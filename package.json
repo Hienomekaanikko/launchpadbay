@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@fastify/mysql": "^5.0.3",
+    "dotenv": "^17.4.2"
+  }
+}
