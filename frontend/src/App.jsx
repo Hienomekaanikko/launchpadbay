@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import bg from './assets/bg.png'
 
@@ -7,14 +7,20 @@ function LaunchpadButton() {
 }
 
 function LaunchpadGrid() {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), 400)
+    return () => clearTimeout(timer)
+  }, [])
   return (
-    <div className="container">
-      {Array.from({ length: 25 }).map((_, i) => (
-        <LaunchpadButton key={i} />
-      ))}
-    </div>
+      <div className={`container ${visible ? 'visible' : ''}`}>
+        {Array.from({ length: 25 }).map((_, i) => (
+          <LaunchpadButton key={i} />
+        ))}
+      </div>
     )
-}
+  }
 
 function PlayView() {
   return (
@@ -94,11 +100,11 @@ function App() {
       <header>
         <nav>
           <button onClick={() => setPlayMode(!playMode)}>{playMode ? 'Home' : 'Play'}</button>
-          <button onClick={() => {setShowLogin(!loggedIn); loggedIn && setLoggedIn(false)}}>{loggedIn ? 'Logout' : 'Login'}</button>
+          {!playMode && <button onClick={() => {setShowLogin(!loggedIn); loggedIn && setLoggedIn(false)}}>{loggedIn ? 'Logout' : 'Login'}</button>}
         </nav>
       </header>
       <main>
-          {showLogin && 
+          {showLogin && !playMode && 
           <LoginView 
             setLoggedIn={setLoggedIn}
             setShowLogin={setShowLogin}
