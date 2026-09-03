@@ -1,5 +1,34 @@
 import { useState } from 'react'
 import './App.css'
+import bg from './assets/bg.png'
+
+function LaunchpadButton() {
+  return <button className="LaunchpadButton"></button>
+}
+
+function LaunchpadGrid() {
+  return (
+    <div className="container">
+      {Array.from({ length: 25 }).map((_, i) => (
+        <LaunchpadButton key={i} />
+      ))}
+    </div>
+    )
+}
+
+function PlayView() {
+  return (
+    <div className="PlayView"
+      style={{
+      backgroundImage: `url(${bg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
+    }}>
+    <LaunchpadGrid />
+    </div>
+  )
+}
 
 function LobbyView() {
   return (
@@ -78,11 +107,10 @@ function App() {
                         className="Lobbybutton"
                         onClick={() => setLobbyMode(!lobbyMode)}>{lobbyMode ? 'Hide' : 'Lobby'}</button>}
           {lobbyMode && <LobbyView />}
+          {playMode && <PlayView />}
       </main>
       <footer>
-        <button>
-          Terms & Conditions
-        </button>
+        {!playMode && <button> Terms & Conditions </button>}
       </footer>
     </>
   )
