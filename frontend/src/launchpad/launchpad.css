@@ -1,0 +1,452 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700&display=swap");
+
+:root {
+  --c1: #ff1f71;
+  --c2: #2db2ff;
+  --c3: #1eff45;
+  --c4: #ffd500;
+  --c5: #ff6a00;
+  --bg-top: #0f0a03;
+  --bg-bottom: #050300;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Roboto", sans-serif;
+}
+
+body {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(to bottom, var(--bg-top), var(--bg-bottom));
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition: background 0.6s ease;
+}
+
+/* Home button */
+.home-btn {
+  background: rgba(255, 255, 255, 0.2);
+  position: fixed;
+  top: 28px;
+  left: 50px;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  padding: 10px 28px;
+  cursor: pointer;
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+.home-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.home-btn:active {
+  transform: scale(0.96);
+}
+
+.dot-grid {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px);
+  background-size: 38px 38px;
+  animation: grid-shift 22s linear infinite;
+}
+
+@keyframes grid-shift {
+  from { background-position: 0 0; }
+  to   { background-position: 38px 38px; }
+}
+
+.container {
+  position: relative;
+  width: max-content;
+  display: grid;
+  grid-template-columns: repeat(5, 120px);
+  grid-template-rows: repeat(5, 120px);
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Button container */
+.container .btn {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Inner button */
+.container .btn a {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 15px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.12);
+  border-radius: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 10px;
+  letter-spacing: 1px;
+  text-decoration: none;
+  overflow: hidden;
+  color: #fff;
+  font-weight: 500;
+  z-index: 1;
+  transition: 0.5s;
+  backdrop-filter: blur(15px);
+}
+
+/* Hover effect */
+.container .btn:hover a {
+  letter-spacing: 2px;
+}
+
+/* Shimmer effect */
+.container .btn a::before {
+  content: "";
+  position: absolute;
+  top: -30%;
+  left: -80%;
+  width: 120%;
+  height: 160%;
+  background: linear-gradient(
+    120deg,
+    rgba(255, 255, 255, 0.4) 0%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 100%
+  );
+  transform: translateX(0);
+  transition: transform 0.6s ease;
+  pointer-events: none;
+}
+
+.container .btn:hover a::before {
+  transform: translateX(200%);
+}
+
+/* Top & bottom bars */
+.container .btn::before,
+.container .btn::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 30px;
+  height: 10px;
+  border-radius: 10px;
+  transition: 0.5s;
+}
+
+.container .btn::before { bottom: -5px; }
+.container .btn::after { top: -5px; }
+
+.container .btn:hover::before,
+.container .btn:hover::after {
+  width: 80%;
+  height: 50%;
+  border-radius: 20px;
+}
+
+/* Row-based coloring and glow */
+.container .btn:nth-child(-n+5)::before,
+.container .btn:nth-child(-n+5)::after {
+  background: var(--c1);
+  box-shadow: 0 0 5px var(--c1),0 0 15px var(--c1),0 0 30px var(--c1),0 0 60px var(--c1);
+  transition: background 0.6s ease, box-shadow 0.6s ease;
+}
+
+.container .btn:nth-child(n+6):nth-child(-n+10)::before,
+.container .btn:nth-child(n+6):nth-child(-n+10)::after {
+  background: var(--c2);
+  box-shadow: 0 0 5px var(--c2),0 0 15px var(--c2),0 0 30px var(--c2),0 0 60px var(--c2);
+  transition: background 0.6s ease, box-shadow 0.6s ease;
+}
+
+.container .btn:nth-child(n+11):nth-child(-n+15)::before,
+.container .btn:nth-child(n+11):nth-child(-n+15)::after {
+  background: var(--c3);
+  box-shadow: 0 0 5px var(--c3),0 0 15px var(--c3),0 0 30px var(--c3),0 0 60px var(--c3);
+  transition: background 0.6s ease, box-shadow 0.6s ease;
+}
+
+.container .btn:nth-child(n+16):nth-child(-n+20)::before,
+.container .btn:nth-child(n+16):nth-child(-n+20)::after {
+  background: var(--c4);
+  box-shadow: 0 0 5px var(--c4),0 0 15px var(--c4),0 0 30px var(--c4),0 0 60px var(--c4);
+  transition: background 0.6s ease, box-shadow 0.6s ease;
+}
+
+.container .btn:nth-child(n+21):nth-child(-n+25)::before,
+.container .btn:nth-child(n+21):nth-child(-n+25)::after {
+  background: var(--c5);
+  box-shadow: 0 0 5px var(--c5),0 0 15px var(--c5),0 0 30px var(--c5),0 0 60px var(--c5);
+  transition: background 0.6s ease, box-shadow 0.6s ease;
+}
+
+/* Loading state — sound not yet ready */
+.container .btn.btn-loading a {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* Active glow */
+.container .btn.active a {
+  box-shadow: 0 0 20px #fff, 0 0 40px #fff, 0 0 60px #fff;
+}
+
+/* Queued blink effect */
+.container .btn.blink a {
+  animation: blink 0.5s infinite alternate;
+}
+
+@keyframes blink {
+  from { box-shadow: 0 0 5px #fff,0 0 15px #fff,0 0 30px #fff; }
+  to   { box-shadow: 0 0 10px #ff0,0 0 25px #ff0,0 0 50px #ff0; }
+}
+
+#transport-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  border-radius: 12px;
+  padding: 8px 14px;
+}
+
+.transport-btn {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.5);
+  font-size: 11px;
+  letter-spacing: 2px;
+  padding: 6px 18px;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s;
+  backdrop-filter: blur(10px);
+}
+
+.transport-btn:hover {
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+}
+
+.transport-btn.active {
+  background: rgba(255,255,255,0.16);
+  color: #fff;
+  border-color: rgba(255,255,255,0.45);
+  box-shadow: 0 0 12px rgba(255,255,255,0.18);
+}
+
+/* Stutter buttons */
+.stutter-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.35);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.stutter-btn:hover {
+  background: rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.7);
+}
+.stutter-btn.stutter-active {
+  background: rgba(255,213,0,0.2);
+  border-color: rgba(255,213,0,0.55);
+  color: #ffd500;
+  box-shadow: 0 0 10px rgba(255,213,0,0.25);
+}
+
+/* Covers the dot-grid/home-btn/body-gradient flash while the theme's
+   background image (and everything else) is still loading. */
+/* No background-image here on purpose — <body> is still showing the landing
+   page background at this point (App.jsx sets it, and nothing clears it
+   until engine.js applies the theme image), so this just dims/blurs what's
+   already painted rather than loading its own copy of the same image. */
+/* Fully opaque on purpose — engine.js can swap <body>'s background to the
+   theme image at any point while this is still up (its own timing, not tied
+   to `ready`), and this must never let that swap show through mid-load. */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition: opacity 0.4s ease;
+}
+
+.loading-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Grid wrapper — stacks bar above grid */
+.grid-wrapper {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 0;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.grid-wrapper.ready {
+  opacity: 1;
+}
+
+/* Master loop progress bar */
+#master-bar {
+  width: 640px;
+  height: 4px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 2px;
+}
+
+#master-bar-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 0 8px #fff, 0 0 16px rgba(255,255,255,0.5);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+body[style*="background-image"] {
+  background-size: cover;
+  background-position: center;
+}
+
+/* Knobs layout */
+.knob-col-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  background: rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(12px);
+  border-radius: 16px;
+  padding: 14px 10px;
+}
+
+.knob-col-label {
+  font-size: 10px;
+  letter-spacing: 2.5px;
+  color: rgba(255,255,255,0.35);
+  text-transform: uppercase;
+}
+
+.grid-with-knobs {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.knob-col {
+  display: grid;
+  grid-template-rows: repeat(5, 120px);
+  gap: 10px;
+  align-items: center;
+  justify-items: center;
+  width: 52px;
+}
+
+/* SVG rotary knob */
+.knob-wrap {
+  width: 44px;
+  height: 44px;
+  cursor: ns-resize;
+  user-select: none;
+}
+
+.knob-svg { width: 44px; height: 44px; overflow: visible; }
+
+.knob-bg {
+  fill: rgba(255,255,255,0.06);
+  stroke: rgba(255,255,255,0.1);
+  stroke-width: 1;
+}
+
+.knob-track {
+  fill: none;
+  stroke: rgba(255,255,255,0.1);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.knob-fill {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
+.knob-dot { fill: #fff; }
+
+.knob-input {
+  display: none;
+}
+
+.row-color-1 .knob-fill { stroke: var(--c1); filter: drop-shadow(0 0 3px var(--c1)); }
+.row-color-2 .knob-fill { stroke: var(--c2); filter: drop-shadow(0 0 3px var(--c2)); }
+.row-color-3 .knob-fill { stroke: var(--c3); filter: drop-shadow(0 0 3px var(--c3)); }
+.row-color-4 .knob-fill { stroke: var(--c4); filter: drop-shadow(0 0 3px var(--c4)); }
+.row-color-5 .knob-fill { stroke: var(--c5); filter: drop-shadow(0 0 3px var(--c5)); }
+
+.home-btn::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  width: 70%;
+  height: 2px;
+  border-radius: 100px;
+  background: #ffd500;
+  box-shadow: 2px 0 4px #ffd500, 0 0 10px #ffd500, 0 0 20px rgba(255, 213, 0, 0.6);
+}

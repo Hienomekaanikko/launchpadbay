@@ -1,40 +1,7 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import bg from './assets/bg.png'
-
-function LaunchpadButton() {
-  return <button className="LaunchpadButton"></button>
-}
-
-function LaunchpadGrid() {
-  const [visible, setVisible] = useState(false)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setVisible(true), 400)
-    return () => clearTimeout(timer)
-  }, [])
-  return (
-      <div className={`container ${visible ? 'visible' : ''}`}>
-        {Array.from({ length: 25 }).map((_, i) => (
-          <LaunchpadButton key={i} />
-        ))}
-      </div>
-    )
-  }
-
-function PlayView() {
-  return (
-    <div className="PlayView"
-      style={{
-      backgroundImage: `url(${bg})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-      backgroundRepeat: 'no-repeat',
-    }}>
-    <LaunchpadGrid />
-    </div>
-  )
-}
+import LaunchpadView from './launchpad/LaunchpadView.jsx'
+import landing from './assets/landing.jpg'
 
 function LobbyView() {
   return (
@@ -95,12 +62,27 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [lobbyMode, setLobbyMode] = useState(false);
 
+  useEffect(() => {
+    // LaunchpadView/engine.js takes ownership of the body background while
+    // playing and clears it on unmount, at which point playMode flips back
+    // to false and this re-applies the landing background.
+    if (!playMode) {
+      document.body.style.backgroundImage = `url(${landing})`
+      document.body.style.backgroundSize = 'cover'
+      document.body.style.backgroundPosition = 'center'
+      document.body.style.backgroundRepeat = 'no-repeat'
+    }
+  }, [playMode])
+
   return (
     <>
       <header>
+        {!playMode && <div className="Logo">
+          LaunchpadBay
+        </div>}
         <nav>
-          <button onClick={() => setPlayMode(!playMode)}>{playMode ? 'Home' : 'Play'}</button>
-          {!playMode && <button onClick={() => {setShowLogin(!loggedIn); loggedIn && setLoggedIn(false)}}>{loggedIn ? 'Logout' : 'Login'}</button>}
+          {!playMode && <button className="NavButton" onClick={() => setPlayMode(true)}>Play</button>}
+          {!playMode && <button className="NavButton" onClick={() => {setShowLogin(!loggedIn); loggedIn && setLoggedIn(false)}}>{loggedIn ? 'Logout' : 'Login'}</button>}
         </nav>
       </header>
       <main>
@@ -113,7 +95,7 @@ function App() {
                         className="Lobbybutton"
                         onClick={() => setLobbyMode(!lobbyMode)}>{lobbyMode ? 'Hide' : 'Lobby'}</button>}
           {lobbyMode && <LobbyView />}
-          {playMode && <PlayView />}
+          {playMode && <LaunchpadView onBack={() => setPlayMode(false)} />}
       </main>
       <footer>
         {!playMode && <button> Terms & Conditions </button>}
