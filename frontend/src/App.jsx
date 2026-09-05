@@ -17,7 +17,7 @@ function ValidateRegister( {checkValidated, setRegisterView} ) {
   return (
     <div className="RegisterView">
       Input/registering validation not done yet but this would say "Registering succesful! Or Failed"
-      <button onClick={()=> {checkValidated(false); setRegisterView(false)}}>Continue!</button>
+      <button className="FormButton" onClick={()=> {checkValidated(false); setRegisterView(false)}}>Continue!</button>
     </div>
   )
 }
@@ -27,11 +27,11 @@ function RegisterView({ setRegisterView }) {
   return (
     <>
       <div className="RegisterView">
-        <button onClick={() => setRegisterView(false)}>x</button>
-        <input type="text" placeholder="Set username"/>
-        <input type="password" placeholder="Set password"/>
-        <input type="password" placeholder="Type password again"/>
-        <button onClick={() => checkValidated(true)}>Submit</button> 
+        <button className="CloseButton" onClick={() => setRegisterView(false)}>x</button>
+        <input className="inputbox" type="text" placeholder="Set username"/>
+        <input className="inputbox" type="password" placeholder="Set password"/>
+        <input className="inputbox" type="password" placeholder="Type password again"/>
+        <button className="FormButton" onClick={() => checkValidated(true)}>Submit</button>
       </div>
       {validated && <ValidateRegister checkValidated={checkValidated} setRegisterView={setRegisterView}/>}
 
@@ -44,13 +44,13 @@ function LoginView({ setLoggedIn, setShowLogin }) {
 
   return (
     <>
-      <div className="LoginView">
-        <button onClick={() => setShowLogin(false)}>x</button>
-        <input type="text" placeholder="Username" />
-        <input type="password" placeholder="Password" />
-        <button onClick={()=> {setLoggedIn(true); setShowLogin(false)}}>Login</button>
-        <button onClick={()=> {setRegisterView(true)}}>Not registered yet?</button>
-      </div>
+      {!registerView && <div className="LoginView">
+        <button className="CloseButton" onClick={() => setShowLogin(false)}>x</button>
+        <input className="inputbox" type="text" placeholder="Username" />
+        <input className="inputbox" type="password" placeholder="Password" />
+        <button className="FormButton" onClick={()=> {setLoggedIn(true); setShowLogin(false)}}>Login</button>
+        <button className="FormButton" onClick={()=> {setRegisterView(true)}}>Not registered yet?</button>
+      </div>}
        {registerView && <RegisterView setRegisterView={setRegisterView} />}
     </>
   )
@@ -85,6 +85,7 @@ function App() {
           {!playMode && <button className="NavButton" onClick={() => {setShowLogin(!loggedIn); loggedIn && setLoggedIn(false)}}>{loggedIn ? 'Logout' : 'Login'}</button>}
         </nav>
       </header>
+      {!playMode && <div className="Tagline">JAM WITH EASE</div>}
       <main>
           {showLogin && !playMode && 
           <LoginView 
@@ -98,7 +99,7 @@ function App() {
           {playMode && <LaunchpadView onBack={() => setPlayMode(false)} />}
       </main>
       <footer>
-        {!playMode && <button> Terms & Conditions </button>}
+        {!playMode && <button className="FooterLink"> Terms & Conditions </button>}
       </footer>
     </>
   )
