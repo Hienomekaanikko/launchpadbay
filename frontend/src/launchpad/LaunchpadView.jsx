@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { mountLaunchpad } from './engine.js'
-import { themes } from './themes.js'
+import { fetchThemes } from './themes.js'
 import launchpadCss from './launchpad.css?raw'
 import landing from '../assets/landing.jpg'
 
@@ -16,10 +16,9 @@ export default function LaunchpadView({ onBack }) {
     styleTag.textContent = launchpadCss
     document.head.appendChild(styleTag)
 
-    const { destroy } = mountLaunchpad(containerRef.current)
-
     let cancelled = false
     let minWaitTimer = null
+    let destroy = null
     const start = Date.now()
     const markReady = () => {
       if (cancelled) return
@@ -29,20 +28,31 @@ export default function LaunchpadView({ onBack }) {
       }, wait)
     }
 
-    const bgImage = themes[0]?.bgImage
-    if (bgImage) {
-      const img = new Image()
-      img.onload = markReady
-      img.onerror = markReady
-      img.src = bgImage
-    } else {
+    // mountLaunchpad can't start until the theme list (and therefore the
+    // sound/image URLs it needs) has actually arrived from the backend —
+    // unlike the old static themes.js, this is no longer instantly available.
+    fetchThemes().then((themes) => {
+      if (cancelled) return
+      ;({ destroy } = mountLaunchpad(containerRef.current, themes))
+
+      const bgImage = themes[0]?.bgImage
+      if (bgImage) {
+        const img = new Image()
+        img.onload = markReady
+        img.onerror = markReady
+        img.src = bgImage
+      } else {
+        markReady()
+      }
+    }).catch((err) => {
+      console.error('Failed to load launchpad themes:', err)
       markReady()
-    }
+    })
 
     return () => {
       cancelled = true
       if (minWaitTimer) clearTimeout(minWaitTimer)
-      destroy()
+      if (destroy) destroy()
       styleTag.remove()
     }
   }, [])
