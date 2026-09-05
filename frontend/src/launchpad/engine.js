@@ -7,13 +7,13 @@
 // mounting did — required because React (StrictMode especially) can mount and
 // unmount this view repeatedly in the same page session.
 //
-// Stripped out entirely: Supabase client/fetching, the `?pack=` custom-pack
-// loader, and the auth/subscribe/admin-edit-in-player UI. Themes come from the
-// local `themes.js` placeholder instead of a live backend.
+// Stripped out entirely: the `?pack=` custom-pack loader and the
+// auth/subscribe/admin-edit-in-player UI. Themes are now fetched from the
+// backend's /themes route (see themes.js's fetchThemes) and passed in here
+// rather than imported as a static module, since the caller controls when
+// that fetch happens.
 
-import { themes } from './themes.js'
-
-export function mountLaunchpad(container) {
+export function mountLaunchpad(container, themes) {
   let destroyed = false
   const winListeners = [] // { target, type, handler, opts }
   const pendingTimeouts = new Set()
@@ -332,11 +332,9 @@ export function mountLaunchpad(container) {
   }
 
   function applyThemeColors(theme) {
-    const root = document.documentElement
-    theme.colors.forEach((c, i) => root.style.setProperty(`--c${i + 1}`, c))
-    root.style.setProperty('--bg-top', theme.bg[0])
-    root.style.setProperty('--bg-bottom', theme.bg[1])
-
+    // --c1..--c5 (row colors) and --bg-top/--bg-bottom (the fallback body
+    // gradient) are deliberately NOT set here — they're fixed in
+    // launchpad.css's :root and shared by every theme, never overridden.
     themes.forEach((t) => t.bodyClass && document.body.classList.remove(t.bodyClass))
     if (theme.bodyClass) document.body.classList.add(theme.bodyClass)
 
