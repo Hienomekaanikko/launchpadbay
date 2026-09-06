@@ -12,6 +12,8 @@ services:
     build: ./backend
     env_file:
       - ./backend/.env
+    environment:
+      DATABASE_URL: "mysql://dj:greatestdj@mysql:3306/launchpadbay"
     ports:
       - "3000:3000"
     volumes:
