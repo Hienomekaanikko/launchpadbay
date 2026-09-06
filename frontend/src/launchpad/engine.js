@@ -1,18 +1,3 @@
-// Adapted from the original launchpad's script.js (~/Devaus/launchpad/script.js).
-//
-// The original runs as a single top-level `window.addEventListener('load', ...)`
-// on a static page that never unmounts, so it freely uses module-level state and
-// permanently-attached `window` listeners. This version wraps the same engine in
-// `mountLaunchpad(container)`, which returns a `destroy()` that undoes everything
-// mounting did — required because React (StrictMode especially) can mount and
-// unmount this view repeatedly in the same page session.
-//
-// Stripped out entirely: the `?pack=` custom-pack loader and the
-// auth/subscribe/admin-edit-in-player UI. Themes are now fetched from the
-// backend's /themes route (see themes.js's fetchThemes) and passed in here
-// rather than imported as a static module, since the caller controls when
-// that fetch happens.
-
 export function mountLaunchpad(container, themes) {
   let destroyed = false
   const winListeners = [] // { target, type, handler, opts }
