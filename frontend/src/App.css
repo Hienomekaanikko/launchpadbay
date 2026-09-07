@@ -56,6 +56,36 @@ footer {
   user-select: none;
 }
 
+.UserTag {
+  position: fixed;
+  top: 50px;
+  right: 50px;
+  z-index: 20;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  background: rgba(0, 0, 0, 0.25);
+  backdrop-filter: blur(10px);
+  border-radius: 8px;
+  padding: 6px 12px;
+  pointer-events: none;
+  user-select: none;
+}
+
+.UserTag::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translateX(-50%);
+  width: 90%;
+  height: 2px;
+  border-radius: 100px;
+  background: #ffd500;
+  box-shadow: 2px 0 4px #ffd500, 0 0 10px #ffd500, 0 0 20px rgba(255, 213, 0, 0.6);
+}
+
 .Tagline {
   position: fixed;
   top: 50%;
@@ -292,6 +322,13 @@ footer {
   outline: none;
   background: rgba(0, 0, 0, 0.35);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.FormError {
+  color: #ff6b6b;
+  font-size: 12px;
+  text-align: center;
+  max-width: 220px;
 }
 
 .FooterLink {

@@ -6,8 +6,9 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-RUN npx prisma generate
+RUN ./node_modules/.bin/prisma generate
+RUN chmod +x docker-entrypoint.sh
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && npx prisma db seed && node server.js"]
+CMD ["./docker-entrypoint.sh"]
