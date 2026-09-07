@@ -31,7 +31,10 @@ export default function LaunchpadView({ onBack }) {
     // mountLaunchpad can't start until the theme list (and therefore the
     // sound/image URLs it needs) has actually arrived from the backend —
     // unlike the old static themes.js, this is no longer instantly available.
-    fetchThemes().then((themes) => {
+    // fetchThemes retries on its own (the backend may still be starting up),
+    // so the loading overlay just stays up rather than us falling through to
+    // a themeless, silently-broken launchpad on the first failed request.
+    fetchThemes(() => cancelled).then((themes) => {
       if (cancelled) return
       ;({ destroy } = mountLaunchpad(containerRef.current, themes))
 
@@ -45,6 +48,7 @@ export default function LaunchpadView({ onBack }) {
         markReady()
       }
     }).catch((err) => {
+      if (cancelled) return
       console.error('Failed to load launchpad themes:', err)
       markReady()
     })

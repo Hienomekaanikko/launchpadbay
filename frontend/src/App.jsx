@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 import LaunchpadView from './launchpad/LaunchpadView.jsx'
 import landing from './assets/landing.jpg'
+import { login, register } from './auth.js'
 
 function LobbyView() {
   return (
@@ -13,44 +14,85 @@ function LobbyView() {
   )
 }
 
-function ValidateRegister( {checkValidated, setRegisterView} ) {
+function ValidateRegister({ message, onContinue }) {
   return (
     <div className="RegisterView">
-      Input/registering validation not done yet but this would say "Registering succesful! Or Failed"
-      <button className="FormButton" onClick={()=> {checkValidated(false); setRegisterView(false)}}>Continue!</button>
+      {message}
+      <button className="FormButton" onClick={onContinue}>Continue!</button>
     </div>
   )
 }
 
 function RegisterView({ setRegisterView }) {
-  const [validated, checkValidated] = useState(false)
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [error, setError] = useState('')
+  const [submitted, setSubmitted] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    try {
+      await register(username, email, password)
+      setSubmitted(true)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   return (
     <>
-      <div className="RegisterView">
-        <button className="CloseButton" onClick={() => setRegisterView(false)}>x</button>
-        <input className="inputbox" type="text" placeholder="Set username"/>
-        <input className="inputbox" type="password" placeholder="Set password"/>
-        <input className="inputbox" type="password" placeholder="Type password again"/>
-        <button className="FormButton" onClick={() => checkValidated(true)}>Submit</button>
-      </div>
-      {validated && <ValidateRegister checkValidated={checkValidated} setRegisterView={setRegisterView}/>}
-
+      {!submitted && <form className="RegisterView" onSubmit={handleSubmit}>
+        <button type="button" className="CloseButton" onClick={() => setRegisterView(false)}>x</button>
+        <input className="inputbox" type="text" placeholder="Set username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+        <input className="inputbox" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input className="inputbox" type="password" placeholder="Set password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <input className="inputbox" type="password" placeholder="Type password again" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+        {error && <div className="FormError">{error}</div>}
+        <button type="submit" className="FormButton">Submit</button>
+      </form>}
+      {submitted && <ValidateRegister message="Registration successful!" onContinue={() => setRegisterView(false)} />}
     </>
   )
 }
 
-function LoginView({ setLoggedIn, setShowLogin }) {
+function LoginView({ onLoggedIn, setShowLogin }) {
   const [registerView, setRegisterView] = useState(false)
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+
+    try {
+      const { token } = await login(username, password)
+      onLoggedIn(token, username)
+      setShowLogin(false)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
 
   return (
     <>
-      {!registerView && <div className="LoginView">
-        <button className="CloseButton" onClick={() => setShowLogin(false)}>x</button>
-        <input className="inputbox" type="text" placeholder="Username" />
-        <input className="inputbox" type="password" placeholder="Password" />
-        <button className="FormButton" onClick={()=> {setLoggedIn(true); setShowLogin(false)}}>Login</button>
-        <button className="FormButton" onClick={()=> {setRegisterView(true)}}>Not registered yet?</button>
-      </div>}
+      {!registerView && <form className="LoginView" onSubmit={handleSubmit}>
+        <button type="button" className="CloseButton" onClick={() => setShowLogin(false)}>x</button>
+        <input className="inputbox" type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+        <input className="inputbox" type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        {error && <div className="FormError">{error}</div>}
+        <button type="submit" className="FormButton">Login</button>
+        <button type="button" className="FormButton" onClick={() => setRegisterView(true)}>Not registered yet?</button>
+      </form>}
        {registerView && <RegisterView setRegisterView={setRegisterView} />}
     </>
   )
@@ -59,8 +101,10 @@ function LoginView({ setLoggedIn, setShowLogin }) {
 function App() {
   const [playMode, setPlayMode] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [token, setToken] = useState(() => localStorage.getItem('token'));
+  const [username, setUsername] = useState(() => localStorage.getItem('username'));
   const [lobbyMode, setLobbyMode] = useState(false);
+  const loggedIn = Boolean(token)
 
   useEffect(() => {
     // LaunchpadView/engine.js takes ownership of the body background while
@@ -74,25 +118,40 @@ function App() {
     }
   }, [playMode])
 
+  const handleLoggedIn = (newToken, newUsername) => {
+    localStorage.setItem('token', newToken)
+    localStorage.setItem('username', newUsername)
+    setToken(newToken)
+    setUsername(newUsername)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('username')
+    setToken(null)
+    setUsername(null)
+  }
+
   return (
     <>
       <header>
         {!playMode && <div className="Logo">
           LaunchpadBay
         </div>}
+        {loggedIn && <div className="UserTag">Logged in as: {username}</div>}
         <nav>
           {!playMode && <button className="NavButton" onClick={() => setPlayMode(true)}>Play</button>}
-          {!playMode && <button className="NavButton" onClick={() => {setShowLogin(!loggedIn); loggedIn && setLoggedIn(false)}}>{loggedIn ? 'Logout' : 'Login'}</button>}
+          {!playMode && <button className="NavButton" onClick={() => (loggedIn ? handleLogout() : setShowLogin(true))}>{loggedIn ? 'Logout' : 'Login'}</button>}
         </nav>
       </header>
       {!playMode && <div className="Tagline">JAM WITH EASE</div>}
       <main>
-          {showLogin && !playMode && 
-          <LoginView 
-            setLoggedIn={setLoggedIn}
+          {showLogin && !playMode &&
+          <LoginView
+            onLoggedIn={handleLoggedIn}
             setShowLogin={setShowLogin}
             />}
-          {loggedIn && <button 
+          {loggedIn && <button
                         className="Lobbybutton"
                         onClick={() => setLobbyMode(!lobbyMode)}>{lobbyMode ? 'Hide' : 'Lobby'}</button>}
           {lobbyMode && <LobbyView />}
