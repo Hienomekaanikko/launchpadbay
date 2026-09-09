@@ -18,3 +18,12 @@ export function register(username, email, password) {
 export function login(username, password) {
   return post('/login', { username, password })
 }
+
+export async function fetchProfile(token) {
+  const res = await fetch('/api/profile', {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || `Request failed: ${res.status}`)
+  return data
+}
