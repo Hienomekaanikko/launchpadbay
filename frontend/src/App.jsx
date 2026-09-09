@@ -4,6 +4,7 @@ import LaunchpadView from './launchpad/LaunchpadView.jsx'
 import landing from './assets/landing.jpg'
 import LobbyView from './components/LobbyView.jsx'
 import LoginView from './components/LoginView.jsx'
+import ProfileView from './components/ProfileView.jsx'
 
 function App() {
   const [playMode, setPlayMode] = useState(false);
@@ -11,6 +12,7 @@ function App() {
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [username, setUsername] = useState(() => localStorage.getItem('username'));
   const [lobbyMode, setLobbyMode] = useState(false);
+  const [profileMode, setProfileMode] = useState(false);
   const loggedIn = Boolean(token)
 
   useEffect(() => {
@@ -34,6 +36,7 @@ function App() {
     localStorage.removeItem('username')
     setToken(null)
     setUsername(null)
+    setProfileMode(false)
   }
 
   return (
@@ -42,7 +45,7 @@ function App() {
         {!playMode && <div className="Logo">
           LaunchpadBay
         </div>}
-        {loggedIn && <div className="UserTag">Logged in as: {username}</div>}
+        {loggedIn && <button className="UserTag" onClick={() => setProfileMode(!profileMode)}>Logged in as: {username}</button>}
         <nav>
           {!playMode && <button className="NavButton" onClick={() => setPlayMode(true)}>Play</button>}
           {!playMode && <button className="NavButton" onClick={() => (loggedIn ? handleLogout() : setShowLogin(true))}>{loggedIn ? 'Logout' : 'Login'}</button>}
@@ -59,6 +62,7 @@ function App() {
                         className="Lobbybutton"
                         onClick={() => setLobbyMode(!lobbyMode)}>{lobbyMode ? 'Hide' : 'Lobby'}</button>}
           {lobbyMode && <LobbyView />}
+          {profileMode && loggedIn && <ProfileView token={token} />}
           {playMode && <LaunchpadView onBack={() => setPlayMode(false)} />}
       </main>
       <footer>

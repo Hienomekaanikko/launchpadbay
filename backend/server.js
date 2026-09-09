@@ -45,6 +45,14 @@ await fastify.register(jwt, {
     secret: process.env.JWT_SECRET
   })
 
+fastify.decorate('authenticate', async function (request, reply) {
+    try {
+        await request.jwtVerify()
+    } catch (err) {
+        reply.code(401).send({ error: 'Unauthorized' })
+    }
+})
+
 fastify.get('/health/db', async () => {
     const [{ ok }] = await prisma.$queryRaw`SELECT 1 AS ok`
     return { ok: Number(ok) }
@@ -103,6 +111,14 @@ fastify.post('/login', async (request, reply) => {
 
     const token = fastify.jwt.sign({ id: user.id, username: user.username })
     return { token }
+})
+
+fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, reply) => {
+    const user = await prisma.users.findUnique({ where: { id: request.user.id } })
+    if (!user) {
+      return reply.code(404).send({ error: 'User not found' })
+    }
+    return { id: user.id, username: user.username, email: user.email }
 })
 
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {
