@@ -24,7 +24,8 @@ export function mountLaunchpad(container, themes) {
   const soundToButton = {}
 
   const bufferCache = new Map()
-  const preloadedImages = new Set()
+  // DEAD (write-only): only ever .add()-ed in init's image preload, never read.
+  // const preloadedImages = new Set()
 
   const buttonRows = {
     btn1: 1, btn2: 1, btn3: 1, btn4: 1, btn5: 1,
@@ -50,13 +51,17 @@ export function mountLaunchpad(container, themes) {
   }
   const STUTTER_DEPTHS = [4, 8, 16]
 
-  let masterLoopName = null
+  // DEAD (write-only): assigned in startLoop/scheduleHandoff/loadThemeSounds
+  // and cleared in stopLoop, but never read to drive any behaviour.
+  // let masterLoopName = null
   let masterStartTime = null
   let masterLoopDuration = null
   let splitActive = false
 
   const rowVolumes = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1 }
-  const currentFadeTime = 0
+  // DEAD (unreachable): nothing ever sets a fade time, so every
+  // `currentFadeTime > 0` branch below is unreachable. Kept for bookkeeping.
+  // const currentFadeTime = 0
 
   const rowFilters = {}
   const rowGains = {}
@@ -104,12 +109,13 @@ export function mountLaunchpad(container, themes) {
 
     const gain = rowGains[row]
     gain.gain.cancelScheduledValues(startTime)
-    if (currentFadeTime > 0) {
-      gain.gain.setValueAtTime(0, startTime)
-      gain.gain.linearRampToValueAtTime(rowVolumes[row], startTime + currentFadeTime)
-    } else {
-      gain.gain.setValueAtTime(rowVolumes[row], startTime)
-    }
+    gain.gain.setValueAtTime(rowVolumes[row], startTime)
+
+    // DEAD (unreachable): fade-in — see currentFadeTime
+    // if (currentFadeTime > 0) {
+    //   gain.gain.setValueAtTime(0, startTime)
+    //   gain.gain.linearRampToValueAtTime(rowVolumes[row], startTime + currentFadeTime)
+    // }
 
     if (button) {
       button.classList.remove('active')
@@ -126,7 +132,8 @@ export function mountLaunchpad(container, themes) {
         button.classList.remove('blink')
         button.classList.add('active')
       }
-      if (!masterLoopName) masterLoopName = name
+      // DEAD (write-only): see masterLoopName
+      // if (!masterLoopName) masterLoopName = name
       sound.startTimeoutId = null
     }, (startTime - audioCtx.currentTime) * 1000)
   }
@@ -200,10 +207,13 @@ export function mountLaunchpad(container, themes) {
 
       rowActive[row] = { name, buttonId }
       rowPending[row] = null
-      masterLoopName = name
+      // DEAD (write-only): see masterLoopName
+      // masterLoopName = name
     }, (handoffTime - audioCtx.currentTime) * 1000)
   }
 
+  // DEAD (no-op param): `force` only ever gated the unreachable fade-out
+  // below, so passing it changes nothing. Kept for bookkeeping.
   function stopLoop(name, force = false) {
     const sound = sounds[name]
     if (!sound) return
@@ -220,7 +230,8 @@ export function mountLaunchpad(container, themes) {
 
     if (button) button.classList.remove('blink', 'active')
     if (row && rowActive[row]?.name === name) rowActive[row] = null
-    if (masterLoopName === name) masterLoopName = null
+    // DEAD (write-only): see masterLoopName
+    // if (masterLoopName === name) masterLoopName = null
 
     const anyActive = Object.values(rowActive).some((a) => a !== null)
     if (!anyActive) {
@@ -230,24 +241,26 @@ export function mountLaunchpad(container, themes) {
 
     if (sound.source) {
       const gain = row ? rowGains[row] : null
-      if (!force && currentFadeTime > 0 && gain) {
+      if (gain) {
         gain.gain.cancelScheduledValues(audioCtx.currentTime)
-        gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime)
-        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + currentFadeTime)
-        const src = sound.source
-        sound.source = null
-        track(() => {
-          try { src.stop() } catch { /* already stopped */ }
-          if (!destroyed) gain.gain.setValueAtTime(rowVolumes[row], audioCtx.currentTime)
-        }, currentFadeTime * 1000 + 50)
-      } else {
-        if (gain) {
-          gain.gain.cancelScheduledValues(audioCtx.currentTime)
-          gain.gain.setValueAtTime(rowVolumes[row], audioCtx.currentTime)
-        }
-        sound.source.stop()
-        sound.source = null
+        gain.gain.setValueAtTime(rowVolumes[row], audioCtx.currentTime)
       }
+      sound.source.stop()
+      sound.source = null
+
+      // DEAD (unreachable): fade-out — see currentFadeTime. This is also the
+      // only place `force` was ever read, which is why it's a no-op.
+      // if (!force && currentFadeTime > 0 && gain) {
+      //   gain.gain.cancelScheduledValues(audioCtx.currentTime)
+      //   gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime)
+      //   gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + currentFadeTime)
+      //   const src = sound.source
+      //   sound.source = null
+      //   track(() => {
+      //     try { src.stop() } catch { /* already stopped */ }
+      //     if (!destroyed) gain.gain.setValueAtTime(rowVolumes[row], audioCtx.currentTime)
+      //   }, currentFadeTime * 1000 + 50)
+      // }
     }
   }
 
@@ -320,8 +333,11 @@ export function mountLaunchpad(container, themes) {
     // --c1..--c5 (row colors) and --bg-top/--bg-bottom (the fallback body
     // gradient) are deliberately NOT set here — they're fixed in
     // launchpad.css's :root and shared by every theme, never overridden.
-    themes.forEach((t) => t.bodyClass && document.body.classList.remove(t.bodyClass))
-    if (theme.bodyClass) document.body.classList.add(theme.bodyClass)
+    // DEAD (never populated): the themes API serializes `bodyClass` from the
+    // `body_class` column, but the seed never sets it and no CSS rule targets
+    // a body class, so this is inert. Wired end-to-end, just unused.
+    // themes.forEach((t) => t.bodyClass && document.body.classList.remove(t.bodyClass))
+    // if (theme.bodyClass) document.body.classList.add(theme.bodyClass)
 
     document.body.style.backgroundImage = theme.bgImage ? `url('${theme.bgImage}')` : ''
   }
@@ -341,7 +357,8 @@ export function mountLaunchpad(container, themes) {
     for (const key of Object.keys(sounds)) delete sounds[key]
     for (const key of Object.keys(soundToButton)) delete soundToButton[key]
 
-    masterLoopName = null
+    // DEAD (write-only): see masterLoopName
+    // masterLoopName = null
     masterStartTime = null
     masterLoopDuration = null
 
@@ -517,7 +534,8 @@ export function mountLaunchpad(container, themes) {
       await new Promise((resolve) => {
         if (!themes[0].bgImage) { applyThemeColors(themes[0]); resolve(); return }
         const img = new Image()
-        img.onload = () => { preloadedImages.add(themes[0].bgImage); applyThemeColors(themes[0]); resolve() }
+        // DEAD (write-only): was `preloadedImages.add(themes[0].bgImage)` here
+        img.onload = () => { applyThemeColors(themes[0]); resolve() }
         img.onerror = () => { applyThemeColors(themes[0]); resolve() }
         img.src = themes[0].bgImage
       })
@@ -681,7 +699,8 @@ export function mountLaunchpad(container, themes) {
     audioCtx?.close().catch(() => {})
 
     document.body.style.backgroundImage = ''
-    themes.forEach((t) => t.bodyClass && document.body.classList.remove(t.bodyClass))
+    // DEAD (never populated): see applyThemeColors
+    // themes.forEach((t) => t.bodyClass && document.body.classList.remove(t.bodyClass))
   }
 
   return { destroy }

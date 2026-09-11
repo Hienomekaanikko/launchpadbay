@@ -428,9 +428,11 @@ body[style*="background-image"] {
 
 .knob-dot { fill: #fff; }
 
-.knob-input {
+/* DEAD (unused): nothing is ever given .knob-input — leftover from the
+   <input type="range"> version of the knob, before the SVG one. */
+/* .knob-input {
   display: none;
-}
+} */
 
 .row-color-1 .knob-fill { stroke: var(--c1); filter: drop-shadow(0 0 3px var(--c1)); }
 .row-color-2 .knob-fill { stroke: var(--c2); filter: drop-shadow(0 0 3px var(--c2)); }
