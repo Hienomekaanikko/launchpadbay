@@ -25,13 +25,11 @@ export function mountLaunchpad(container, themes) {
 
   // --- Config ---
 
-  const buttonRows = {
-    btn1: 1, btn2: 1, btn3: 1, btn4: 1, btn5: 1,
-    btn6: 2, btn7: 2, btn8: 2, btn9: 2, btn10: 2,
-    btn11: 3, btn12: 3, btn13: 3, btn14: 3, btn15: 3,
-    btn16: 4, btn17: 4, btn18: 4, btn19: 4, btn20: 4,
-    btn21: 5, btn22: 5, btn23: 5, btn24: 5, btn25: 5,
-  }
+  // Slots run 1..25, left-to-right then top-to-bottom, five per row. A slot's
+  // pad is `btn<slot>` and its sound is `sound<slot>`, so both the row and the
+  // sound/pad pairing are derivable and don't need lookup tables.
+  const rowOfButton = (buttonId) => Math.floor((Number(buttonId.slice(3)) - 1) / 5) + 1
+  const buttonIdOfSound = (name) => `btn${name.slice(5)}`
 
   const STUTTER_DEPTHS = [4, 8, 16]
   // Single tap cycles the depth, double tap toggles the stutter itself, so
@@ -48,7 +46,6 @@ export function mountLaunchpad(container, themes) {
 
   let audioCtx = null
   const sounds = {}
-  const soundToButton = {}
 
   const bufferCache = new Map()
   // DEAD (write-only): only ever .add()-ed in init's image preload, never read.
@@ -61,12 +58,15 @@ export function mountLaunchpad(container, themes) {
   // same handoffTime, since the outgoing source's stop() can't be rescheduled
   // once set.
   const rowPending = { 1: null, 2: null, 3: null, 4: null, 5: null }
+  // `source` doubles as the on/off flag: a row is stuttering exactly when it
+  // has a live stutter source. `depth` persists across toggles so re-enabling
+  // a row resumes at the division it was last set to.
   const rowStutter = {
-    1: { mode: 0, depth: 4, source: null },
-    2: { mode: 0, depth: 4, source: null },
-    3: { mode: 0, depth: 4, source: null },
-    4: { mode: 0, depth: 4, source: null },
-    5: { mode: 0, depth: 4, source: null },
+    1: { depth: 4, source: null },
+    2: { depth: 4, source: null },
+    3: { depth: 4, source: null },
+    4: { depth: 4, source: null },
+    5: { depth: 4, source: null },
   }
 
   // DEAD (write-only): assigned in startLoop/scheduleHandoff/loadThemeSounds
@@ -168,7 +168,7 @@ export function mountLaunchpad(container, themes) {
     source.loop = true
     source.loopEnd = sound.buffer.duration / (splitActive ? 2 : 1)
 
-    const row = buttonRows[buttonId]
+    const row = rowOfButton(buttonId)
     source.connect(rowGains[row])
 
     const button = byId(buttonId)
@@ -285,9 +285,9 @@ export function mountLaunchpad(container, themes) {
     const sound = sounds[name]
     if (!sound) return
 
-    const btnId = soundToButton[name]
-    const button = btnId ? byId(btnId) : null
-    const row = btnId ? buttonRows[btnId] : null
+    const buttonId = buttonIdOfSound(name)
+    const button = byId(buttonId)
+    const row = rowOfButton(buttonId)
 
     if (sound.startTimeoutId) {
       clearTimeout(sound.startTimeoutId)
@@ -296,7 +296,7 @@ export function mountLaunchpad(container, themes) {
     }
 
     if (button) button.classList.remove('blink', 'active')
-    if (row && rowActive[row]?.name === name) rowActive[row] = null
+    if (rowActive[row]?.name === name) rowActive[row] = null
     // DEAD (write-only): see masterLoopName
     // if (masterLoopName === name) masterLoopName = null
 
@@ -307,7 +307,7 @@ export function mountLaunchpad(container, themes) {
     }
 
     if (sound.source) {
-      const gain = row ? rowGains[row] : null
+      const gain = rowGains[row]
       if (gain) {
         gain.gain.cancelScheduledValues(audioCtx.currentTime)
         gain.gain.setValueAtTime(rowVolumes[row], audioCtx.currentTime)
@@ -334,14 +334,13 @@ export function mountLaunchpad(container, themes) {
   async function toggleLoop(name, buttonId) {
     if (audioCtx.state === 'suspended') await audioCtx.resume()
 
-    const row = buttonRows[buttonId]
+    const row = rowOfButton(buttonId)
 
-    if (rowStutter[row].mode !== 0) {
-      const st = rowStutter[row]
-      if (st.source) { try { st.source.stop() } catch { /* noop */ } st.source = null }
-      st.mode = 0
-      const b = byId(`stutter-btn-${row}`)
-      if (b) { b.textContent = 'STU'; b.classList.remove('stutter-active') }
+    const st = rowStutter[row]
+    if (st.source) {
+      try { st.source.stop() } catch { /* noop */ }
+      st.source = null
+      updateStutterBtn(row)
     }
 
     const current = rowActive[row]
@@ -409,7 +408,6 @@ export function mountLaunchpad(container, themes) {
   function releaseStutter(row) {
     const st = rowStutter[row]
     if (st.source) { try { st.source.stop() } catch { /* noop */ } st.source = null }
-    st.mode = 0
 
     const active = rowActive[row]
     if (active) startLoop(active.name, active.buttonId)
@@ -420,11 +418,13 @@ export function mountLaunchpad(container, themes) {
   function tapStutter(row) {
     if (audioCtx.state === 'suspended') audioCtx.resume()
     const st = rowStutter[row]
-    if (st.mode !== 0) {
+    if (st.source) {
       releaseStutter(row)
     } else {
+      // startStutter is a no-op when the row has nothing playing; deriving the
+      // lit state from st.source means the button stays dark in that case
+      // instead of latching on with no sound behind it.
       startStutter(row, st.depth)
-      st.mode = st.depth
       updateStutterBtn(row)
     }
   }
@@ -434,10 +434,10 @@ export function mountLaunchpad(container, themes) {
     const idx = STUTTER_DEPTHS.indexOf(st.depth)
     st.depth = STUTTER_DEPTHS[(idx + 1) % STUTTER_DEPTHS.length]
 
-    if (st.mode !== 0) {
+    if (st.source) {
       const active = rowActive[row]
       const sound = active ? sounds[active.name] : null
-      if (sound?.buffer && st.source) {
+      if (sound?.buffer) {
         const startTime = getNextStartTime()
         const bufDur = sound.buffer.duration / (splitActive ? 2 : 1)
         const loopLen = bufDur / st.depth
@@ -452,7 +452,6 @@ export function mountLaunchpad(container, themes) {
         src.connect(rowGains[row])
         src.start(startTime)
         st.source = src
-        st.mode = st.depth
       }
     }
 
@@ -491,16 +490,13 @@ export function mountLaunchpad(container, themes) {
     for (let r = 1; r <= 5; r++) {
       const st = rowStutter[r]
       if (st.source) { try { st.source.stop() } catch { /* noop */ } st.source = null }
-      st.mode = 0
-      const btn = byId(`stutter-btn-${r}`)
-      if (btn) { btn.textContent = 'STU'; btn.classList.remove('stutter-active') }
+      updateStutterBtn(r)
     }
 
     for (const name of Object.keys(sounds)) {
       if (sounds[name]?.source) stopLoop(name, true)
     }
     for (const key of Object.keys(sounds)) delete sounds[key]
-    for (const key of Object.keys(soundToButton)) delete soundToButton[key]
 
     // DEAD (write-only): see masterLoopName
     // masterLoopName = null
@@ -523,7 +519,6 @@ export function mountLaunchpad(container, themes) {
         const id = `btn${slot}`
         return loadSound(name, url)
           .then(() => {
-            soundToButton[name] = id
             const btn = byId(id)
             if (btn) btn.classList.remove('btn-loading')
           })
@@ -568,7 +563,7 @@ export function mountLaunchpad(container, themes) {
     const btn = byId(`stutter-btn-${row}`)
     if (!btn) return
     btn.textContent = `1/${st.depth}`
-    btn.classList.toggle('stutter-active', st.mode !== 0)
+    btn.classList.toggle('stutter-active', st.source !== null)
   }
 
   // --- UI: knob helpers ---
@@ -716,10 +711,12 @@ export function mountLaunchpad(container, themes) {
       const btn = document.createElement('button')
       btn.id = `stutter-btn-${row}`
       btn.className = 'stutter-btn'
-      btn.textContent = '1/4'
       btn.addEventListener('click', onTap)
       btn.addEventListener('touchend', (e) => { e.preventDefault(); onTap() }, { passive: false })
       stutterCol.appendChild(btn)
+      // Appended first so byId can find it — updateStutterBtn is the only
+      // thing that writes the label, so there's no hardcoded default here.
+      updateStutterBtn(row)
     }
   }
 
@@ -731,18 +728,22 @@ export function mountLaunchpad(container, themes) {
 
       if (themes.length === 0 || destroyed) return
 
+      // Everything that doesn't need decoded audio goes up front. The loading
+      // overlay lifts on the theme image alone, so building these after the
+      // sounds would reveal the grid with empty knob/stutter columns while
+      // the (large) wavs are still downloading.
       bindPads()
       bindTransport()
-
-      await preloadThemeImage(themes[0])
-      if (destroyed) return
-      await loadThemeSounds(themes[0])
-      if (destroyed) return
-
       buildKnobs()
       buildStutterButtons()
-
       progressRAF = requestAnimationFrame(updateProgressBars)
+
+      // Independent work: the image only touches <body>, the sounds only touch
+      // the pads. Awaiting them in sequence made every wav wait on the jpg.
+      await Promise.all([
+        preloadThemeImage(themes[0]),
+        loadThemeSounds(themes[0]),
+      ])
     } catch (err) {
       console.error('Launchpad init error:', err)
     }
