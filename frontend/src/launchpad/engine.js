@@ -5,10 +5,8 @@ import { createClock } from './audio/clock.js'
 import {
   ROWS,
   PADS,
-  buttonIdOfSlot,
-  soundNameOfSlot,
-  buttonIdOfSound,
-  rowOfButton,
+  rowOfSlot,
+  padId,
 } from './slots.js'
 
 export function mountLaunchpad(container, themes) {
@@ -30,13 +28,14 @@ export function mountLaunchpad(container, themes) {
 
   // --- State ---
 
-  // name -> { buffer, source, startTimeoutId }
+  // slot -> { buffer, source, startTimeoutId }
   const sounds = {}
   // DEAD (write-only): only ever .add()-ed in init's image preload, never read.
   // const preloadedImages = new Set()
 
+  // row -> the slot currently sounding on it, or null
   const rowActive = { 1: null, 2: null, 3: null, 4: null, 5: null }
-  // { name, buttonId, handoffTime } — a pad queued to take over a row once
+  // { slot, handoffTime } — a pad queued to take over a row once
   // the currently playing pad's loop ends. Re-targetable: clicking another
   // pad while one is already queued replaces the queued pad but reuses the
   // same handoffTime, since the outgoing source's stop() can't be rescheduled
@@ -65,8 +64,9 @@ export function mountLaunchpad(container, themes) {
 
   // --- Timebase glue ---
 
-  // The grid's bar length is seeded from whichever sample happens to be first
-  // in `sounds`, which is decode order, not slot order.
+  // The grid's bar length is seeded from the lowest loaded slot: integer keys
+  // iterate in ascending numeric order, so this is slot order rather than the
+  // decode order it was when `sounds` was keyed by name.
   const defaultLoopDuration = () => Object.values(sounds)[0]?.buffer?.duration || 1
   const nextStartTime = () => clock.nextStartTime(defaultLoopDuration())
 
@@ -74,9 +74,9 @@ export function mountLaunchpad(container, themes) {
   // playing has to be re-pointed at the new loop length.
   function applyLoopDivisor() {
     const divisor = clock.divisor()
-    for (const row of Object.values(rowActive)) {
-      if (!row) continue
-      const sound = sounds[row.name]
+    for (const slot of Object.values(rowActive)) {
+      if (!slot) continue
+      const sound = sounds[slot]
       if (sound?.source) sound.source.loopEnd = sound.source.buffer.duration / divisor
     }
   }
@@ -88,8 +88,8 @@ export function mountLaunchpad(container, themes) {
 
   // --- Voices: per-row loop state machine ---
 
-  function startLoop(name, buttonId) {
-    const sound = sounds[name]
+  function startLoop(slot) {
+    const sound = sounds[slot]
     if (!sound) return
 
     const source = mixer.createSource()
@@ -97,7 +97,7 @@ export function mountLaunchpad(container, themes) {
     source.loop = true
     source.loopEnd = sound.buffer.duration / clock.divisor()
 
-    const row = rowOfButton(buttonId)
+    const row = rowOfSlot(slot)
     source.connect(mixer.rowInput(row))
 
     const startTime = nextStartTime()
@@ -109,17 +109,17 @@ export function mountLaunchpad(container, themes) {
     //   gain.gain.linearRampToValueAtTime(rowVolumes[row], startTime + currentFadeTime)
     // }
 
-    setPadState(buttonId, 'queued')
+    setPadState(slot, 'queued')
 
     source.start(startTime)
     sound.source = source
-    rowActive[row] = { name, buttonId }
+    rowActive[row] = slot
 
     sound.startTimeoutId = lifecycle.track(() => {
       if (lifecycle.isDestroyed() || !sound.source) return
-      setPadState(buttonId, 'playing')
+      setPadState(slot, 'playing')
       // DEAD (write-only): see masterLoopName
-      // if (!masterLoopName) masterLoopName = name
+      // if (!masterLoopName) masterLoopName = slot
       sound.startTimeoutId = null
     }, (startTime - mixer.now()) * 1000)
   }
@@ -130,7 +130,7 @@ export function mountLaunchpad(container, themes) {
     const pending = rowPending[row]
     if (!pending) return
 
-    const sound = sounds[pending.name]
+    const sound = sounds[pending.slot]
     if (sound?.startTimeoutId) {
       lifecycle.cancel(sound.startTimeoutId)
       sound.startTimeoutId = null
@@ -140,17 +140,17 @@ export function mountLaunchpad(container, themes) {
       sound.source = null
     }
 
-    setPadState(pending.buttonId, 'idle')
+    setPadState(pending.slot, 'idle')
 
     rowPending[row] = null
   }
 
-  // Queues `name` to take over `row` at `handoffTime` — the moment the
+  // Queues `slot` to take over `row` at `handoffTime` — the moment the
   // currently playing pad's loop ends — instead of cutting it off now.
-  function scheduleHandoff(row, name, buttonId, handoffTime) {
+  function scheduleHandoff(row, slot, handoffTime) {
     cancelPending(row)
 
-    const sound = sounds[name]
+    const sound = sounds[slot]
     if (!sound) return
 
     const source = mixer.createSource()
@@ -161,9 +161,9 @@ export function mountLaunchpad(container, themes) {
     source.start(handoffTime)
     sound.source = source
 
-    setPadState(buttonId, 'queued')
+    setPadState(slot, 'queued')
 
-    rowPending[row] = { name, buttonId, handoffTime }
+    rowPending[row] = { slot, handoffTime }
 
     sound.startTimeoutId = lifecycle.track(() => {
       sound.startTimeoutId = null
@@ -171,41 +171,40 @@ export function mountLaunchpad(container, themes) {
 
       const outgoing = rowActive[row]
       if (outgoing) {
-        const outSound = sounds[outgoing.name]
+        const outSound = sounds[outgoing]
         if (outSound?.source) {
           try { outSound.source.stop() } catch { /* already stopped */ }
           outSound.source = null
         }
-        setPadState(outgoing.buttonId, 'idle')
+        setPadState(outgoing, 'idle')
       }
 
-      setPadState(buttonId, 'playing')
+      setPadState(slot, 'playing')
 
-      rowActive[row] = { name, buttonId }
+      rowActive[row] = slot
       rowPending[row] = null
       // DEAD (write-only): see masterLoopName
-      // masterLoopName = name
+      // masterLoopName = slot
     }, (handoffTime - mixer.now()) * 1000)
   }
 
   // DEAD (no-op param): `force` only ever gated the unreachable fade-out
   // below, so passing it changes nothing. Kept for bookkeeping.
-  function stopLoop(name, force = false) {
-    const sound = sounds[name]
+  function stopLoop(slot, force = false) {
+    const sound = sounds[slot]
     if (!sound) return
 
-    const buttonId = buttonIdOfSound(name)
-    const row = rowOfButton(buttonId)
+    const row = rowOfSlot(slot)
 
     if (sound.startTimeoutId) {
       lifecycle.cancel(sound.startTimeoutId)
       sound.startTimeoutId = null
     }
 
-    setPadState(buttonId, 'idle')
-    if (rowActive[row]?.name === name) rowActive[row] = null
+    setPadState(slot, 'idle')
+    if (rowActive[row] === slot) rowActive[row] = null
     // DEAD (write-only): see masterLoopName
-    // if (masterLoopName === name) masterLoopName = null
+    // if (masterLoopName === slot) masterLoopName = null
 
     const anyActive = Object.values(rowActive).some((a) => a !== null)
     if (!anyActive) clock.reset()
@@ -231,10 +230,10 @@ export function mountLaunchpad(container, themes) {
     }
   }
 
-  async function toggleLoop(name, buttonId) {
+  async function toggleLoop(slot) {
     if (mixer.state() === 'suspended') await mixer.resume()
 
-    const row = rowOfButton(buttonId)
+    const row = rowOfSlot(slot)
 
     const st = rowStutter[row]
     if (st.source) {
@@ -248,22 +247,22 @@ export function mountLaunchpad(container, themes) {
 
     // Re-clicking whatever's currently sounding always stops the row,
     // even mid-handoff.
-    if (current && current.name === name) {
+    if (current === slot) {
       cancelPending(row)
-      stopLoop(current.name)
+      stopLoop(slot)
       return
     }
 
     // Re-clicking the already-queued pad cancels the handoff and leaves
     // the currently sounding pad playing.
-    if (pending && pending.name === name) {
+    if (pending?.slot === slot) {
       cancelPending(row)
       return
     }
 
     // Nothing playing in this row yet — start immediately, as before.
     if (!current) {
-      startLoop(name, buttonId)
+      startLoop(slot)
       return
     }
 
@@ -275,7 +274,7 @@ export function mountLaunchpad(container, themes) {
     // the same source. If a handoff is already queued, reuse its committed
     // handoffTime and just re-target which pad takes over.
     const handoffTime = pending ? pending.handoffTime : nextStartTime()
-    scheduleHandoff(row, name, buttonId, handoffTime)
+    scheduleHandoff(row, slot, handoffTime)
   }
 
   // Tears every row back to silence. Used before swapping themes, since none
@@ -287,8 +286,11 @@ export function mountLaunchpad(container, themes) {
       updateStutterBtn(r)
     }
 
-    for (const name of Object.keys(sounds)) {
-      if (sounds[name]?.source) stopLoop(name, true)
+    // Object keys are strings even when they're slot numbers, and stopLoop
+    // compares against rowActive with ===, so coerce before handing it over.
+    for (const key of Object.keys(sounds)) {
+      const slot = Number(key)
+      if (sounds[slot]?.source) stopLoop(slot, true)
     }
     for (const key of Object.keys(sounds)) delete sounds[key]
 
@@ -305,9 +307,9 @@ export function mountLaunchpad(container, themes) {
   // --- Stutter ---
 
   function startStutter(row, divisor) {
-    const active = rowActive[row]
-    if (!active) return
-    const sound = sounds[active.name]
+    const slot = rowActive[row]
+    if (!slot) return
+    const sound = sounds[slot]
     if (!sound?.buffer) return
 
     const st = rowStutter[row]
@@ -333,8 +335,8 @@ export function mountLaunchpad(container, themes) {
     const st = rowStutter[row]
     if (st.source) { try { st.source.stop() } catch { /* noop */ } st.source = null }
 
-    const active = rowActive[row]
-    if (active) startLoop(active.name, active.buttonId)
+    const slot = rowActive[row]
+    if (slot) startLoop(slot)
 
     updateStutterBtn(row)
   }
@@ -359,8 +361,8 @@ export function mountLaunchpad(container, themes) {
     st.depth = STUTTER_DEPTHS[(idx + 1) % STUTTER_DEPTHS.length]
 
     if (st.source) {
-      const active = rowActive[row]
-      const sound = active ? sounds[active.name] : null
+      const slot = rowActive[row]
+      const sound = slot ? sounds[slot] : null
       if (sound?.buffer) {
         const startTime = nextStartTime()
         const bufDur = sound.buffer.duration / clock.divisor()
@@ -413,23 +415,23 @@ export function mountLaunchpad(container, themes) {
   async function loadThemeSounds(theme) {
     resetAllRows()
 
-    for (let i = 1; i <= PADS; i++) setPadLoading(buttonIdOfSlot(i), true)
+    for (let slot = 1; slot <= PADS; slot++) setPadLoading(slot, true)
 
     await Promise.all(
-      Object.entries(theme.sounds).map(([slot, url]) => {
-        const name = soundNameOfSlot(slot)
-        const id = buttonIdOfSlot(slot)
+      // The API keys these by slot, but as JSON they arrive as strings.
+      Object.entries(theme.sounds).map(([key, url]) => {
+        const slot = Number(key)
         return buffers.load(url)
           .then((buffer) => {
-            sounds[name] = { buffer, source: null, startTimeoutId: null }
-            setPadLoading(id, false)
+            sounds[slot] = { buffer, source: null, startTimeoutId: null }
+            setPadLoading(slot, false)
           })
           .catch((err) => {
             // Without this the pad un-dims either way, so a sound that failed
             // to load is indistinguishable from one that worked until you
             // press it and get silence.
-            console.warn(`Launchpad: could not load ${name} from ${url}`, err)
-            setPadLoading(id, false)
+            console.warn(`Launchpad: could not load slot ${slot} from ${url}`, err)
+            setPadLoading(slot, false)
           })
       })
     )
@@ -437,7 +439,7 @@ export function mountLaunchpad(container, themes) {
 
     // No sound slots for this theme yet — clear the loading dim immediately.
     if (Object.keys(theme.sounds).length === 0) {
-      for (let i = 1; i <= PADS; i++) setPadLoading(buttonIdOfSlot(i), false)
+      for (let slot = 1; slot <= PADS; slot++) setPadLoading(slot, false)
     }
   }
 
@@ -462,8 +464,8 @@ export function mountLaunchpad(container, themes) {
   // A pad is in exactly one play state: 'idle', 'queued' (started, waiting for
   // the next loop boundary) or 'playing'. The audio code reports which one;
   // how that looks is entirely this function's business.
-  function setPadState(buttonId, state) {
-    const btn = byId(buttonId)
+  function setPadState(slot, state) {
+    const btn = byId(padId(slot))
     if (!btn) return
     btn.classList.toggle('blink', state === 'queued')
     btn.classList.toggle('active', state === 'playing')
@@ -471,8 +473,8 @@ export function mountLaunchpad(container, themes) {
 
   // Separate axis from play state: a pad can be dimmed for loading while the
   // outgoing theme's loop is still sounding on it.
-  function setPadLoading(buttonId, loading) {
-    const btn = byId(buttonId)
+  function setPadLoading(slot, loading) {
+    const btn = byId(padId(slot))
     if (!btn) return
     btn.classList.toggle('btn-loading', loading)
   }
@@ -562,17 +564,15 @@ export function mountLaunchpad(container, themes) {
   // --- UI: bindings & construction ---
 
   function bindPads() {
-    for (let i = 1; i <= PADS; i++) {
-      const name = soundNameOfSlot(i)
-      const id = buttonIdOfSlot(i)
-      const btn = byId(id)
+    for (let slot = 1; slot <= PADS; slot++) {
+      const btn = byId(padId(slot))
       if (!btn) continue
       btn.addEventListener('touchend', (e) => {
         e.preventDefault()
         if (mixer.state() === 'suspended') mixer.resume()
-        toggleLoop(name, id)
+        toggleLoop(slot)
       }, { passive: false })
-      btn.onclick = () => toggleLoop(name, id)
+      btn.onclick = () => toggleLoop(slot)
     }
   }
 
@@ -673,8 +673,8 @@ export function mountLaunchpad(container, themes) {
 
     if (progressRAF) cancelAnimationFrame(progressRAF)
 
-    for (const name of Object.keys(sounds)) {
-      try { sounds[name]?.source?.stop() } catch { /* already stopped */ }
+    for (const sound of Object.values(sounds)) {
+      try { sound?.source?.stop() } catch { /* already stopped */ }
     }
     for (const row of Object.values(rowStutter)) {
       try { row.source?.stop() } catch { /* already stopped */ }
