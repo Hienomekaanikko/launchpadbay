@@ -171,7 +171,6 @@ export function mountLaunchpad(container, themes) {
     const row = rowOfButton(buttonId)
     source.connect(rowGains[row])
 
-    const button = byId(buttonId)
     const startTime = getNextStartTime()
 
     const gain = rowGains[row]
@@ -184,10 +183,7 @@ export function mountLaunchpad(container, themes) {
     //   gain.gain.linearRampToValueAtTime(rowVolumes[row], startTime + currentFadeTime)
     // }
 
-    if (button) {
-      button.classList.remove('active')
-      button.classList.add('blink')
-    }
+    setPadState(buttonId, 'queued')
 
     source.start(startTime)
     sound.source = source
@@ -195,10 +191,7 @@ export function mountLaunchpad(container, themes) {
 
     sound.startTimeoutId = track(() => {
       if (destroyed || !sound.source) return
-      if (button) {
-        button.classList.remove('blink')
-        button.classList.add('active')
-      }
+      setPadState(buttonId, 'playing')
       // DEAD (write-only): see masterLoopName
       // if (!masterLoopName) masterLoopName = name
       sound.startTimeoutId = null
@@ -222,8 +215,7 @@ export function mountLaunchpad(container, themes) {
       sound.source = null
     }
 
-    const button = byId(pending.buttonId)
-    if (button) button.classList.remove('blink', 'active')
+    setPadState(pending.buttonId, 'idle')
 
     rowPending[row] = null
   }
@@ -244,11 +236,7 @@ export function mountLaunchpad(container, themes) {
     source.start(handoffTime)
     sound.source = source
 
-    const button = byId(buttonId)
-    if (button) {
-      button.classList.remove('active')
-      button.classList.add('blink')
-    }
+    setPadState(buttonId, 'queued')
 
     rowPending[row] = { name, buttonId, handoffTime }
 
@@ -263,14 +251,10 @@ export function mountLaunchpad(container, themes) {
           try { outSound.source.stop() } catch { /* already stopped */ }
           outSound.source = null
         }
-        const outButton = byId(outgoing.buttonId)
-        if (outButton) outButton.classList.remove('blink', 'active')
+        setPadState(outgoing.buttonId, 'idle')
       }
 
-      if (button) {
-        button.classList.remove('blink')
-        button.classList.add('active')
-      }
+      setPadState(buttonId, 'playing')
 
       rowActive[row] = { name, buttonId }
       rowPending[row] = null
@@ -286,7 +270,6 @@ export function mountLaunchpad(container, themes) {
     if (!sound) return
 
     const buttonId = buttonIdOfSound(name)
-    const button = byId(buttonId)
     const row = rowOfButton(buttonId)
 
     if (sound.startTimeoutId) {
@@ -295,7 +278,7 @@ export function mountLaunchpad(container, themes) {
       sound.startTimeoutId = null
     }
 
-    if (button) button.classList.remove('blink', 'active')
+    setPadState(buttonId, 'idle')
     if (rowActive[row]?.name === name) rowActive[row] = null
     // DEAD (write-only): see masterLoopName
     // if (masterLoopName === name) masterLoopName = null
@@ -508,23 +491,20 @@ export function mountLaunchpad(container, themes) {
       rowPending[r] = null
     }
 
-    for (let i = 1; i <= 25; i++) {
-      const btn = byId(`btn${i}`)
-      if (btn) btn.classList.add('btn-loading')
-    }
+    for (let i = 1; i <= 25; i++) setPadLoading(`btn${i}`, true)
 
     await Promise.all(
       Object.entries(theme.sounds).map(([slot, url]) => {
         const name = `sound${slot}`
         const id = `btn${slot}`
         return loadSound(name, url)
-          .then(() => {
-            const btn = byId(id)
-            if (btn) btn.classList.remove('btn-loading')
-          })
-          .catch(() => {
-            const btn = byId(id)
-            if (btn) btn.classList.remove('btn-loading')
+          .then(() => setPadLoading(id, false))
+          .catch((err) => {
+            // Without this the pad un-dims either way, so a sound that failed
+            // to load is indistinguishable from one that worked until you
+            // press it and get silence.
+            console.warn(`Launchpad: could not load ${name} from ${url}`, err)
+            setPadLoading(id, false)
           })
       })
     )
@@ -532,10 +512,7 @@ export function mountLaunchpad(container, themes) {
 
     // No sound slots for this theme yet — clear the loading dim immediately.
     if (Object.keys(theme.sounds).length === 0) {
-      for (let i = 1; i <= 25; i++) {
-        const btn = byId(`btn${i}`)
-        if (btn) btn.classList.remove('btn-loading')
-      }
+      for (let i = 1; i <= 25; i++) setPadLoading(`btn${i}`, false)
     }
   }
 
@@ -556,6 +533,24 @@ export function mountLaunchpad(container, themes) {
     }
 
     progressRAF = requestAnimationFrame(updateProgressBars)
+  }
+
+  // A pad is in exactly one play state: 'idle', 'queued' (started, waiting for
+  // the next loop boundary) or 'playing'. The audio code reports which one;
+  // how that looks is entirely this function's business.
+  function setPadState(buttonId, state) {
+    const btn = byId(buttonId)
+    if (!btn) return
+    btn.classList.toggle('blink', state === 'queued')
+    btn.classList.toggle('active', state === 'playing')
+  }
+
+  // Separate axis from play state: a pad can be dimmed for loading while the
+  // outgoing theme's loop is still sounding on it.
+  function setPadLoading(buttonId, loading) {
+    const btn = byId(buttonId)
+    if (!btn) return
+    btn.classList.toggle('btn-loading', loading)
   }
 
   function updateStutterBtn(row) {
