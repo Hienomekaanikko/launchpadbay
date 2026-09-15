@@ -6,39 +6,47 @@ const FILTER_Q = 0.5
 
 // The audio graph and the per-row parameters hanging off it. Every row is its
 // own chain: sources -> gain -> lowpass -> destination.
+//
+// The context is created here (suspended until the first user gesture). A
+// suspended context still decodes fine, so buffers can take it immediately.
 export function createMixer() {
-  let ctx = null
+  const ctx = new (window.AudioContext || window.webkitAudioContext)()
   const filters = {}
   const gains = {}
 
   const volumes = {}
   for (let r = 1; r <= ROWS; r++) volumes[r] = 1
 
-  return {
-    build() {
-      ctx = new (window.AudioContext || window.webkitAudioContext)()
-      for (let r = 1; r <= ROWS; r++) {
-        const f = ctx.createBiquadFilter()
-        f.type = 'lowpass'
-        f.frequency.value = FILTER_MAX_HZ
-        f.Q.value = FILTER_Q
-        f.connect(ctx.destination)
-        filters[r] = f
-        const g = ctx.createGain()
-        g.connect(filters[r])
-        gains[r] = g
-      }
-    },
+  for (let r = 1; r <= ROWS; r++) {
+    const f = ctx.createBiquadFilter()
+    f.type = 'lowpass'
+    f.frequency.value = FILTER_MAX_HZ
+    f.Q.value = FILTER_Q
+    f.connect(ctx.destination)
+    filters[r] = f
+    const g = ctx.createGain()
+    g.connect(filters[r])
+    gains[r] = g
+  }
 
+  return {
     context: () => ctx,
     now: () => ctx.currentTime,
-    state: () => ctx.state,
-    resume: () => ctx.resume(),
-    createSource: () => ctx.createBufferSource(),
-    close: () => ctx?.close().catch(() => {}),
+    // No-op when already running; avoids InvalidStateError after close().
+    resume: () => (ctx.state === 'suspended' ? ctx.resume() : Promise.resolve()),
+    close: () => ctx.close().catch(() => {}),
 
-    // Where a row's sources connect.
-    rowInput: (row) => gains[row],
+    // Spawn a looping BufferSource into a row's gain. Callers decide `at` and
+    // `loopEnd`; this only owns the node create / wire / start plumbing.
+    startLoopSource(row, buffer, loopEnd, at) {
+      const src = ctx.createBufferSource()
+      src.buffer = buffer
+      src.loop = true
+      src.loopEnd = loopEnd
+      src.connect(gains[row])
+      src.start(at)
+      return src
+    },
 
     setVolume(row, value01) {
       volumes[row] = value01

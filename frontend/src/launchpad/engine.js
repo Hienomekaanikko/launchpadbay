@@ -1,7 +1,7 @@
 import { createLifecycle } from './lifecycle.js'
 import { createBuffers } from './audio/buffers.js'
 import { createMixer } from './audio/mixer.js'
-import { createClock } from './audio/clock.js'
+import { createLoopGrid } from './audio/loopGrid.js'
 import {
   ROWS,
   PADS,
@@ -12,8 +12,8 @@ import {
 export function mountLaunchpad(container, themes) {
   const lifecycle = createLifecycle()
   const mixer = createMixer()
-  const clock = createClock(mixer)
-  const buffers = createBuffers(mixer.context)
+  const loopGrid = createLoopGrid(mixer.now)
+  const buffers = createBuffers(mixer.context())
 
   const byId = (id) => container.querySelector(`#${id}`)
 
@@ -64,16 +64,17 @@ export function mountLaunchpad(container, themes) {
 
   // --- Timebase glue ---
 
-  // The grid's bar length is seeded from the lowest loaded slot: integer keys
+  // The grid's loop length is seeded from the lowest loaded slot: integer keys
   // iterate in ascending numeric order, so this is slot order rather than the
-  // decode order it was when `sounds` was keyed by name.
-  const defaultLoopDuration = () => Object.values(sounds)[0]?.buffer?.duration || 1
-  const nextStartTime = () => clock.nextStartTime(defaultLoopDuration())
+  // decode order it was when `sounds` was keyed by name — not whichever pad
+  // was pressed first.
+  const seedLoopLength = () => Object.values(sounds)[0]?.buffer?.duration || 1
+  const nextLoopBoundary = () => loopGrid.nextLoopBoundary(seedLoopLength())
 
-  // SPLIT is two jobs: the clock rescales the grid, and every source already
+  // SPLIT is two jobs: the loop grid rescales, and every source already
   // playing has to be re-pointed at the new loop length.
   function applyLoopDivisor() {
-    const divisor = clock.divisor()
+    const divisor = loopGrid.loopDivisor()
     for (const slot of Object.values(rowActive)) {
       if (!slot) continue
       const sound = sounds[slot]
@@ -82,7 +83,7 @@ export function mountLaunchpad(container, themes) {
   }
 
   function toggleSplit(enabled) {
-    clock.setSplit(enabled)
+    loopGrid.setSplit(enabled)
     applyLoopDivisor()
   }
 
@@ -92,15 +93,8 @@ export function mountLaunchpad(container, themes) {
     const sound = sounds[slot]
     if (!sound) return
 
-    const source = mixer.createSource()
-    source.buffer = sound.buffer
-    source.loop = true
-    source.loopEnd = sound.buffer.duration / clock.divisor()
-
     const row = rowOfSlot(slot)
-    source.connect(mixer.rowInput(row))
-
-    const startTime = nextStartTime()
+    const startTime = nextLoopBoundary()
     mixer.resetRowGain(row, startTime)
 
     // DEAD (unreachable): fade-in — see currentFadeTime
@@ -111,8 +105,12 @@ export function mountLaunchpad(container, themes) {
 
     setPadState(slot, 'queued')
 
-    source.start(startTime)
-    sound.source = source
+    sound.source = mixer.startLoopSource(
+      row,
+      sound.buffer,
+      sound.buffer.duration / loopGrid.loopDivisor(),
+      startTime,
+    )
     rowActive[row] = slot
 
     sound.startTimeoutId = lifecycle.track(() => {
@@ -153,13 +151,12 @@ export function mountLaunchpad(container, themes) {
     const sound = sounds[slot]
     if (!sound) return
 
-    const source = mixer.createSource()
-    source.buffer = sound.buffer
-    source.loop = true
-    source.loopEnd = sound.buffer.duration / clock.divisor()
-    source.connect(mixer.rowInput(row))
-    source.start(handoffTime)
-    sound.source = source
+    sound.source = mixer.startLoopSource(
+      row,
+      sound.buffer,
+      sound.buffer.duration / loopGrid.loopDivisor(),
+      handoffTime,
+    )
 
     setPadState(slot, 'queued')
 
@@ -207,7 +204,7 @@ export function mountLaunchpad(container, themes) {
     // if (masterLoopName === slot) masterLoopName = null
 
     const anyActive = Object.values(rowActive).some((a) => a !== null)
-    if (!anyActive) clock.reset()
+    if (!anyActive) loopGrid.reset()
 
     if (sound.source) {
       mixer.resetRowGain(row, mixer.now())
@@ -231,7 +228,7 @@ export function mountLaunchpad(container, themes) {
   }
 
   async function toggleLoop(slot) {
-    if (mixer.state() === 'suspended') await mixer.resume()
+    await mixer.resume()
 
     const row = rowOfSlot(slot)
 
@@ -273,7 +270,7 @@ export function mountLaunchpad(container, themes) {
     // it's cancelled via re-click — since stop() can't be called twice on
     // the same source. If a handoff is already queued, reuse its committed
     // handoffTime and just re-target which pad takes over.
-    const handoffTime = pending ? pending.handoffTime : nextStartTime()
+    const handoffTime = pending ? pending.handoffTime : nextLoopBoundary()
     scheduleHandoff(row, slot, handoffTime)
   }
 
@@ -296,7 +293,7 @@ export function mountLaunchpad(container, themes) {
 
     // DEAD (write-only): see masterLoopName
     // masterLoopName = null
-    clock.reset()
+    loopGrid.reset()
 
     for (let r = 1; r <= ROWS; r++) {
       rowActive[r] = null
@@ -306,6 +303,10 @@ export function mountLaunchpad(container, themes) {
 
   // --- Stutter ---
 
+  // Arms (or re-arms) stutter on a row. Always snaps at the next loop boundary,
+  // including when replacing an already-running stutter — that used to cut
+  // immediately, but the only caller of that branch was unreachable, and the
+  // depth-cycle path needs the soft handoff.
   function startStutter(row, divisor) {
     const slot = rowActive[row]
     if (!slot) return
@@ -313,22 +314,19 @@ export function mountLaunchpad(container, themes) {
     if (!sound?.buffer) return
 
     const st = rowStutter[row]
-    if (st.source) { try { st.source.stop() } catch { /* noop */ } st.source = null }
+    const depth = divisor ?? st.depth
+    const bufDur = sound.buffer.duration / loopGrid.loopDivisor()
+    const loopLen = bufDur / depth
+    const startTime = nextLoopBoundary()
 
-    const bufDur = sound.buffer.duration / clock.divisor()
-    const loopLen = bufDur / divisor
-    const startTime = nextStartTime()
+    if (st.source) {
+      try { st.source.stop(startTime) } catch { /* noop */ }
+      st.source = null
+    }
 
     if (sound.source) { sound.source.stop(startTime); sound.source = null }
 
-    const src = mixer.createSource()
-    src.buffer = sound.buffer
-    src.loop = true
-    src.loopStart = 0
-    src.loopEnd = loopLen
-    src.connect(mixer.rowInput(row))
-    src.start(startTime)
-    st.source = src
+    st.source = mixer.startLoopSource(row, sound.buffer, loopLen, startTime)
   }
 
   function releaseStutter(row) {
@@ -342,7 +340,7 @@ export function mountLaunchpad(container, themes) {
   }
 
   function tapStutter(row) {
-    if (mixer.state() === 'suspended') mixer.resume()
+    mixer.resume()
     const st = rowStutter[row]
     if (st.source) {
       releaseStutter(row)
@@ -350,37 +348,15 @@ export function mountLaunchpad(container, themes) {
       // startStutter is a no-op when the row has nothing playing; deriving the
       // lit state from st.source means the button stays dark in that case
       // instead of latching on with no sound behind it.
-      startStutter(row, st.depth)
+      startStutter(row)
       updateStutterBtn(row)
     }
   }
 
   function cycleStutterDepth(row) {
     const st = rowStutter[row]
-    const idx = STUTTER_DEPTHS.indexOf(st.depth)
-    st.depth = STUTTER_DEPTHS[(idx + 1) % STUTTER_DEPTHS.length]
-
-    if (st.source) {
-      const slot = rowActive[row]
-      const sound = slot ? sounds[slot] : null
-      if (sound?.buffer) {
-        const startTime = nextStartTime()
-        const bufDur = sound.buffer.duration / clock.divisor()
-        const loopLen = bufDur / st.depth
-
-        try { st.source.stop(startTime) } catch { /* noop */ }
-
-        const src = mixer.createSource()
-        src.buffer = sound.buffer
-        src.loop = true
-        src.loopStart = 0
-        src.loopEnd = loopLen
-        src.connect(mixer.rowInput(row))
-        src.start(startTime)
-        st.source = src
-      }
-    }
-
+    st.depth = STUTTER_DEPTHS[(STUTTER_DEPTHS.indexOf(st.depth) + 1) % STUTTER_DEPTHS.length]
+    if (st.source) startStutter(row)
     updateStutterBtn(row)
   }
 
@@ -449,7 +425,7 @@ export function mountLaunchpad(container, themes) {
     if (lifecycle.isDestroyed()) return
     const fill = byId('master-bar-fill')
     const anyActive = Object.values(rowActive).some((a) => a !== null)
-    const phase = clock.phase()
+    const phase = loopGrid.loopPhase()
 
     if (fill && anyActive && phase !== null) {
       fill.style.width = phase * 100 + '%'
@@ -569,7 +545,6 @@ export function mountLaunchpad(container, themes) {
       if (!btn) continue
       btn.addEventListener('touchend', (e) => {
         e.preventDefault()
-        if (mixer.state() === 'suspended') mixer.resume()
         toggleLoop(slot)
       }, { passive: false })
       btn.onclick = () => toggleLoop(slot)
@@ -579,8 +554,8 @@ export function mountLaunchpad(container, themes) {
   function bindTransport() {
     const btn = byId('split-btn')
     btn.onclick = () => {
-      toggleSplit(!clock.isSplit())
-      btn.classList.toggle('active', clock.isSplit())
+      toggleSplit(!loopGrid.isSplit())
+      btn.classList.toggle('active', loopGrid.isSplit())
     }
   }
 
@@ -617,7 +592,8 @@ export function mountLaunchpad(container, themes) {
       let tapCount = 0
       let tapTimer = null
       const onTap = () => {
-        if (mixer.state() === 'suspended') mixer.resume()
+        // Covers single-tap cycleStutterDepth, which doesn't resume on its own.
+        mixer.resume()
         tapCount++
         if (tapTimer) lifecycle.cancel(tapTimer)
         tapTimer = lifecycle.track(() => {
@@ -643,8 +619,6 @@ export function mountLaunchpad(container, themes) {
 
   async function init() {
     try {
-      mixer.build()
-
       if (themes.length === 0 || lifecycle.isDestroyed()) return
 
       // Everything that doesn't need decoded audio goes up front. The loading
