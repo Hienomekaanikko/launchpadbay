@@ -87,6 +87,24 @@ export function mountLaunchpad(container, themes) {
     applyLoopDivisor()
   }
 
+  // --- Helpers ---
+
+  function killSource(obj, atTime) {
+    if (!obj.source) return
+    try { obj.source.stop(atTime) } catch { /* already stopped */ }
+    obj.source = null
+  }
+
+  function playSound(slot, row, at) {
+    const sound = sounds[slot]
+    sound.source = mixer.startLoopSource(
+      row,
+      sound.buffer,
+      sound.buffer.duration / loopGrid.loopDivisor(),
+      at,
+    )
+  }
+
   // --- Voices: per-row loop state machine ---
 
   function startLoop(slot) {
@@ -105,12 +123,7 @@ export function mountLaunchpad(container, themes) {
 
     setPadState(slot, 'queued')
 
-    sound.source = mixer.startLoopSource(
-      row,
-      sound.buffer,
-      sound.buffer.duration / loopGrid.loopDivisor(),
-      startTime,
-    )
+    playSound(slot, row, startTime)
     rowActive[row] = slot
 
     sound.startTimeoutId = lifecycle.track(() => {
@@ -133,10 +146,7 @@ export function mountLaunchpad(container, themes) {
       lifecycle.cancel(sound.startTimeoutId)
       sound.startTimeoutId = null
     }
-    if (sound?.source) {
-      try { sound.source.stop() } catch { /* hasn't started yet */ }
-      sound.source = null
-    }
+    killSource(sound)
 
     setPadState(pending.slot, 'idle')
 
@@ -151,12 +161,7 @@ export function mountLaunchpad(container, themes) {
     const sound = sounds[slot]
     if (!sound) return
 
-    sound.source = mixer.startLoopSource(
-      row,
-      sound.buffer,
-      sound.buffer.duration / loopGrid.loopDivisor(),
-      handoffTime,
-    )
+    playSound(slot, row, handoffTime)
 
     setPadState(slot, 'queued')
 
@@ -169,10 +174,7 @@ export function mountLaunchpad(container, themes) {
       const outgoing = rowActive[row]
       if (outgoing) {
         const outSound = sounds[outgoing]
-        if (outSound?.source) {
-          try { outSound.source.stop() } catch { /* already stopped */ }
-          outSound.source = null
-        }
+        killSource(outSound)
         setPadState(outgoing, 'idle')
       }
 
@@ -208,22 +210,7 @@ export function mountLaunchpad(container, themes) {
 
     if (sound.source) {
       mixer.resetRowGain(row, mixer.now())
-      sound.source.stop()
-      sound.source = null
-
-      // DEAD (unreachable): fade-out — see currentFadeTime. This is also the
-      // only place `force` was ever read, which is why it's a no-op.
-      // if (!force && currentFadeTime > 0 && gain) {
-      //   gain.gain.cancelScheduledValues(audioCtx.currentTime)
-      //   gain.gain.setValueAtTime(gain.gain.value, audioCtx.currentTime)
-      //   gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + currentFadeTime)
-      //   const src = sound.source
-      //   sound.source = null
-      //   track(() => {
-      //     try { src.stop() } catch { /* already stopped */ }
-      //     if (!destroyed) gain.gain.setValueAtTime(rowVolumes[row], audioCtx.currentTime)
-      //   }, currentFadeTime * 1000 + 50)
-      // }
+      killSource(sound)
     }
   }
 
@@ -234,8 +221,7 @@ export function mountLaunchpad(container, themes) {
 
     const st = rowStutter[row]
     if (st.source) {
-      try { st.source.stop() } catch { /* noop */ }
-      st.source = null
+      killSource(st)
       updateStutterBtn(row)
     }
 
@@ -279,7 +265,7 @@ export function mountLaunchpad(container, themes) {
   function resetAllRows() {
     for (let r = 1; r <= ROWS; r++) {
       const st = rowStutter[r]
-      if (st.source) { try { st.source.stop() } catch { /* noop */ } st.source = null }
+      killSource(st)
       updateStutterBtn(r)
     }
 
@@ -320,18 +306,17 @@ export function mountLaunchpad(container, themes) {
     const startTime = nextLoopBoundary()
 
     if (st.source) {
-      try { st.source.stop(startTime) } catch { /* noop */ }
-      st.source = null
+      killSource(st, startTime)
     }
 
-    if (sound.source) { sound.source.stop(startTime); sound.source = null }
+    killSource(sound, startTime)
 
     st.source = mixer.startLoopSource(row, sound.buffer, loopLen, startTime)
   }
 
   function releaseStutter(row) {
     const st = rowStutter[row]
-    if (st.source) { try { st.source.stop() } catch { /* noop */ } st.source = null }
+    killSource(st)
 
     const slot = rowActive[row]
     if (slot) startLoop(slot)
@@ -647,12 +632,8 @@ export function mountLaunchpad(container, themes) {
 
     if (progressRAF) cancelAnimationFrame(progressRAF)
 
-    for (const sound of Object.values(sounds)) {
-      try { sound?.source?.stop() } catch { /* already stopped */ }
-    }
-    for (const row of Object.values(rowStutter)) {
-      try { row.source?.stop() } catch { /* already stopped */ }
-    }
+    for (const sound of Object.values(sounds)) killSource(sound)
+    for (const row of Object.values(rowStutter)) killSource(row)
 
     mixer.close()
 
