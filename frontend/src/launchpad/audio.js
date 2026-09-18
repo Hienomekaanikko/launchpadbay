@@ -5,6 +5,10 @@ export const sounds = {}
 export const soundToButton = {}
 const bufferCache = new Map()
 
+function clearMap(obj) {
+  for (const key of Object.keys(obj)) delete obj[key]
+}
+
 export function initAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)()
 }
@@ -40,16 +44,22 @@ export function createBufferSource(buffer, splitActive, loopEnd) {
   return source
 }
 
-export function startSource(source, startTime) {
-  source.start(startTime)
-}
-
-export function setGainValue(gain, value, startTime) {
-  gain.gain.setValueAtTime(value, startTime)
-}
-
 export function stopAllSources() {
   for (const name of Object.keys(sounds)) {
     try { sounds[name]?.source?.stop() } catch { /* already stopped */ }
+  }
+}
+
+// Clears module singletons so a later mount can re-init cleanly.
+export function resetAudio() {
+  stopAllSources()
+  clearMap(sounds)
+  clearMap(soundToButton)
+  clearMap(rowGains)
+  clearMap(rowFilters)
+  bufferCache.clear()
+  if (audioCtx) {
+    audioCtx.close().catch(() => {})
+    audioCtx = null
   }
 }

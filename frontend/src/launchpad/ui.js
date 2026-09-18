@@ -6,10 +6,6 @@ export const buttonRows = {
   btn21: 5, btn22: 5, btn23: 5, btn24: 5, btn25: 5,
 }
 
-function on(target, type, handler, opts) {
-  target.addEventListener(type, handler, opts)
-}
-
 export function createKnob(id, colorClass) {
   const wrap = document.createElement('div')
   wrap.className = `knob-wrap ${colorClass}`
@@ -56,36 +52,47 @@ export function setupKnobDrag(wrap, getValue, setValue) {
   let dragging = false
   let startY = 0
   let startVal = 0
+  const cleanups = []
 
-  on(wrap, 'mousedown', (e) => {
+  function listen(target, type, handler, opts) {
+    target.addEventListener(type, handler, opts)
+    cleanups.push(() => target.removeEventListener(type, handler, opts))
+  }
+
+  listen(wrap, 'mousedown', (e) => {
     dragging = true; startY = e.clientY; startVal = getValue()
     e.preventDefault()
   })
-  on(window, 'mousemove', (e) => {
+  listen(window, 'mousemove', (e) => {
     if (!dragging) return
     setValue(Math.max(0, Math.min(100, startVal + (startY - e.clientY))))
   })
-  on(window, 'mouseup', () => { dragging = false })
+  listen(window, 'mouseup', () => { dragging = false })
 
-  on(wrap, 'touchstart', (e) => {
+  listen(wrap, 'touchstart', (e) => {
     dragging = true; startY = e.touches[0].clientY; startVal = getValue()
     e.preventDefault()
   }, { passive: false })
-  on(window, 'touchmove', (e) => {
+  listen(window, 'touchmove', (e) => {
     if (!dragging) return
     setValue(Math.max(0, Math.min(100, startVal + (startY - e.touches[0].clientY))))
     e.preventDefault()
   }, { passive: false })
-  on(window, 'touchend', () => { dragging = false })
+  listen(window, 'touchend', () => { dragging = false })
 
-  on(wrap, 'wheel', (e) => {
+  listen(wrap, 'wheel', (e) => {
     e.preventDefault()
     setValue(Math.max(0, Math.min(100, getValue() + (e.deltaY < 0 ? 2 : -2))))
   }, { passive: false })
+
+  return () => {
+    for (const off of cleanups) off()
+    cleanups.length = 0
+  }
 }
 
-export function updateStutterBtn(row, depth, mode) {
-  const btn = document.getElementById(`stutter-btn-${row}`)
+export function updateStutterBtn(byId, row, depth, mode) {
+  const btn = byId(`stutter-btn-${row}`)
   if (!btn) return
   btn.textContent = `1/${depth}`
   btn.classList.toggle('stutter-active', mode !== 0)
@@ -107,12 +114,17 @@ function updateProgressBar(fillElement, now, masterStartTime, masterLoopDuration
 }
 
 export function startProgressLoop(fillElement, getProgress) {
-  let rafId
+  let rafId = 0
+  let running = true
   function frame() {
+    if (!running) return
     const { now, masterStartTime, masterLoopDuration } = getProgress()
     updateProgressBar(fillElement, now, masterStartTime, masterLoopDuration)
     rafId = requestAnimationFrame(frame)
   }
   rafId = requestAnimationFrame(frame)
-  return rafId
+  return () => {
+    running = false
+    if (rafId) cancelAnimationFrame(rafId)
+  }
 }
