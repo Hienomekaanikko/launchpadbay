@@ -2,7 +2,7 @@
 
 import {
   initAudio,
-  initRowGainFilters,
+  initDSP,
   loadSound,
   createBufferSource,
   resetAudio,
@@ -23,8 +23,6 @@ import {
 } from './ui.js'
 
 export function mountLaunchpad(container, themes) {
-  // Timing: master* / handoff* / startTime = AudioContext seconds (musical).
-  // uiTimer* = setTimeout for DOM/gesture only (not the musical source of truth).
   let isTornDown = false
   const uiTimerIds = new Set()
 
@@ -46,11 +44,9 @@ export function mountLaunchpad(container, themes) {
   let currentFadeTime = 0
   let rowVolumes = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1 }
 
-  // --- Audio init ---
   initAudio()
-  initRowGainFilters([1, 2, 3, 4, 5])
+  initDSP([1, 2, 3, 4, 5])
 
-  // --- Container-scoped helpers ---
   const byId = (id) => container.querySelector(`#${id}`)
 
   function cancelUiTimer(id) {
@@ -78,8 +74,7 @@ export function mountLaunchpad(container, themes) {
     return masterStartTime + (completedBars + 1) * masterLoopDuration
   }
 
-  // --- Pad event binding (LaunchpadView.jsx already renders .btn elements) ---
-  function bindPads() {
+  function bindPadsToEngine() {
     for (let i = 1; i <= 25; i++) {
       const btn = byId(`btn${i}`)
       if (!btn) continue
@@ -123,7 +118,6 @@ export function mountLaunchpad(container, themes) {
     const row = padRows[padId]
     const startTime = getNextStartTime(sound.buffer.duration)
 
-    // Reset gain to clear stale ramps before starting the source
     const gain = rowGains[row]
     if (gain) {
       gain.gain.cancelScheduledValues(startTime)
@@ -407,89 +401,93 @@ export function mountLaunchpad(container, themes) {
     }
   }
 
-  // --- UI init ---
-  applyThemeColors(themes[0])
-
-  // --- Split button ---
-  const splitBtn = byId('split-btn')
-  const onSplit = () => {
-    splitActive = !splitActive
-    splitBtn.classList.toggle('active', splitActive)
-    for (const r of Object.values(rowActive)) {
-      if (r) {
-        const sound = sounds[r.soundName]
-        if (sound?.source) sound.source.loopEnd = sound.buffer.duration / (splitActive ? 2 : 1)
+  // --- UI binding ---
+  function bindTransport() {
+    const splitBtn = byId('split-btn')
+    const onSplit = () => {
+      splitActive = !splitActive
+      splitBtn.classList.toggle('active', splitActive)
+      for (const r of Object.values(rowActive)) {
+        if (r) {
+          const sound = sounds[r.soundName]
+          if (sound?.source) sound.source.loopEnd = sound.buffer.duration / (splitActive ? 2 : 1)
+        }
+      }
+      if (masterLoopDuration) {
+        masterLoopDuration = splitActive ? masterLoopDuration / 2 : masterLoopDuration * 2
       }
     }
-    if (masterLoopDuration) {
-      masterLoopDuration = splitActive ? masterLoopDuration / 2 : masterLoopDuration * 2
+    splitBtn.addEventListener('click', onSplit)
+    splitBtn.addEventListener('touchend', (e) => { e.preventDefault(); onSplit() }, { passive: false })
+  }
+
+  // Double-tap: single = cycle depth, double = toggle stutter
+  function bindStutterControls() {
+    const stutterCol = byId('stutter-btns')
+    for (let row = 1; row <= 5; row++) {
+      const btn = document.createElement('button')
+      btn.id = `stutter-btn-${row}`
+      btn.className = 'stutter-btn'
+      btn.textContent = '1/4'
+      stutterCol.appendChild(btn)
+
+      let tapCount = 0
+      let tapTimer = null
+      const onTap = () => {
+        if (audioCtx.state === 'suspended') audioCtx.resume()
+        tapCount++
+        clearTimeout(tapTimer)
+        tapTimer = trackUiTimer(() => {
+          if (tapCount === 1) cycleStutterDepth(row)
+          else tapStutter(row)
+          tapCount = 0
+        }, 280)
+      }
+      btn.addEventListener('click', onTap)
+      btn.addEventListener('touchend', (e) => { e.preventDefault(); onTap() }, { passive: false })
     }
   }
-  splitBtn.addEventListener('click', onSplit)
-  splitBtn.addEventListener('touchend', (e) => { e.preventDefault(); onSplit() }, { passive: false })
 
-  // --- Stutter buttons (double-tap: single=cycle depth, double=toggle) ---
-  const stutterCol = byId('stutter-btns')
-  for (let row = 1; row <= 5; row++) {
-    const btn = document.createElement('button')
-    btn.id = `stutter-btn-${row}`
-    btn.className = 'stutter-btn'
-    btn.textContent = '1/4'
-    stutterCol.appendChild(btn)
+  function bindKnobs() {
+    const cleanups = []
+    const volCol = byId('vol-knobs')
+    const filterCol = byId('filter-knobs')
+    for (let row = 1; row <= 5; row++) {
+      const colorClass = `row-color-${row}`
 
-    let tapCount = 0
-    let tapTimer = null
-    const onTap = () => {
-      if (audioCtx.state === 'suspended') audioCtx.resume()
-      tapCount++
-      clearTimeout(tapTimer)
-      tapTimer = trackUiTimer(() => {
-        if (tapCount === 1) cycleStutterDepth(row)
-        else tapStutter(row)
-        tapCount = 0
-      }, 280)
+      const volWrap = createKnob(`vol-wrap-${row}`, colorClass)
+      volCol.appendChild(volWrap)
+      let volVal = 100
+      cleanups.push(setupKnobDrag(volWrap, () => volVal, (v) => {
+        volVal = v
+        rowVolumes[row] = v / 100
+        rowGains[row].gain.setValueAtTime(v / 100, audioCtx.currentTime)
+        updateKnobVisual(volWrap, v)
+      }))
+
+      const filterWrap = createKnob(`filter-wrap-${row}`, colorClass)
+      filterCol.appendChild(filterWrap)
+      let filterVal = 100
+      cleanups.push(setupKnobDrag(filterWrap, () => filterVal, (v) => {
+        filterVal = v
+        rowFilters[row].frequency.setValueAtTime(200 * Math.pow(100, v / 100), audioCtx.currentTime)
+        updateKnobVisual(filterWrap, v)
+      }))
     }
-    btn.addEventListener('click', onTap)
-    btn.addEventListener('touchend', (e) => { e.preventDefault(); onTap() }, { passive: false })
+    return cleanups
   }
 
-  // --- Knobs (VOL + filter) ---
-  const knobCleanups = []
-  const volCol = byId('vol-knobs')
-  const filterCol = byId('filter-knobs')
-  for (let row = 1; row <= 5; row++) {
-    const colorClass = `row-color-${row}`
-
-    const volWrap = createKnob(`vol-wrap-${row}`, colorClass)
-    volCol.appendChild(volWrap)
-    let volVal = 100
-    knobCleanups.push(setupKnobDrag(volWrap, () => volVal, (v) => {
-      volVal = v
-      rowVolumes[row] = v / 100
-      rowGains[row].gain.setValueAtTime(v / 100, audioCtx.currentTime)
-      updateKnobVisual(volWrap, v)
-    }))
-
-    const filterWrap = createKnob(`filter-wrap-${row}`, colorClass)
-    filterCol.appendChild(filterWrap)
-    let filterVal = 100
-    knobCleanups.push(setupKnobDrag(filterWrap, () => filterVal, (v) => {
-      filterVal = v
-      rowFilters[row].frequency.setValueAtTime(200 * Math.pow(100, v / 100), audioCtx.currentTime)
-      updateKnobVisual(filterWrap, v)
-    }))
-  }
-
-  // --- Progress bar ---
+  // --- Bootstrap ---
+  applyThemeColors(themes[0])
+  bindTransport()
+  bindStutterControls()
+  const knobCleanups = bindKnobs()
   const stopProgress = startProgressLoop(byId('master-bar-fill'), () => ({
     now: audioCtx.currentTime,
     masterStartTime,
     masterLoopDuration,
   }))
-
-  // --- Pad binding & sound loading ---
-  bindPads()
-
+  bindPadsToEngine()
   loadThemeSounds(themes[0]).catch((err) => {
     console.error('Launchpad init error:', err)
   })
