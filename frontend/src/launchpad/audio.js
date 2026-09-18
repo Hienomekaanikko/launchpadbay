@@ -2,19 +2,14 @@ export let audioCtx = null
 export const rowGains = {}
 export const rowFilters = {}
 export const sounds = {}
-export const soundToButton = {}
+export const soundToPad = {}
 const bufferCache = new Map()
-
-function clearMap(obj) {
-	for (const key of Object.keys(obj))
-		delete obj[key]
-}
 
 export function initAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)()
 }
 
-export function initAudioGainFilter(rows) {
+export function initRowGainFilters(rows) {
   for (const row of rows) {
     const filter = audioCtx.createBiquadFilter()
     filter.type = 'lowpass'
@@ -41,12 +36,12 @@ export async function loadSound(soundName, url) {
 	}
 }
 
-export function createBufferSource(buffer, splitActive, loopEnd) {
+export function createBufferSource(buffer, splitActive, loopEndSec) {
   const source = audioCtx.createBufferSource()
   source.buffer = buffer
   source.loop = true
-  if (loopEnd != null) {
-    source.loopEnd = loopEnd
+  if (loopEndSec != null) {
+    source.loopEnd = loopEndSec
   } else {
     source.loopEnd = buffer.duration / (splitActive ? 2 : 1)
   }
@@ -62,10 +57,10 @@ export function stopAllSources() {
 // Clears module singletons so a later mount can re-init cleanly.
 export function resetAudio() {
   stopAllSources()
-  clearMap(sounds)
-  clearMap(soundToButton)
-  clearMap(rowGains)
-  clearMap(rowFilters)
+  for (const key of Object.keys(sounds)) delete sounds[key]
+  for (const key of Object.keys(soundToPad)) delete soundToPad[key]
+  for (const key of Object.keys(rowGains)) delete rowGains[key]
+  for (const key of Object.keys(rowFilters)) delete rowFilters[key]
   bufferCache.clear()
   if (audioCtx) {
     audioCtx.close().catch(() => {})
