@@ -6,7 +6,8 @@ export const soundToButton = {}
 const bufferCache = new Map()
 
 function clearMap(obj) {
-  for (const key of Object.keys(obj)) delete obj[key]
+	for (const key of Object.keys(obj))
+		delete obj[key]
 }
 
 export function initAudio() {
@@ -15,38 +16,46 @@ export function initAudio() {
 
 export function initAudioGainFilter(rows) {
   for (const row of rows) {
-    const f = audioCtx.createBiquadFilter()
-    f.type = 'lowpass'
-    f.frequency.value = 20000
-    f.Q.value = 0.5
-    f.connect(audioCtx.destination)
-    rowFilters[row] = f
-    const g = audioCtx.createGain()
-    g.connect(f)
-    rowGains[row] = g
+    const filter = audioCtx.createBiquadFilter()
+    filter.type = 'lowpass'
+    filter.frequency.value = 20000
+    filter.Q.value = 0.5
+    filter.connect(audioCtx.destination)
+    rowFilters[row] = filter
+    const gain = audioCtx.createGain()
+    gain.connect(filter)
+    rowGains[row] = gain
   }
 }
 
-export async function loadSound(name, url) {
+export async function loadSound(soundName, url) {
   if (!bufferCache.has(url)) {
-    const resp = await fetch(url)
-    const raw = await resp.arrayBuffer()
-    bufferCache.set(url, await audioCtx.decodeAudioData(raw))
+    const httpResponse = await fetch(url)
+    const rawAudio = await httpResponse.arrayBuffer()
+    bufferCache.set(url, await audioCtx.decodeAudioData(rawAudio))
   }
-  sounds[name] = { buffer: bufferCache.get(url), source: null, startTimeoutId: null }
+	sounds[soundName] = {
+		buffer: bufferCache.get(url),
+		source: null,
+		startUiTimerId: null
+	}
 }
 
 export function createBufferSource(buffer, splitActive, loopEnd) {
   const source = audioCtx.createBufferSource()
   source.buffer = buffer
   source.loop = true
-  source.loopEnd = loopEnd ?? buffer.duration / (splitActive ? 2 : 1)
+  if (loopEnd != null) {
+    source.loopEnd = loopEnd
+  } else {
+    source.loopEnd = buffer.duration / (splitActive ? 2 : 1)
+  }
   return source
 }
 
 export function stopAllSources() {
-  for (const name of Object.keys(sounds)) {
-    try { sounds[name]?.source?.stop() } catch { /* already stopped */ }
+  for (const soundName of Object.keys(sounds)) {
+    try { sounds[soundName]?.source?.stop() } catch { /* already stopped */ }
   }
 }
 
