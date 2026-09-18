@@ -9,7 +9,7 @@ export function initAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)()
 }
 
-export function initRowGainFilters(rows) {
+export function initDSP(rows) {
   for (const row of rows) {
     const filter = audioCtx.createBiquadFilter()
     filter.type = 'lowpass'
