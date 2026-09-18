@@ -5,9 +5,7 @@ import {
   initAudioGainFilter,
   loadSound,
   createBufferSource,
-  startSource,
-  setGainValue,
-  stopAllSources,
+  resetAudio,
   sounds,
   soundToButton,
   audioCtx,
@@ -60,7 +58,10 @@ export function mountLaunchpad(container, themes) {
   function getNextStartTime(bufDuration) {
     if (!masterStartTime || !masterLoopDuration) {
       const now = audioCtx.currentTime
-      return now + 0.1
+      const futureStart = now + 0.1
+      masterStartTime = futureStart
+      masterLoopDuration = (bufDuration || 1) / (splitActive ? 2 : 1)
+      return futureStart
     }
     const now = audioCtx.currentTime
     const elapsed = now - masterStartTime
@@ -75,12 +76,12 @@ export function mountLaunchpad(container, themes) {
       if (!btn) continue
       const name = `sound${i}`
       const id = `btn${i}`
-      btn.addEventListener('touchend', (e) => {
-        e.preventDefault()
+      const onPad = () => {
         if (audioCtx.state === 'suspended') audioCtx.resume()
         toggleLoop(name, id)
-      }, { passive: false })
-      btn.onclick = () => toggleLoop(name, id)
+      }
+      btn.addEventListener('click', onPad)
+      btn.addEventListener('touchend', (e) => { e.preventDefault(); onPad() }, { passive: false })
     }
   }
 
@@ -117,12 +118,13 @@ export function mountLaunchpad(container, themes) {
     const gain = rowGains[row]
     if (gain) {
       gain.gain.cancelScheduledValues(startTime)
-      setGainValue(gain, rowVolumes[row], startTime)
+      gain.gain.setValueAtTime(rowVolumes[row], startTime)
     }
 
     const source = createBufferSource(sound.buffer, splitActive)
     source.connect(rowGains[row])
-    startSource(source, startTime)
+    source.start(startTime)
+    sound.source = source
 
     const button = byId(buttonId)
     if (button) {
@@ -176,12 +178,12 @@ export function mountLaunchpad(container, themes) {
         sound.source = null
         track(() => {
           try { src.stop() } catch { /* already stopped */ }
-          if (!destroyed) setGainValue(rowGains[row], rowVolumes[row], audioCtx.currentTime)
+          if (!destroyed) rowGains[row].gain.setValueAtTime(rowVolumes[row], audioCtx.currentTime)
         }, currentFadeTime * 1000 + 50)
       } else {
         if (gain) {
           gain.gain.cancelScheduledValues(audioCtx.currentTime)
-          setGainValue(gain, rowVolumes[row], audioCtx.currentTime)
+          gain.gain.setValueAtTime(rowVolumes[row], audioCtx.currentTime)
         }
         try { sound.source.stop() } catch { /* already stopped */ }
         sound.source = null
@@ -197,7 +199,7 @@ export function mountLaunchpad(container, themes) {
 
     const source = createBufferSource(sound.buffer, splitActive)
     source.connect(rowGains[row])
-    startSource(source, handoffTime)
+    source.start(handoffTime)
 
     sound.source = source
 
@@ -244,8 +246,7 @@ export function mountLaunchpad(container, themes) {
       const st = rowStutter[row]
       if (st.source) { try { st.source.stop() } catch { /* noop */ } st.source = null }
       st.mode = 0
-      const b = byId(`stutter-btn-${row}`)
-      if (b) { b.textContent = 'STU'; b.classList.remove('stutter-active') }
+      updateStutterBtn(byId, row, st.depth, st.mode)
     }
 
     const current = rowActive[row]
@@ -280,7 +281,7 @@ export function mountLaunchpad(container, themes) {
     } else {
       startStutter(row, st.depth)
       st.mode = st.depth
-      updateStutterBtn(row, st.depth, st.mode)
+      updateStutterBtn(byId, row, st.depth, st.mode)
     }
   }
 
@@ -292,7 +293,7 @@ export function mountLaunchpad(container, themes) {
     const active = rowActive[row]
     if (active) startLoop(active.name, active.buttonId)
 
-    updateStutterBtn(row, st.depth, st.mode)
+    updateStutterBtn(byId, row, st.depth, st.mode)
   }
 
   function cycleStutterDepth(row) {
@@ -312,13 +313,13 @@ export function mountLaunchpad(container, themes) {
 
         const src = createBufferSource(sound.buffer, splitActive, loopLen)
         src.connect(rowGains[row])
-        startSource(src, startTime)
+        src.start(startTime)
         st.source = src
         st.mode = st.depth
       }
     }
 
-    updateStutterBtn(row, st.depth, st.mode)
+    updateStutterBtn(byId, row, st.depth, st.mode)
   }
 
   function startStutter(row, divisor) {
@@ -338,7 +339,7 @@ export function mountLaunchpad(container, themes) {
 
     const src = createBufferSource(sound.buffer, splitActive, loopLen)
     src.connect(rowGains[row])
-    startSource(src, startTime)
+    src.start(startTime)
     st.source = src
   }
 
@@ -348,7 +349,7 @@ export function mountLaunchpad(container, themes) {
       const st = rowStutter[r]
       if (st.source) { try { st.source.stop() } catch { /* noop */ } st.source = null }
       st.mode = 0
-      updateStutterBtn(r, st.depth, st.mode)
+      updateStutterBtn(byId, r, st.depth, st.mode)
     }
 
     for (const name of Object.keys(sounds)) {
@@ -398,9 +399,10 @@ export function mountLaunchpad(container, themes) {
   applyThemeColors(themes[0])
 
   // --- Split button ---
-  byId('split-btn').onclick = () => {
+  const splitBtn = byId('split-btn')
+  const onSplit = () => {
     splitActive = !splitActive
-    byId('split-btn').classList.toggle('active', splitActive)
+    splitBtn.classList.toggle('active', splitActive)
     for (const r of Object.values(rowActive)) {
       if (r) {
         const sound = sounds[r.name]
@@ -411,6 +413,8 @@ export function mountLaunchpad(container, themes) {
       masterLoopDuration = splitActive ? masterLoopDuration / 2 : masterLoopDuration * 2
     }
   }
+  splitBtn.addEventListener('click', onSplit)
+  splitBtn.addEventListener('touchend', (e) => { e.preventDefault(); onSplit() }, { passive: false })
 
   // --- Stutter buttons (double-tap: single=cycle depth, double=toggle) ---
   const stutterCol = byId('stutter-btns')
@@ -438,6 +442,7 @@ export function mountLaunchpad(container, themes) {
   }
 
   // --- Knobs (VOL + filter) ---
+  const knobCleanups = []
   const volCol = byId('vol-knobs')
   const filterCol = byId('filter-knobs')
   for (let row = 1; row <= 5; row++) {
@@ -446,25 +451,25 @@ export function mountLaunchpad(container, themes) {
     const volWrap = createKnob(`vol-wrap-${row}`, colorClass)
     volCol.appendChild(volWrap)
     let volVal = 100
-    setupKnobDrag(volWrap, () => volVal, (v) => {
+    knobCleanups.push(setupKnobDrag(volWrap, () => volVal, (v) => {
       volVal = v
       rowVolumes[row] = v / 100
-      setGainValue(rowGains[row], v / 100, audioCtx.currentTime)
+      rowGains[row].gain.setValueAtTime(v / 100, audioCtx.currentTime)
       updateKnobVisual(volWrap, v)
-    })
+    }))
 
     const filterWrap = createKnob(`filter-wrap-${row}`, colorClass)
     filterCol.appendChild(filterWrap)
     let filterVal = 100
-    setupKnobDrag(filterWrap, () => filterVal, (v) => {
+    knobCleanups.push(setupKnobDrag(filterWrap, () => filterVal, (v) => {
       filterVal = v
       rowFilters[row].frequency.setValueAtTime(200 * Math.pow(100, v / 100), audioCtx.currentTime)
       updateKnobVisual(filterWrap, v)
-    })
+    }))
   }
 
   // --- Progress bar ---
-  let progressRAF = startProgressLoop(byId('master-bar-fill'), () => ({
+  const stopProgress = startProgressLoop(byId('master-bar-fill'), () => ({
     now: audioCtx.currentTime,
     masterStartTime,
     masterLoopDuration,
@@ -481,13 +486,22 @@ export function mountLaunchpad(container, themes) {
   function destroy() {
     destroyed = true
 
-    if (progressRAF) cancelAnimationFrame(progressRAF)
+    stopProgress()
 
     for (const id of pendingTimeouts) clearTimeout(id)
     pendingTimeouts.clear()
 
-    stopAllSources()
-    audioCtx.close().catch(() => {})
+    for (const off of knobCleanups) off()
+    knobCleanups.length = 0
+
+    for (const st of Object.values(rowStutter)) {
+      if (st.source) {
+        try { st.source.stop() } catch { /* already stopped */ }
+        st.source = null
+      }
+    }
+
+    resetAudio()
 
     document.body.style.backgroundImage = ''
     themes.forEach((t) => t.bodyClass && document.body.classList.remove(t.bodyClass))
