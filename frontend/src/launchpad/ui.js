@@ -1,4 +1,4 @@
-export const buttonRows = {
+export const padRows = {
   btn1: 1, btn2: 1, btn3: 1, btn4: 1, btn5: 1,
   btn6: 2, btn7: 2, btn8: 2, btn9: 2, btn10: 2,
   btn11: 3, btn12: 3, btn13: 3, btn14: 3, btn15: 3,
@@ -91,11 +91,11 @@ export function setupKnobDrag(wrap, getValue, setValue) {
   }
 }
 
-export function updateStutterBtn(byId, row, depth, mode) {
+export function updateStutterBtn(byId, row, depth, activeDepth) {
   const btn = byId(`stutter-btn-${row}`)
   if (!btn) return
   btn.textContent = `1/${depth}`
-  btn.classList.toggle('stutter-active', mode !== 0)
+  btn.classList.toggle('stutter-active', activeDepth !== 0)
 }
 
 export function applyThemeColors(theme) {
