@@ -45,7 +45,7 @@ function App() {
         {!playMode && <div className="Logo">
           LaunchpadBay
         </div>}
-        {loggedIn && <button className="UserTag" onClick={() => setProfileMode(!profileMode)}>Logged in as: {username}</button>}
+        {loggedIn && <button className="UserTag" onClick={() => setProfileMode(!profileMode)}>{username}</button>}
         <nav>
           {!playMode && <button className="NavButton" onClick={() => setPlayMode(true)}>Play</button>}
           {!playMode && <button className="NavButton" onClick={() => (loggedIn ? handleLogout() : setShowLogin(true))}>{loggedIn ? 'Logout' : 'Login'}</button>}
