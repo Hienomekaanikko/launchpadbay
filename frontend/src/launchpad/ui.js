@@ -1,11 +1,3 @@
-export const padRows = {
-  btn1: 1, btn2: 1, btn3: 1, btn4: 1, btn5: 1,
-  btn6: 2, btn7: 2, btn8: 2, btn9: 2, btn10: 2,
-  btn11: 3, btn12: 3, btn13: 3, btn14: 3, btn15: 3,
-  btn16: 4, btn17: 4, btn18: 4, btn19: 4, btn20: 4,
-  btn21: 5, btn22: 5, btn23: 5, btn24: 5, btn25: 5,
-}
-
 export function createKnob(id, colorClass) {
   const wrap = document.createElement('div')
   wrap.className = `knob-wrap ${colorClass}`
@@ -91,8 +83,8 @@ export function setupKnobDrag(wrap, getValue, setValue) {
   }
 }
 
-export function updateStutterBtn(byId, row, depth, activeDepth) {
-  const btn = byId(`stutter-btn-${row}`)
+export function updateStutterBtn(byId, channel, depth, activeDepth) {
+  const btn = byId(`stutter-btn-${channel}`)
   if (!btn) return
   btn.textContent = `1/${depth}`
   btn.classList.toggle('stutter-active', activeDepth !== 0)

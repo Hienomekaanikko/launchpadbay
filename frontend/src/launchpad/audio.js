@@ -1,39 +1,41 @@
+import { CHANNEL_COUNT } from './pads.js'
+
 export let audioCtx = null
-export const rowGains = {}
-export const rowFilters = {}
+export const channelGains = {}
+export const channelFilters = {}
+// pad index (1..25) -> { buffer, source, startUiTimerId }
 export const sounds = {}
-export const soundToPad = {}
 const bufferCache = new Map()
 
 export function initAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)()
 }
 
-export function initDSP(rows) {
-  for (const row of rows) {
+export function initDSP() {
+  for (let channel = 1; channel <= CHANNEL_COUNT; channel++) {
     const filter = audioCtx.createBiquadFilter()
     filter.type = 'lowpass'
     filter.frequency.value = 20000
     filter.Q.value = 0.5
     filter.connect(audioCtx.destination)
-    rowFilters[row] = filter
+    channelFilters[channel] = filter
     const gain = audioCtx.createGain()
     gain.connect(filter)
-    rowGains[row] = gain
+    channelGains[channel] = gain
   }
 }
 
-export async function loadSound(soundName, url) {
+export async function loadSound(pad, url) {
   if (!bufferCache.has(url)) {
     const httpResponse = await fetch(url)
     const rawAudio = await httpResponse.arrayBuffer()
     bufferCache.set(url, await audioCtx.decodeAudioData(rawAudio))
   }
-	sounds[soundName] = {
-		buffer: bufferCache.get(url),
-		source: null,
-		startUiTimerId: null
-	}
+  sounds[pad] = {
+    buffer: bufferCache.get(url),
+    source: null,
+    startUiTimerId: null,
+  }
 }
 
 export function createBufferSource(buffer, splitActive, loopEndSec) {
@@ -49,8 +51,8 @@ export function createBufferSource(buffer, splitActive, loopEndSec) {
 }
 
 export function stopAllSources() {
-  for (const soundName of Object.keys(sounds)) {
-    try { sounds[soundName]?.source?.stop() } catch { /* already stopped */ }
+  for (const sound of Object.values(sounds)) {
+    try { sound?.source?.stop() } catch { /* already stopped */ }
   }
 }
 
@@ -58,9 +60,8 @@ export function stopAllSources() {
 export function resetAudio() {
   stopAllSources()
   for (const key of Object.keys(sounds)) delete sounds[key]
-  for (const key of Object.keys(soundToPad)) delete soundToPad[key]
-  for (const key of Object.keys(rowGains)) delete rowGains[key]
-  for (const key of Object.keys(rowFilters)) delete rowFilters[key]
+  for (const key of Object.keys(channelGains)) delete channelGains[key]
+  for (const key of Object.keys(channelFilters)) delete channelFilters[key]
   bufferCache.clear()
   if (audioCtx) {
     audioCtx.close().catch(() => {})
