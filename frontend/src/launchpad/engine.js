@@ -75,7 +75,9 @@ export function mountLaunchpad(container, themes) {
       const now = audioCtx.currentTime
       const futureStart = now + 0.1
       masterStartTime = futureStart
-      masterLoopDuration = (bufferDurationSec || 1) / (splitActive ? 2 : 1)
+      let duration = bufferDurationSec || 1
+      if (splitActive) duration = duration / 2
+      masterLoopDuration = duration
       return futureStart
     }
     const now = audioCtx.currentTime
@@ -104,11 +106,11 @@ export function mountLaunchpad(container, themes) {
     if (!pending) return
 
     const sound = sounds[pending.pad]
-    if (sound?.startUiTimerId) {
+    if (sound && sound.startUiTimerId) {
       cancelUiTimer(sound.startUiTimerId)
       sound.startUiTimerId = null
     }
-    if (sound?.source) {
+    if (sound && sound.source) {
       try { sound.source.stop() } catch { /* hasn't started yet */ }
       sound.source = null
     }
@@ -230,7 +232,7 @@ export function mountLaunchpad(container, themes) {
       const outgoing = channelActive[channel]
       if (outgoing) {
         const outSound = sounds[outgoing]
-        if (outSound?.source) {
+        if (outSound && outSound.source) {
           try { outSound.source.stop() } catch { /* already stopped */ }
           outSound.source = null
         }
@@ -270,7 +272,7 @@ export function mountLaunchpad(container, themes) {
       return
     }
 
-    if (pending?.pad === pad) {
+    if (pending && pending.pad === pad) {
       cancelPendingLoop(channel)
       return
     }
@@ -280,8 +282,17 @@ export function mountLaunchpad(container, themes) {
       return
     }
 
-    const bufferDurationSec = sounds[current]?.buffer.duration || 1
-    const handoffTime = pending ? pending.handoffTime : getNextStartTime(bufferDurationSec)
+    const currentSound = sounds[current]
+    let bufferDurationSec = 1
+    if (currentSound && currentSound.buffer) {
+      bufferDurationSec = currentSound.buffer.duration
+    }
+    let handoffTime
+    if (pending) {
+      handoffTime = pending.handoffTime
+    } else {
+      handoffTime = getNextStartTime(bufferDurationSec)
+    }
     scheduleHandoff(channel, pad, handoffTime)
   }
 
@@ -316,10 +327,12 @@ export function mountLaunchpad(container, themes) {
 
     if (stutter.activeDepth !== 0) {
       const pad = channelActive[channel]
-      const sound = pad ? sounds[pad] : null
-      if (sound?.buffer && stutter.source) {
+      let sound = null
+      if (pad) sound = sounds[pad]
+      if (sound && sound.buffer && stutter.source) {
         const startTime = getNextStartTime(sound.buffer.duration)
-        const bufferDurationSec = sound.buffer.duration / (splitActive ? 2 : 1)
+        let bufferDurationSec = sound.buffer.duration
+        if (splitActive) bufferDurationSec = bufferDurationSec / 2
         const stutterLoopSec = bufferDurationSec / stutter.depth
 
         try { stutter.source.stop(startTime) } catch { /* noop */ }
@@ -339,12 +352,13 @@ export function mountLaunchpad(container, themes) {
     const pad = channelActive[channel]
     if (!pad) return
     const sound = sounds[pad]
-    if (!sound?.buffer) return
+    if (!sound || !sound.buffer) return
 
     const stutter = channelStutter[channel]
     if (stutter.source) { try { stutter.source.stop() } catch { /* noop */ } stutter.source = null }
 
-    const bufferDurationSec = sound.buffer.duration / (splitActive ? 2 : 1)
+    let bufferDurationSec = sound.buffer.duration
+    if (splitActive) bufferDurationSec = bufferDurationSec / 2
     const stutterLoopSec = bufferDurationSec / stutterDepth
     const startTime = getNextStartTime(sound.buffer.duration)
 
@@ -368,7 +382,8 @@ export function mountLaunchpad(container, themes) {
     // Object keys are strings; coerce so stopLoop's === checks stay correct.
     for (const key of Object.keys(sounds)) {
       const pad = Number(key)
-      if (sounds[pad]?.source) stopLoop(pad, true)
+      const sound = sounds[pad]
+      if (sound && sound.source) stopLoop(pad, true)
     }
     for (const key of Object.keys(sounds)) delete sounds[key]
 
@@ -417,10 +432,20 @@ export function mountLaunchpad(container, themes) {
       for (const pad of Object.values(channelActive)) {
         if (!pad) continue
         const sound = sounds[pad]
-        if (sound?.source) sound.source.loopEnd = sound.buffer.duration / (splitActive ? 2 : 1)
+        if (sound && sound.source) {
+          if (splitActive) {
+            sound.source.loopEnd = sound.buffer.duration / 2
+          } else {
+            sound.source.loopEnd = sound.buffer.duration
+          }
+        }
       }
       if (masterLoopDuration) {
-        masterLoopDuration = splitActive ? masterLoopDuration / 2 : masterLoopDuration * 2
+        if (splitActive) {
+          masterLoopDuration = masterLoopDuration / 2
+        } else {
+          masterLoopDuration = masterLoopDuration * 2
+        }
       }
     }
     splitBtn.addEventListener('click', onSplit)
