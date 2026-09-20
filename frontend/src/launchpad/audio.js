@@ -44,15 +44,19 @@ export function createBufferSource(buffer, splitActive, loopEndSec) {
   source.loop = true
   if (loopEndSec != null) {
     source.loopEnd = loopEndSec
+  } else if (splitActive) {
+    source.loopEnd = buffer.duration / 2
   } else {
-    source.loopEnd = buffer.duration / (splitActive ? 2 : 1)
+    source.loopEnd = buffer.duration
   }
   return source
 }
 
 export function stopAllSources() {
   for (const sound of Object.values(sounds)) {
-    try { sound?.source?.stop() } catch { /* already stopped */ }
+    try {
+      if (sound && sound.source) sound.source.stop()
+    } catch { /* already stopped */ }
   }
 }
 
