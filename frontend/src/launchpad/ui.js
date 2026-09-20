@@ -94,11 +94,11 @@ export function applyThemeColors(theme) {
   document.body.style.backgroundImage = theme.bgImage ? `url('${theme.bgImage}')` : ''
 }
 
-function updateProgressBar(fillElement, now, masterStartTime, masterLoopDuration) {
+function updateProgressBar(fillElement, now, syncStartTime, syncLoopDuration) {
   if (!fillElement) return
-  if (masterStartTime != null && masterLoopDuration != null) {
-    const elapsed = Math.max(0, (now - masterStartTime) % masterLoopDuration)
-    fillElement.style.width = (elapsed / masterLoopDuration) * 100 + '%'
+  if (syncStartTime != null && syncLoopDuration != null) {
+    const elapsed = Math.max(0, (now - syncStartTime) % syncLoopDuration)
+    fillElement.style.width = (elapsed / syncLoopDuration) * 100 + '%'
     fillElement.style.opacity = '1'
   } else {
     fillElement.style.opacity = '0'
@@ -110,8 +110,8 @@ export function startProgressLoop(fillElement, getProgress) {
   let running = true
   function frame() {
     if (!running) return
-    const { now, masterStartTime, masterLoopDuration } = getProgress()
-    updateProgressBar(fillElement, now, masterStartTime, masterLoopDuration)
+    const { now, syncStartTime, syncLoopDuration } = getProgress()
+    updateProgressBar(fillElement, now, syncStartTime, syncLoopDuration)
     rafId = requestAnimationFrame(frame)
   }
   rafId = requestAnimationFrame(frame)
