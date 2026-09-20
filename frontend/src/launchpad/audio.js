@@ -3,15 +3,15 @@ import { CHANNEL_COUNT } from './pads.js'
 export let audioCtx = null
 export const channelGains = {}
 export const channelFilters = {}
-// pad index (1..25) -> { buffer, source, startUiTimerId }
-export const sounds = {}
+// pad index (1..25) -> { buffer, source, uiStartTimerId }
+export const padVoices = {}
 const bufferCache = new Map()
 
 export function initAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)()
 }
 
-export function initDSP() {
+export function initChannelChain() {
   for (let channel = 1; channel <= CHANNEL_COUNT; channel++) {
     const filter = audioCtx.createBiquadFilter()
     filter.type = 'lowpass'
@@ -25,20 +25,20 @@ export function initDSP() {
   }
 }
 
-export async function loadSound(pad, url) {
+export async function loadPadVoice(pad, url) {
   if (!bufferCache.has(url)) {
     const httpResponse = await fetch(url)
     const rawAudio = await httpResponse.arrayBuffer()
     bufferCache.set(url, await audioCtx.decodeAudioData(rawAudio))
   }
-  sounds[pad] = {
+  padVoices[pad] = {
     buffer: bufferCache.get(url),
     source: null,
-    startUiTimerId: null,
+    uiStartTimerId: null,
   }
 }
 
-export function createBufferSource(buffer, splitActive, loopEndSec) {
+export function createLoopSource(buffer, splitActive, loopEndSec) {
   const source = audioCtx.createBufferSource()
   source.buffer = buffer
   source.loop = true
@@ -52,18 +52,18 @@ export function createBufferSource(buffer, splitActive, loopEndSec) {
   return source
 }
 
-export function stopAllSources() {
-  for (const sound of Object.values(sounds)) {
+export function stopAllVoices() {
+  for (const voice of Object.values(padVoices)) {
     try {
-      if (sound && sound.source) sound.source.stop()
+      if (voice && voice.source) voice.source.stop()
     } catch { /* already stopped */ }
   }
 }
 
 // Clears module singletons so a later mount can re-init cleanly.
 export function resetAudio() {
-  stopAllSources()
-  for (const key of Object.keys(sounds)) delete sounds[key]
+  stopAllVoices()
+  for (const key of Object.keys(padVoices)) delete padVoices[key]
   for (const key of Object.keys(channelGains)) delete channelGains[key]
   for (const key of Object.keys(channelFilters)) delete channelFilters[key]
   bufferCache.clear()

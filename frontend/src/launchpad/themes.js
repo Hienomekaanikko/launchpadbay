@@ -1,6 +1,6 @@
-// Fetches the theme list (colors, background image, and per-slot sound URLs)
+// Fetches the theme list (colors, background image, and per-slot sampleUrls)
 // from the backend's /themes route, proxied through nginx at /api/themes.
-// Replaces the old static import.meta.glob-bundled version — sounds and
+// Replaces the old static import.meta.glob-bundled version — samples and
 // theme images now live on the backend, not in the frontend build.
 async function fetchThemesOnce() {
   const res = await fetch('/api/themes')

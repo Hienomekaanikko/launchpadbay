@@ -64,16 +64,16 @@ fastify.get('/themes', async () => {
     })
 
     return themeRows.map((theme) => {
-        const sounds = {}
+        const sampleUrls = {}
         for (const sound of theme.theme_sounds) {
-            sounds[sound.slot] = `/api/uploads/sounds/${sound.filename}`
+            sampleUrls[sound.slot] = `/api/uploads/sounds/${sound.filename}`
         }
         return {
             id: theme.id,
             name: theme.name,
             bgImage: theme.bg_image ? `/api/uploads/images/${theme.bg_image}` : null,
             bodyClass: theme.body_class,
-            sounds,
+            sampleUrls,
         }
     })
 })
