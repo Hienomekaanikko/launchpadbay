@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #ffd500;                  /* yellow glow underline, used so far for the NavButton */
+  --color-error: #ff6b6b;                  /* color for error messages */
+  --color-surface: var(--color-white);     /* the glass style vibe for cards (used with an opacity modifier, for example bg-surface/40) */
+
+  --font-sans: "Roboto", sans-serif;       /* body text font, matches the global reset in App.css */
+  --tracking-nav: 0.5px;                   /* letter-spacing used on NavButton-style labels */
+
+  --shadow-nav: 0 8px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12);         /* NavButton resting shadow */
+  --shadow-nav-hover: 0 10px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.18);   /* NavButton hover shadow */
+  --shadow-glow-brand: 2px 0 4px var(--color-brand), 0 0 10px var(--color-brand), 0 0 20px rgba(255, 213, 0, 0.6); /* NavButton underline glow */
+  --shadow-panel: 0 15px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);        /* glass panel shadow, e.g. the profile card */
+
+  --color-online: #4ade80;                 /* friend online-status indicator */
+}
