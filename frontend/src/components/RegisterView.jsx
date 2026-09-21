@@ -1,12 +1,16 @@
 import { useState } from 'react'
 import { register } from '../auth.js'
+import Modal from './Modal.jsx'
+import CloseButton from './CloseButton.jsx'
+import Input from './Input.jsx'
+import FormButton from './FormButton.jsx'
 
 function ValidateRegister({ message, onContinue }) {
   return (
-    <div className="RegisterView">
+    <Modal className="z-11">
       {message}
-      <button className="FormButton" onClick={onContinue}>Continue!</button>
-    </div>
+      <FormButton onClick={onContinue}>Continue!</FormButton>
+    </Modal>
   )
 }
 
@@ -37,15 +41,15 @@ export default function RegisterView({ setRegisterView }) {
 
   return (
     <>
-      {!submitted && <form className="RegisterView" onSubmit={handleSubmit}>
-        <button type="button" className="CloseButton" onClick={() => setRegisterView(false)}>x</button>
-        <input className="inputbox" type="text" placeholder="Set username" value={username} onChange={(e) => setUsername(e.target.value)} required />
-        <input className="inputbox" type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input className="inputbox" type="password" placeholder="Set password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <input className="inputbox" type="password" placeholder="Type password again" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
-        {error && <div className="FormError">{error}</div>}
-        <button type="submit" className="FormButton">Submit</button>
-      </form>}
+      {!submitted && <Modal as="form" className="z-11" onSubmit={handleSubmit}>
+        <CloseButton onClick={() => setRegisterView(false)}>x</CloseButton>
+        <Input type="text" placeholder="Set username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+        <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <Input type="password" placeholder="Set password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <Input type="password" placeholder="Type password again" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+        {error && <div className="text-error text-xs text-center max-w-55">{error}</div>}
+        <FormButton type="submit">Submit</FormButton>
+      </Modal>}
       {submitted && <ValidateRegister message="Registration successful!" onContinue={() => setRegisterView(false)} />}
     </>
   )

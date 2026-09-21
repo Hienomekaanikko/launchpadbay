@@ -6,12 +6,16 @@
   --color-surface: var(--color-white);     /* the glass style vibe for cards (used with an opacity modifier, for example bg-surface/40) */
 
   --font-sans: "Roboto", sans-serif;       /* body text font, matches the global reset in App.css */
+  --font-display: "Poppins", sans-serif;   /* heading/logo font, e.g. Logo and Tagline */
   --tracking-nav: 0.5px;                   /* letter-spacing used on NavButton-style labels */
 
   --shadow-nav: 0 8px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.12);         /* NavButton resting shadow */
   --shadow-nav-hover: 0 10px 24px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.18);   /* NavButton hover shadow */
   --shadow-glow-brand: 2px 0 4px var(--color-brand), 0 0 10px var(--color-brand), 0 0 20px rgba(255, 213, 0, 0.6); /* NavButton underline glow */
   --shadow-panel: 0 15px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);        /* glass panel shadow, e.g. the profile card */
+  --shadow-close: 0 4px 10px rgba(0, 0, 0, 0.25);                                                 /* CloseButton shadow */
+  --shadow-input: inset 0 1px 0 rgba(255, 255, 255, 0.1);                                         /* Input resting shadow */
+  --shadow-input-focus: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.25); /* Input focus shadow */
 
   --color-online: #4ade80;                 /* friend online-status indicator */
 }
