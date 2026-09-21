@@ -3,6 +3,9 @@ import {
   initChannelChain,
   loadPadVoice,
   createLoopSource,
+  splitDuration,
+  periodAfterSplitToggle,
+  safeStop,
   resetAudio,
   padVoices,
   audioCtx,
@@ -11,20 +14,25 @@ import {
 } from './audio.js'
 import {
   CHANNEL_COUNT,
-  PAD_COUNT,
   channelOfPad,
+  slotOfPad,
   padDomId,
 } from './pads.js'
 import {
   updateStutterBtn,
   applyThemeColors,
   startProgressLoop,
+  renderPad,
+  renderChannel,
 } from './ui.js'
 import { createClock } from './clock.js'
 import {
   createChannels,
   reduceChannel,
   anyChannelSounding,
+  patchPad,
+  padVisual,
+  setAllPadsLoading,
 } from './channel.js'
 import { createUiTimers } from './uiTimers.js'
 import { bindLaunchpadControls } from './bindings.js'
@@ -35,11 +43,13 @@ export function mountLaunchpad(container, themes) {
 
   const clock = createClock()
   const channels = createChannels(CHANNEL_COUNT)
+  const stutterSources = {} // channelId -> AudioBufferSourceNode
   const STUTTER_DEPTHS = [4, 8, 16]
 
   let splitActive = false
   let currentFadeTime = 0
-  let channelVolumes = { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1 }
+  const channelVolumes = {}
+  for (let id = 1; id <= CHANNEL_COUNT; id++) channelVolumes[id] = 1
 
   initAudio()
   initChannelChain()
@@ -53,13 +63,17 @@ export function mountLaunchpad(container, themes) {
 
   function setChannel(id, event) {
     channels[id] = reduceChannel(channels[id], event)
+    renderChannel(padEl, channels[id])
     return channels[id]
   }
 
+  function updatePadLoading(channelId, pad, loading) {
+    patchPad(channels[channelId], pad, { loading })
+    renderPad(padEl, padVisual(channels[channelId], slotOfPad(pad)))
+  }
+
   function masterPeriodFromBuffer(bufferDurationSec) {
-    let period = bufferDurationSec || 1
-    if (splitActive) period = period / 2
-    return period
+    return splitDuration(bufferDurationSec || 1, splitActive)
   }
 
   function resolveStartTime(bufferDurationSec) {
@@ -78,18 +92,26 @@ export function mountLaunchpad(container, themes) {
   }
 
   function stopStutterSource(channelId, when) {
-    const src = channels[channelId].stutterSource
-    if (!src) return
-    try {
-      if (when != null) src.stop(when)
-      else src.stop()
-    } catch { /* already stopped */ }
-    channels[channelId].stutterSource = null
+    safeStop(stutterSources[channelId], when)
+    delete stutterSources[channelId]
   }
 
   function refreshStutterBtn(channelId) {
     const { depth, activeDepth } = channels[channelId].stutter
     updateStutterBtn(byId, channelId, depth, activeDepth)
+  }
+
+  function endStutter(channelId, options) {
+    if (!options) options = {}
+    stopStutterSource(channelId)
+    if (options.resume) {
+      const pad = channels[channelId].activePad
+      // startLoop → ARM from stuttering (clears activeDepth, blinks until boundary)
+      if (pad) startLoop(pad)
+    } else {
+      setChannel(channelId, { type: 'STUTTER_OFF' })
+    }
+    refreshStutterBtn(channelId)
   }
 
   function armStutterSource(channelId, voice, depth, startTime) {
@@ -101,7 +123,7 @@ export function mountLaunchpad(container, themes) {
     source.connect(channelGains[channelId])
     source.start(startTime)
     setChannel(channelId, { type: 'STUTTER_ON', depth })
-    channels[channelId].stutterSource = source
+    stutterSources[channelId] = source
   }
 
   // --- Audio functions ---
@@ -117,56 +139,60 @@ export function mountLaunchpad(container, themes) {
       voice.uiStartTimerId = null
     }
     if (voice && voice.source) {
-      try { voice.source.stop() } catch { /* hasn't started yet */ }
+      safeStop(voice.source)
       voice.source = null
     }
-
-    const button = padEl(pendingPad)
-    if (button) button.classList.remove('blink', 'active')
 
     setChannel(channelId, { type: 'CANCEL_PENDING' })
   }
 
-  function startLoop(pad, options) {
+  // Shared: schedule a pad voice at `at`; FSM (armed/pending → playing) drives lights.
+  function schedulePadAt(pad, at, options) {
     if (!options) options = {}
-    let resume = options.resume
-    if (resume == null) resume = false
 
     const voice = padVoices[pad]
     if (!voice) return
 
     const channelId = channelOfPad(pad)
-    const startTime = resolveStartTime(voice.buffer.duration)
 
-    const gain = channelGains[channelId]
-    if (gain) {
-      gain.gain.cancelScheduledValues(startTime)
-      gain.gain.setValueAtTime(channelVolumes[channelId], startTime)
+    if (options.resetGain) {
+      const gain = channelGains[channelId]
+      if (gain) {
+        gain.gain.cancelScheduledValues(at)
+        gain.gain.setValueAtTime(channelVolumes[channelId], at)
+      }
     }
 
     const source = createLoopSource(voice.buffer, splitActive)
     source.connect(channelGains[channelId])
-    source.start(startTime)
+    source.start(at)
     voice.source = source
 
-    const button = padEl(pad)
-    if (button) {
-      button.classList.remove('active')
-      button.classList.add('blink')
-    }
+    if (options.onSchedule) options.onSchedule(channelId)
 
-    if (!resume) setChannel(channelId, { type: 'ARM', pad })
-
-    const delayMs = ((startTime - audioCtx.currentTime) * 1000) | 0
+    const delayMs = ((at - audioCtx.currentTime) * 1000) | 0
     voice.uiStartTimerId = uiTimers.track(() => {
-      if (isTornDown || !voice.source) return
-      if (button) {
-        button.classList.remove('blink')
-        button.classList.add('active')
-      }
-      if (!resume) setChannel(channelId, { type: 'STARTED', pad })
       voice.uiStartTimerId = null
+      if (isTornDown) return
+      if (options.requireSource && !voice.source) return
+
+      if (options.onFire) options.onFire(channelId)
+      if (options.onStarted) options.onStarted(channelId)
     }, delayMs)
+  }
+
+  function startLoop(pad) {
+    const voice = padVoices[pad]
+    if (!voice) return
+
+    const startTime = resolveStartTime(voice.buffer.duration)
+
+    schedulePadAt(pad, startTime, {
+      resetGain: true,
+      requireSource: true,
+      onSchedule: (channelId) => setChannel(channelId, { type: 'ARM', pad }),
+      onStarted: (channelId) => setChannel(channelId, { type: 'STARTED', pad }),
+    })
   }
 
   function stopLoop(pad, skipFade) {
@@ -176,14 +202,12 @@ export function mountLaunchpad(container, themes) {
     if (!voice) return
 
     const channelId = channelOfPad(pad)
-    const button = padEl(pad)
 
     if (voice.uiStartTimerId) {
       uiTimers.cancel(voice.uiStartTimerId)
       voice.uiStartTimerId = null
     }
 
-    if (button) button.classList.remove('blink', 'active')
     setChannel(channelId, { type: 'STOP' })
 
     if (!anyChannelSounding(channels)) clock.clear()
@@ -198,7 +222,7 @@ export function mountLaunchpad(container, themes) {
         voice.source = null
         const delayMs = currentFadeTime * 1000 + 50
         uiTimers.track(() => {
-          try { source.stop() } catch { /* already stopped */ }
+          safeStop(source)
           if (!isTornDown) channelGains[channelId].gain.setValueAtTime(channelVolumes[channelId], audioCtx.currentTime)
         }, delayMs)
       } else {
@@ -206,7 +230,7 @@ export function mountLaunchpad(container, themes) {
           gain.gain.cancelScheduledValues(audioCtx.currentTime)
           gain.gain.setValueAtTime(channelVolumes[channelId], audioCtx.currentTime)
         }
-        try { voice.source.stop() } catch { /* already stopped */ }
+        safeStop(voice.source)
         voice.source = null
       }
     }
@@ -215,46 +239,20 @@ export function mountLaunchpad(container, themes) {
   function scheduleHandoff(channelId, pad, handoffTime) {
     cancelPendingLoop(channelId)
 
-    const voice = padVoices[pad]
-    if (!voice) return
-
-    const source = createLoopSource(voice.buffer, splitActive)
-    source.connect(channelGains[channelId])
-    source.start(handoffTime)
-    voice.source = source
-
-    const button = padEl(pad)
-    if (button) {
-      button.classList.remove('active')
-      button.classList.add('blink')
-    }
-
-    setChannel(channelId, { type: 'QUEUE_HANDOFF', pad, at: handoffTime })
-
-    const delayMs = ((handoffTime - audioCtx.currentTime) * 1000) | 0
-    voice.uiStartTimerId = uiTimers.track(() => {
-      voice.uiStartTimerId = null
-      if (isTornDown) return
-
-      const ch = channels[channelId]
-      const outgoing = ch.activePad
-      if (outgoing && outgoing !== pad) {
+    schedulePadAt(pad, handoffTime, {
+      onSchedule: () =>
+        setChannel(channelId, { type: 'QUEUE_HANDOFF', pad, at: handoffTime }),
+      onFire: () => {
+        const outgoing = channels[channelId].activePad
+        if (!outgoing || outgoing === pad) return
         const outVoice = padVoices[outgoing]
         if (outVoice && outVoice.source) {
-          try { outVoice.source.stop() } catch { /* already stopped */ }
+          safeStop(outVoice.source)
           outVoice.source = null
         }
-        const outButton = padEl(outgoing)
-        if (outButton) outButton.classList.remove('blink', 'active')
-      }
-
-      if (button) {
-        button.classList.remove('blink')
-        button.classList.add('active')
-      }
-
-      setChannel(channelId, { type: 'STARTED', pad })
-    }, delayMs)
+      },
+      onStarted: () => setChannel(channelId, { type: 'STARTED', pad }),
+    })
   }
 
   function toggleLoop(pad) {
@@ -264,9 +262,7 @@ export function mountLaunchpad(container, themes) {
     const ch = channels[channelId]
 
     if (ch.stutter.activeDepth !== 0) {
-      stopStutterSource(channelId)
-      setChannel(channelId, { type: 'STUTTER_OFF' })
-      refreshStutterBtn(channelId)
+      endStutter(channelId)
     }
 
     const current = channels[channelId]
@@ -301,18 +297,12 @@ export function mountLaunchpad(container, themes) {
       releaseStutter(channelId)
     } else {
       startStutter(channelId, ch.stutter.depth)
-      if (channels[channelId].stutterSource) refreshStutterBtn(channelId)
+      if (stutterSources[channelId]) refreshStutterBtn(channelId)
     }
   }
 
   function releaseStutter(channelId) {
-    stopStutterSource(channelId)
-    setChannel(channelId, { type: 'STUTTER_OFF' })
-
-    const pad = channels[channelId].activePad
-    if (pad) startLoop(pad, { resume: true })
-
-    refreshStutterBtn(channelId)
+    endStutter(channelId, { resume: true })
   }
 
   function cycleStutterDepth(channelId) {
@@ -327,7 +317,7 @@ export function mountLaunchpad(container, themes) {
       const pad = next.activePad
       let voice = null
       if (pad) voice = padVoices[pad]
-      if (voice && voice.buffer && next.stutterSource) {
+      if (voice && voice.buffer && stutterSources[channelId]) {
         const startTime = clock.nextBoundary(audioCtx.currentTime)
         stopStutterSource(channelId, startTime)
         armStutterSource(channelId, voice, depth, startTime)
@@ -340,7 +330,7 @@ export function mountLaunchpad(container, themes) {
   function startStutter(channelId, stutterDepth) {
     const ch = channels[channelId]
     const pad = ch.activePad
-    if (!pad || (ch.state !== 'playing' && ch.state !== 'armed')) return
+    if (!pad || ch.state !== 'playing') return
     const voice = padVoices[pad]
     if (!voice || !voice.buffer) return
 
@@ -348,7 +338,7 @@ export function mountLaunchpad(container, themes) {
 
     const startTime = resolveStartTime(voice.buffer.duration)
     if (voice.source) {
-      try { voice.source.stop(startTime) } catch { /* noop */ }
+      safeStop(voice.source, startTime)
       voice.source = null
     }
 
@@ -362,20 +352,13 @@ export function mountLaunchpad(container, themes) {
       if (!ch.activePad) continue
       const voice = padVoices[ch.activePad]
       if (voice && voice.source) {
-        if (splitActive) {
-          voice.source.loopEnd = voice.buffer.duration / 2
-        } else {
-          voice.source.loopEnd = voice.buffer.duration
-        }
+        voice.source.loopEnd = splitDuration(voice.buffer.duration, splitActive)
       }
     }
     if (clock.isRunning()) {
       const { periodSec } = clock.snapshot()
       const now = audioCtx.currentTime
-      let newPeriod
-      if (splitActive) newPeriod = periodSec / 2
-      else newPeriod = periodSec * 2
-      clock.setPeriod(newPeriod, now, true)
+      clock.setPeriod(periodAfterSplitToggle(periodSec, splitActive), now, true)
     }
     return splitActive
   }
@@ -409,24 +392,22 @@ export function mountLaunchpad(container, themes) {
       const keptDepth = channels[channelId].stutter.depth
       setChannel(channelId, { type: 'RESET' })
       channels[channelId].stutter.depth = keptDepth
+      setAllPadsLoading(channels[channelId], true)
+      renderChannel(padEl, channels[channelId])
       updateStutterBtn(byId, channelId, keptDepth, 0)
     }
 
     clock.clear()
 
-    for (let pad = 1; pad <= PAD_COUNT; pad++) {
-      const btn = padEl(pad)
-      if (btn) btn.classList.add('btn-loading')
-    }
-
     await Promise.all(
       // theme.sampleUrls keys are pad indexes 1–25 (DB column name: "slot")
       Object.entries(theme.sampleUrls).map(([key, url]) => {
         const pad = Number(key)
+        const channelId = channelOfPad(pad)
         return loadPadVoice(pad, url)
           .finally(() => {
-            const btn = padEl(pad)
-            if (btn) btn.classList.remove('btn-loading')
+            if (isTornDown) return
+            updatePadLoading(channelId, pad, false)
           })
       })
     )
@@ -434,9 +415,9 @@ export function mountLaunchpad(container, themes) {
     if (isTornDown) return
 
     if (Object.keys(theme.sampleUrls).length === 0) {
-      for (let pad = 1; pad <= PAD_COUNT; pad++) {
-        const btn = padEl(pad)
-        if (btn) btn.classList.remove('btn-loading')
+      for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
+        setAllPadsLoading(channels[channelId], false)
+        renderChannel(padEl, channels[channelId])
       }
     }
   }
