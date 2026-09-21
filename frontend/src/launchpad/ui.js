@@ -1,3 +1,5 @@
+import { padVisual } from './channel.js'
+
 export function createKnob(id, colorClass) {
   const wrap = document.createElement('div')
   wrap.className = `knob-wrap ${colorClass}`
@@ -88,6 +90,22 @@ export function updateStutterBtn(byId, channel, depth, activeDepth) {
   if (!btn) return
   btn.textContent = `1/${depth}`
   btn.classList.toggle('stutter-active', activeDepth !== 0)
+}
+
+/** Project one pad's derived visual onto the DOM. */
+export function renderPad(padEl, visual) {
+  const el = padEl(visual.pad)
+  if (!el) return
+  el.classList.toggle('blink', visual.blinking)
+  el.classList.toggle('active', visual.active)
+  el.classList.toggle('btn-loading', visual.loading)
+}
+
+/** Project all 5 slots of a channel onto the DOM. */
+export function renderChannel(padEl, ch) {
+  for (const slot of Object.keys(ch.pads)) {
+    renderPad(padEl, padVisual(ch, slot))
+  }
 }
 
 export function applyThemeColors(theme) {

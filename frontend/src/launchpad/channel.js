@@ -1,4 +1,15 @@
-// Per-channel pad lifecycle. No timing math, no AudioNodes.
+import { SLOTS_PER_CHANNEL, padAt, slotOfPad } from './pads.js'
+
+function createPads(channelId) {
+  const pads = {}
+  for (let slot = 1; slot <= SLOTS_PER_CHANNEL; slot++) {
+    pads[slot] = {
+      pad: padAt(channelId, slot),
+      loading: false,
+    }
+  }
+  return pads
+}
 
 export function createChannel(id) {
   return {
@@ -8,7 +19,7 @@ export function createChannel(id) {
     pendingPad: null,
     pendingAt: null,
     stutter: { depth: 4, activeDepth: 0 },
-    stutterSource: null,
+    pads: createPads(id),
   }
 }
 
@@ -24,11 +35,58 @@ export function anyChannelSounding(channels) {
   )
 }
 
+/** Derive blink/active from channel FSM — pad slots only store loading. */
+export function padVisual(ch, slot) {
+  const padState = ch.pads[slot]
+  const pad = padState.pad
+  const waiting =
+    (ch.state === 'armed' && ch.activePad === pad) ||
+    (ch.state === 'pending' && ch.pendingPad === pad)
+  const sounding =
+    !waiting &&
+    ch.activePad === pad &&
+    (ch.state === 'playing' || ch.state === 'stuttering' || ch.state === 'pending')
+  return {
+    pad,
+    blinking: waiting,
+    active: sounding,
+    loading: padState.loading,
+  }
+}
+
+export function patchPad(ch, pad, flags) {
+  Object.assign(ch.pads[slotOfPad(pad)], flags)
+  return ch
+}
+
+export function setAllPadsLoading(ch, loading) {
+  for (let slot = 1; slot <= SLOTS_PER_CHANNEL; slot++) {
+    ch.pads[slot].loading = loading
+  }
+  return ch
+}
+
 export function reduceChannel(ch, event) {
   switch (event.type) {
     case 'ARM':
       if (ch.state === 'idle') {
         return { ...ch, state: 'armed', activePad: event.pad }
+      }
+      // Idempotent re-arm (same pad already waiting).
+      if (ch.state === 'armed' && ch.activePad === event.pad) {
+        return ch
+      }
+      // Stutter release / resume: drop stutter and wait for the next boundary.
+      if (ch.state === 'stuttering' && ch.activePad === event.pad) {
+        return {
+          ...ch,
+          state: 'armed',
+          stutter: { ...ch.stutter, activeDepth: 0 },
+        }
+      }
+      // Re-arm while playing (same pad) — e.g. schedule-ahead after a stop gap.
+      if (ch.state === 'playing' && ch.activePad === event.pad) {
+        return { ...ch, state: 'armed' }
       }
       return ch
 
@@ -69,13 +127,10 @@ export function reduceChannel(ch, event) {
         pendingPad: null,
         pendingAt: null,
         stutter: { ...ch.stutter, activeDepth: 0 },
-        stutterSource: null,
       }
 
     case 'STUTTER_ON':
-      // Allow from stuttering so depth changes while engaged still update activeDepth.
-      // Allow from armed so stutter can engage during the pre-roll blink window.
-      if (ch.state === 'playing' || ch.state === 'stuttering' || ch.state === 'armed') {
+      if (ch.state === 'playing' || ch.state === 'stuttering') {
         return {
           ...ch,
           state: 'stuttering',
@@ -90,7 +145,6 @@ export function reduceChannel(ch, event) {
           ...ch,
           state: 'playing',
           stutter: { ...ch.stutter, activeDepth: 0 },
-          stutterSource: null,
         }
       }
       return ch

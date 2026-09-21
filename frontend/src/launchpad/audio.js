@@ -38,34 +38,51 @@ export async function loadPadVoice(pad, url) {
   }
 }
 
+export function splitDuration(durationSec, splitActive) {
+  if (splitActive) return durationSec / 2
+  return durationSec
+}
+
+/** After flipping split on/off: halve or double the running master period. */
+export function periodAfterSplitToggle(periodSec, splitActive) {
+  if (splitActive) return periodSec / 2
+  return periodSec * 2
+}
+
 export function createLoopSource(buffer, splitActive, loopEndSec) {
   const source = audioCtx.createBufferSource()
   source.buffer = buffer
   source.loop = true
   if (loopEndSec != null) {
     source.loopEnd = loopEndSec
-  } else if (splitActive) {
-    source.loopEnd = buffer.duration / 2
   } else {
-    source.loopEnd = buffer.duration
+    source.loopEnd = splitDuration(buffer.duration, splitActive)
   }
   return source
 }
 
+export function safeStop(source, when) {
+  if (!source) return
+  try {
+    if (when != null) source.stop(when)
+    else source.stop()
+  } catch { /* already stopped */ }
+}
+
 export function stopAllVoices() {
   for (const voice of Object.values(padVoices)) {
-    try {
-      if (voice && voice.source) voice.source.stop()
-    } catch { /* already stopped */ }
+    if (voice) safeStop(voice.source)
   }
 }
 
-// Clears module singletons so a later mount can re-init cleanly.
 export function resetAudio() {
   stopAllVoices()
-  for (const key of Object.keys(padVoices)) delete padVoices[key]
-  for (const key of Object.keys(channelGains)) delete channelGains[key]
-  for (const key of Object.keys(channelFilters)) delete channelFilters[key]
+	for (const key of Object.keys(padVoices))
+		delete padVoices[key]
+	for (const key of Object.keys(channelGains))
+		delete channelGains[key]
+	for (const key of Object.keys(channelFilters))
+		delete channelFilters[key]
   bufferCache.clear()
   if (audioCtx) {
     audioCtx.close().catch(() => {})
