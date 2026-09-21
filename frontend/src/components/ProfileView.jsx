@@ -3,6 +3,7 @@ import { fetchProfile } from '../auth.js'
 import NavButton from './NavButton.jsx'
 import Icon from './Icon.jsx'
 import UserRow from './UserRow.jsx'
+import GlassPanel from './GlassPanel.jsx'
 
 /* This is just a placeholder list of friends that will be pulled from db when it has been designed, should be a rather
 simple addition */
@@ -51,7 +52,7 @@ export default function ProfileView({ token }) {
   }, [token])
 
   return (
-    <div className="fixed top-25 right-12.5 w-1/5 z-20 rounded-[20px] px-10 pt-20 pb-6 bg-surface/40 border-t border-t-white/18 border-b border-b-white/8 shadow-panel">
+    <GlassPanel className="top-25 pt-20">
       {error && <div className="text-error text-xs text-center max-w-55">{error}</div>}
       {!error && !profile && <div>Loading...</div>}
       {profile && (
@@ -61,6 +62,6 @@ export default function ProfileView({ token }) {
       )}
       {profile && <Avatar />}
       {profile && <FriendsButton open={showFriends} onClick={() => setShowFriends((s) => !s)} />}
-    </div>
+    </GlassPanel>
   )
 }
