@@ -3,8 +3,6 @@ import {
   initChannelChain,
   loadPadVoice,
   createLoopSource,
-  getSplitDuration,
-  getLoopLengthAfterSplitToggle,
   stopPlayer,
   resetAudio,
   padVoices,
@@ -46,7 +44,6 @@ export function mountLaunchpad(container, themes) {
   const stutterSources = {} // channelId -> AudioBufferSourceNode
   const STUTTER_DEPTHS = [4, 8, 16]
 
-  let splitActive = false
   let currentFadeTime = 0
   const channelVolumes = {}
   for (let id = 1; id <= CHANNEL_COUNT; id++) channelVolumes[id] = 1
@@ -70,24 +67,6 @@ export function mountLaunchpad(container, themes) {
   function setPadLoading(channelId, pad, loading) {
     setPadFlags(channels[channelId], pad, { loading })
     renderPad(padEl, getPadVisual(channels[channelId], slotOfPad(pad)))
-  }
-
-  function getLoopLengthFromBuffer(bufferDurationSec) {
-    return getSplitDuration(bufferDurationSec || 1, splitActive)
-  }
-
-  function resolveStartTime(bufferDurationSec) {
-    const now = audioCtx.currentTime
-    if (!clock.isRunning()) {
-      return clock.start(now, getLoopLengthFromBuffer(bufferDurationSec))
-    }
-    return clock.getNextGrid(now)
-  }
-
-  function stutterLoopSec(depth, bufferDurationSec) {
-    let loopLength = clock.getLoopLength()
-    if (loopLength == null) loopLength = getLoopLengthFromBuffer(bufferDurationSec)
-    return loopLength / depth
   }
 
   function stopStutterSource(channelId, when) {
@@ -116,8 +95,7 @@ export function mountLaunchpad(container, themes) {
   function armStutterSource(channelId, voice, depth, startTime) {
     const source = createLoopSource(
       voice.buffer,
-      splitActive,
-      stutterLoopSec(depth, voice.buffer.duration),
+      clock.getLoopLength() / depth,
     )
     source.connect(channelGains[channelId])
     source.start(startTime)
@@ -162,7 +140,7 @@ export function mountLaunchpad(container, themes) {
       }
     }
 
-    const source = createLoopSource(voice.buffer, splitActive)
+    const source = createLoopSource(voice.buffer, clock.loopEndFor(voice.buffer.duration))
     source.connect(channelGains[channelId])
     source.start(at)
     voice.source = source
@@ -184,7 +162,13 @@ export function mountLaunchpad(container, themes) {
     const voice = padVoices[pad]
     if (!voice) return
 
-    const startTime = resolveStartTime(voice.buffer.duration)
+    const now = audioCtx.currentTime
+    let startTime
+    if (!clock.isRunning()) {
+      startTime = clock.start(now, clock.loopEndFor(voice.buffer.duration))
+    } else {
+      startTime = clock.getNextGrid(now)
+    }
 
     schedulePadAt(pad, startTime, {
       resetGain: true,
@@ -293,15 +277,11 @@ export function mountLaunchpad(container, themes) {
     ensureAudioRunning()
     const ch = channels[channelId]
     if (ch.stutter.activeDepth !== 0) {
-      releaseStutter(channelId)
+      endStutter(channelId, { resume: true })
     } else {
       startStutter(channelId, ch.stutter.depth)
       if (stutterSources[channelId]) refreshStutterBtn(channelId)
     }
-  }
-
-  function releaseStutter(channelId) {
-    endStutter(channelId, { resume: true })
   }
 
   function cycleStutterDepth(channelId) {
@@ -322,7 +302,6 @@ export function mountLaunchpad(container, themes) {
         armStutterSource(channelId, voice, depth, startTime)
       }
     }
-
     refreshStutterBtn(channelId)
   }
 
@@ -335,7 +314,7 @@ export function mountLaunchpad(container, themes) {
 
     stopStutterSource(channelId)
 
-    const startTime = resolveStartTime(voice.buffer.duration)
+    const startTime = clock.getNextGrid(audioCtx.currentTime)
     if (voice.source) {
       stopPlayer(voice.source, startTime)
       voice.source = null
@@ -345,19 +324,15 @@ export function mountLaunchpad(container, themes) {
   }
 
   function toggleSplit() {
-    splitActive = !splitActive
+    const active = clock.setSplit(!clock.isSplit(), audioCtx.currentTime)
     for (const ch of Object.values(channels)) {
       if (!ch.activePad) continue
       const voice = padVoices[ch.activePad]
       if (voice && voice.source) {
-        voice.source.loopEnd = getSplitDuration(voice.buffer.duration, splitActive)
+        voice.source.loopEnd = clock.loopEndFor(voice.buffer.duration)
       }
     }
-    if (clock.isRunning()) {
-      const now = audioCtx.currentTime
-      clock.setLoopLength(getLoopLengthAfterSplitToggle(clock.getLoopLength(), splitActive), now, true)
-    }
-    return splitActive
+    return active
   }
 
   function setVolume(channelId, v) {
