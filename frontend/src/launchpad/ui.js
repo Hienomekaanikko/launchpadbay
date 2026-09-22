@@ -1,4 +1,4 @@
-import { padVisual } from './channel.js'
+import { getPadVisual } from './channel.js'
 
 export function createKnob(id, colorClass) {
   const wrap = document.createElement('div')
@@ -104,7 +104,7 @@ export function renderPad(padEl, visual) {
 /** Project all 5 slots of a channel onto the DOM. */
 export function renderChannel(padEl, ch) {
   for (const slot of Object.keys(ch.pads)) {
-    renderPad(padEl, padVisual(ch, slot))
+    renderPad(padEl, getPadVisual(ch, slot))
   }
 }
 
@@ -113,10 +113,10 @@ export function applyThemeColors(theme) {
 }
 
 /** phase: 0..1 while the clock is running, or null when idle */
-function updateProgressBar(fillElement, phase) {
+function updateProgressBar(fillElement, getPhase) {
   if (!fillElement) return
-  if (phase != null) {
-    fillElement.style.width = phase * 100 + '%'
+  if (getPhase != null) {
+    fillElement.style.width = getPhase * 100 + '%'
     fillElement.style.opacity = '1'
   } else {
     fillElement.style.opacity = '0'

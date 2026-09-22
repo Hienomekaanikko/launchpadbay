@@ -1,65 +1,66 @@
-// Shared transport: origin + period. No pads, no AudioNodes.
-
 export function createClock() {
-  let originSec = null
-  let periodSec = null
+  let loopOrigin = null
+  let loopLength = null
 
   function isRunning() {
-    return originSec != null && periodSec != null
+    return loopOrigin != null && loopLength != null
   }
 
-  function arm(nowSec, period, lookaheadSec) {
+  function start(nowSec, length, lookaheadSec) {
     if (lookaheadSec == null) lookaheadSec = 0.1
-    originSec = nowSec + lookaheadSec
-    periodSec = period
-    return originSec
+    loopOrigin = nowSec + lookaheadSec
+    loopLength = length
+    return loopOrigin
   }
 
   function clear() {
-    originSec = null
-    periodSec = null
+    loopOrigin = null
+    loopLength = null
   }
 
-  /** subdivision: 1 = full loop, 2 = half, 4 = 1/4, etc. */
-  function nextBoundary(nowSec, subdivision) {
+  function getNextGrid(nowSec, subdivision) {
     if (subdivision == null) subdivision = 1
     if (!isRunning()) return null
-    const step = periodSec / subdivision
-    const elapsed = nowSec - originSec
+    const step = loopLength / subdivision
+    const elapsed = nowSec - loopOrigin
     const n = Math.floor(elapsed / step)
-    return originSec + (n + 1) * step
+    return loopOrigin + (n + 1) * step
   }
 
-  /** 0..1 phase through the master period (for the progress bar) */
-  function phase(nowSec) {
+  /** 0..1 phase through the master loop (for the progress bar) */
+  function getPhase(nowSec) {
     if (!isRunning()) return null
-    const elapsed = Math.max(0, (nowSec - originSec) % periodSec)
-    return elapsed / periodSec
+    const elapsed = Math.max(0, (nowSec - loopOrigin) % loopLength)
+    return elapsed / loopLength
   }
 
   /**
-   * Change period. preservePhase=true keeps the current musical phase
+   * Change loop length. preservePhase=true keeps the current musical phase
    * by shifting origin (cleaner than a blind *= 2 on split).
    */
-  function setPeriod(newPeriodSec, nowSec, preservePhase) {
+  function setLoopLength(newLoopLength, nowSec, preservePhase) {
     if (preservePhase == null) preservePhase = true
     if (!isRunning()) {
-      periodSec = newPeriodSec
+      loopLength = newLoopLength
       return
     }
     if (preservePhase) {
-      let p = phase(nowSec)
+      let p = getPhase(nowSec)
       if (p == null) p = 0
-      periodSec = newPeriodSec
-      originSec = nowSec - p * periodSec
+      loopLength = newLoopLength
+      loopOrigin = nowSec - p * loopLength
     } else {
-      periodSec = newPeriodSec
+      loopLength = newLoopLength
     }
   }
 
-  function snapshot() {
-    return { originSec, periodSec }
+  function getLoopOrigin() {
+    return loopOrigin
   }
 
-  return { isRunning, arm, clear, nextBoundary, phase, setPeriod, snapshot }
+  function getLoopLength() {
+    return loopLength
+  }
+
+  return { isRunning, start, clear, getNextGrid, getPhase, setLoopLength, getLoopOrigin, getLoopLength }
 }
