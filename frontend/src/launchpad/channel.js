@@ -36,7 +36,7 @@ export function anyChannelSounding(channels) {
 }
 
 /** Derive blink/active from channel FSM — pad slots only store loading. */
-export function padVisual(ch, slot) {
+export function getPadVisual(ch, slot) {
   const padState = ch.pads[slot]
   const pad = padState.pad
   const waiting =
@@ -54,7 +54,7 @@ export function padVisual(ch, slot) {
   }
 }
 
-export function patchPad(ch, pad, flags) {
+export function setPadFlags(ch, pad, flags) {
   Object.assign(ch.pads[slotOfPad(pad)], flags)
   return ch
 }

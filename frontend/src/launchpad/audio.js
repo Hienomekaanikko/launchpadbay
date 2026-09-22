@@ -38,15 +38,15 @@ export async function loadPadVoice(pad, url) {
   }
 }
 
-export function splitDuration(durationSec, splitActive) {
+export function getSplitDuration(durationSec, splitActive) {
   if (splitActive) return durationSec / 2
   return durationSec
 }
 
-/** After flipping split on/off: halve or double the running master period. */
-export function periodAfterSplitToggle(periodSec, splitActive) {
-  if (splitActive) return periodSec / 2
-  return periodSec * 2
+/** After flipping split on/off: halve or double the running master loop length. */
+export function getLoopLengthAfterSplitToggle(loopLengthSec, splitActive) {
+  if (splitActive) return loopLengthSec / 2
+  return loopLengthSec * 2
 }
 
 export function createLoopSource(buffer, splitActive, loopEndSec) {
@@ -56,12 +56,12 @@ export function createLoopSource(buffer, splitActive, loopEndSec) {
   if (loopEndSec != null) {
     source.loopEnd = loopEndSec
   } else {
-    source.loopEnd = splitDuration(buffer.duration, splitActive)
+    source.loopEnd = getSplitDuration(buffer.duration, splitActive)
   }
   return source
 }
 
-export function safeStop(source, when) {
+export function stopPlayer(source, when) {
   if (!source) return
   try {
     if (when != null) source.stop(when)
@@ -71,7 +71,7 @@ export function safeStop(source, when) {
 
 export function stopAllVoices() {
   for (const voice of Object.values(padVoices)) {
-    if (voice) safeStop(voice.source)
+    if (voice) stopPlayer(voice.source)
   }
 }
 

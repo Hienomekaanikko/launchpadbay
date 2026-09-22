@@ -23,10 +23,10 @@ function bindPads(padEl, onPad) {
   }
 }
 
-function bindTransport(byId, onSplit) {
+function bindTransport(byId, toggelSplit) {
   const splitBtn = byId('split-btn')
   const handle = () => {
-    const active = onSplit()
+    const active = toggleSplit()
     splitBtn.classList.toggle('active', active)
   }
   bindClickAndTouch(splitBtn, handle)
@@ -57,7 +57,7 @@ function bindStutterControls(byId, trackUiTimer, onStutterTap, onStutterCycle) {
   }
 }
 
-function bindKnobs(byId, onVolume, onFilter) {
+function bindKnobs(byId, setVolume, setFilter) {
   const cleanups = []
   const volCol = byId('vol-knobs')
   const filterCol = byId('filter-knobs')
@@ -70,7 +70,7 @@ function bindKnobs(byId, onVolume, onFilter) {
     let volVal = 100
     cleanups.push(setupKnobDrag(volWrap, () => volVal, (v) => {
       volVal = v
-      onVolume(channelId, v)
+      setVolume(channelId, v)
       updateKnobVisual(volWrap, v)
     }))
 
@@ -79,7 +79,7 @@ function bindKnobs(byId, onVolume, onFilter) {
     let filterVal = 100
     cleanups.push(setupKnobDrag(filterWrap, () => filterVal, (v) => {
       filterVal = v
-      onFilter(channelId, v)
+      setFilter(channelId, v)
       updateKnobVisual(filterWrap, v)
     }))
   }
@@ -92,15 +92,15 @@ export function bindLaunchpadControls({
   padEl,
   trackUiTimer,
   onPad,
-  onSplit,
+  toggleSplit,
   onStutterTap,
   onStutterCycle,
-  onVolume,
-  onFilter,
+  setVolume,
+  setFilter,
 }) {
-  bindTransport(byId, onSplit)
+  bindTransport(byId, toggleSplit)
   bindStutterControls(byId, trackUiTimer, onStutterTap, onStutterCycle)
-  const knobCleanups = bindKnobs(byId, onVolume, onFilter)
+  const knobCleanups = bindKnobs(byId, setVolume, setFilter)
   bindPads(padEl, onPad)
   return { knobCleanups }
 }

@@ -3,9 +3,9 @@ import {
   initChannelChain,
   loadPadVoice,
   createLoopSource,
-  splitDuration,
-  periodAfterSplitToggle,
-  safeStop,
+  getSplitDuration,
+  getLoopLengthAfterSplitToggle,
+  stopPlayer,
   resetAudio,
   padVoices,
   audioCtx,
@@ -30,8 +30,8 @@ import {
   createChannels,
   reduceChannel,
   anyChannelSounding,
-  patchPad,
-  padVisual,
+  setPadFlags,
+  getPadVisual,
   setAllPadsLoading,
 } from './channel.js'
 import { createUiTimers } from './uiTimers.js'
@@ -67,32 +67,31 @@ export function mountLaunchpad(container, themes) {
     return channels[id]
   }
 
-  function updatePadLoading(channelId, pad, loading) {
-    patchPad(channels[channelId], pad, { loading })
-    renderPad(padEl, padVisual(channels[channelId], slotOfPad(pad)))
+  function setPadLoading(channelId, pad, loading) {
+    setPadFlags(channels[channelId], pad, { loading })
+    renderPad(padEl, getPadVisual(channels[channelId], slotOfPad(pad)))
   }
 
-  function masterPeriodFromBuffer(bufferDurationSec) {
-    return splitDuration(bufferDurationSec || 1, splitActive)
+  function getLoopLengthFromBuffer(bufferDurationSec) {
+    return getSplitDuration(bufferDurationSec || 1, splitActive)
   }
 
   function resolveStartTime(bufferDurationSec) {
     const now = audioCtx.currentTime
     if (!clock.isRunning()) {
-      return clock.arm(now, masterPeriodFromBuffer(bufferDurationSec))
+      return clock.start(now, getLoopLengthFromBuffer(bufferDurationSec))
     }
-    return clock.nextBoundary(now)
+    return clock.getNextGrid(now)
   }
 
   function stutterLoopSec(depth, bufferDurationSec) {
-    const { periodSec } = clock.snapshot()
-    let period = periodSec
-    if (period == null) period = masterPeriodFromBuffer(bufferDurationSec)
-    return period / depth
+    let loopLength = clock.getLoopLength()
+    if (loopLength == null) loopLength = getLoopLengthFromBuffer(bufferDurationSec)
+    return loopLength / depth
   }
 
   function stopStutterSource(channelId, when) {
-    safeStop(stutterSources[channelId], when)
+    stopPlayer(stutterSources[channelId], when)
     delete stutterSources[channelId]
   }
 
@@ -139,7 +138,7 @@ export function mountLaunchpad(container, themes) {
       voice.uiStartTimerId = null
     }
     if (voice && voice.source) {
-      safeStop(voice.source)
+      stopPlayer(voice.source)
       voice.source = null
     }
 
@@ -222,7 +221,7 @@ export function mountLaunchpad(container, themes) {
         voice.source = null
         const delayMs = currentFadeTime * 1000 + 50
         uiTimers.track(() => {
-          safeStop(source)
+          stopPlayer(source)
           if (!isTornDown) channelGains[channelId].gain.setValueAtTime(channelVolumes[channelId], audioCtx.currentTime)
         }, delayMs)
       } else {
@@ -230,13 +229,13 @@ export function mountLaunchpad(container, themes) {
           gain.gain.cancelScheduledValues(audioCtx.currentTime)
           gain.gain.setValueAtTime(channelVolumes[channelId], audioCtx.currentTime)
         }
-        safeStop(voice.source)
+        stopPlayer(voice.source)
         voice.source = null
       }
     }
   }
 
-  function scheduleHandoff(channelId, pad, handoffTime) {
+  function queueLoop(channelId, pad, handoffTime) {
     cancelPendingLoop(channelId)
 
     schedulePadAt(pad, handoffTime, {
@@ -247,7 +246,7 @@ export function mountLaunchpad(container, themes) {
         if (!outgoing || outgoing === pad) return
         const outVoice = padVoices[outgoing]
         if (outVoice && outVoice.source) {
-          safeStop(outVoice.source)
+          stopPlayer(outVoice.source)
           outVoice.source = null
         }
       },
@@ -286,8 +285,8 @@ export function mountLaunchpad(container, themes) {
     }
 
     let handoffTime = current.pendingAt
-    if (handoffTime == null) handoffTime = clock.nextBoundary(audioCtx.currentTime)
-    scheduleHandoff(channelId, pad, handoffTime)
+    if (handoffTime == null) handoffTime = clock.getNextGrid(audioCtx.currentTime)
+    queueLoop(channelId, pad, handoffTime)
   }
 
   function tapStutter(channelId) {
@@ -318,7 +317,7 @@ export function mountLaunchpad(container, themes) {
       let voice = null
       if (pad) voice = padVoices[pad]
       if (voice && voice.buffer && stutterSources[channelId]) {
-        const startTime = clock.nextBoundary(audioCtx.currentTime)
+        const startTime = clock.getNextGrid(audioCtx.currentTime)
         stopStutterSource(channelId, startTime)
         armStutterSource(channelId, voice, depth, startTime)
       }
@@ -338,37 +337,35 @@ export function mountLaunchpad(container, themes) {
 
     const startTime = resolveStartTime(voice.buffer.duration)
     if (voice.source) {
-      safeStop(voice.source, startTime)
+      stopPlayer(voice.source, startTime)
       voice.source = null
     }
 
     armStutterSource(channelId, voice, stutterDepth, startTime)
   }
 
-  // Split: flip flag, rewrite active loopEnds, rescale clock period.
-  function onSplit() {
+  function toggleSplit() {
     splitActive = !splitActive
     for (const ch of Object.values(channels)) {
       if (!ch.activePad) continue
       const voice = padVoices[ch.activePad]
       if (voice && voice.source) {
-        voice.source.loopEnd = splitDuration(voice.buffer.duration, splitActive)
+        voice.source.loopEnd = getSplitDuration(voice.buffer.duration, splitActive)
       }
     }
     if (clock.isRunning()) {
-      const { periodSec } = clock.snapshot()
       const now = audioCtx.currentTime
-      clock.setPeriod(periodAfterSplitToggle(periodSec, splitActive), now, true)
+      clock.setLoopLength(getLoopLengthAfterSplitToggle(clock.getLoopLength(), splitActive), now, true)
     }
     return splitActive
   }
 
-  function onVolume(channelId, v) {
+  function setVolume(channelId, v) {
     channelVolumes[channelId] = v / 100
     channelGains[channelId].gain.setValueAtTime(v / 100, audioCtx.currentTime)
   }
 
-  function onFilter(channelId, v) {
+  function setFilter(channelId, v) {
     channelFilters[channelId].frequency.setValueAtTime(
       200 * Math.pow(100, v / 100),
       audioCtx.currentTime,
@@ -407,7 +404,7 @@ export function mountLaunchpad(container, themes) {
         return loadPadVoice(pad, url)
           .finally(() => {
             if (isTornDown) return
-            updatePadLoading(channelId, pad, false)
+            setPadLoading(channelId, pad, false)
           })
       })
     )
@@ -429,14 +426,14 @@ export function mountLaunchpad(container, themes) {
     padEl,
     trackUiTimer: uiTimers.track,
     onPad: toggleLoop,
-    onSplit,
+    toggleSplit,
     onStutterTap: tapStutter,
     onStutterCycle: cycleStutterDepth,
-    onVolume,
-    onFilter,
+    setVolume,
+    setFilter,
   })
   const stopProgress = startProgressLoop(byId('master-bar-fill'), () =>
-    clock.phase(audioCtx.currentTime)
+    clock.getPhase(audioCtx.currentTime)
   )
   loadThemeSounds(themes[0]).catch((err) => {
     console.error('Launchpad init error:', err)
