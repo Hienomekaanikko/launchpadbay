@@ -7,13 +7,13 @@ export default function SessionRow({ id, current, max, status = 'open', onJoinCl
       <span className="text-white/60 text-xs font-sans">{current}/{max}</span>
       <Icon name="friends" className="w-4 h-4 text-white/70" />
       {status === 'pending'
-        ? <span className="text-white/50 text-xs font-medium tracking-nav font-sans">Pending...</span>
+        ? <span className="w-16 text-right text-white/50 text-xs font-medium tracking-nav font-sans">Pending...</span>
         : (
           <button
             type="button"
             onClick={() => onJoinClick?.(id)}
             aria-label={`Request to join ${id}`}
-            className="text-brand text-xs font-medium tracking-nav font-sans hover:text-white transition-colors"
+            className="w-16 text-right text-brand text-xs font-medium tracking-nav font-sans hover:text-white transition-colors"
           >
             JOIN
           </button>
