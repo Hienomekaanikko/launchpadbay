@@ -23,7 +23,7 @@ function bindPads(padEl, onPad) {
   }
 }
 
-function bindTransport(byId, toggelSplit) {
+function bindTransport(byId, toggleSplit) {
   const splitBtn = byId('split-btn')
   const handle = () => {
     const active = toggleSplit()

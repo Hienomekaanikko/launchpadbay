@@ -38,26 +38,11 @@ export async function loadPadVoice(pad, url) {
   }
 }
 
-export function getSplitDuration(durationSec, splitActive) {
-  if (splitActive) return durationSec / 2
-  return durationSec
-}
-
-/** After flipping split on/off: halve or double the running master loop length. */
-export function getLoopLengthAfterSplitToggle(loopLengthSec, splitActive) {
-  if (splitActive) return loopLengthSec / 2
-  return loopLengthSec * 2
-}
-
-export function createLoopSource(buffer, splitActive, loopEndSec) {
+export function createLoopSource(buffer, loopEndSec) {
   const source = audioCtx.createBufferSource()
   source.buffer = buffer
   source.loop = true
-  if (loopEndSec != null) {
-    source.loopEnd = loopEndSec
-  } else {
-    source.loopEnd = getSplitDuration(buffer.duration, splitActive)
-  }
+  source.loopEnd = loopEndSec
   return source
 }
 
@@ -69,20 +54,16 @@ export function stopPlayer(source, when) {
   } catch { /* already stopped */ }
 }
 
-export function stopAllVoices() {
+export function resetAudio() {
   for (const voice of Object.values(padVoices)) {
     if (voice) stopPlayer(voice.source)
   }
-}
-
-export function resetAudio() {
-  stopAllVoices()
-	for (const key of Object.keys(padVoices))
-		delete padVoices[key]
-	for (const key of Object.keys(channelGains))
-		delete channelGains[key]
-	for (const key of Object.keys(channelFilters))
-		delete channelFilters[key]
+  for (const key of Object.keys(padVoices))
+    delete padVoices[key]
+  for (const key of Object.keys(channelGains))
+    delete channelGains[key]
+  for (const key of Object.keys(channelFilters))
+    delete channelFilters[key]
   bufferCache.clear()
   if (audioCtx) {
     audioCtx.close().catch(() => {})
