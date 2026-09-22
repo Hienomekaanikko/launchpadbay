@@ -41,10 +41,11 @@ export function mountLaunchpad(container, themes) {
 
   const clock = createClock()
   const channels = createChannels(CHANNEL_COUNT)
-  const stutterSources = {} // channelId -> AudioBufferSourceNode
+  const stutterSources = {}
   const STUTTER_DEPTHS = [4, 8, 16]
 
   let currentFadeTime = 0
+  let pendingSplit = null // { enabled, at, timerId } | null
   const channelVolumes = {}
   for (let id = 1; id <= CHANNEL_COUNT; id++) channelVolumes[id] = 1
 
@@ -140,7 +141,7 @@ export function mountLaunchpad(container, themes) {
       }
     }
 
-    const source = createLoopSource(voice.buffer, clock.loopEndFor(voice.buffer.duration))
+    const source = createLoopSource(voice.buffer, clock.getLoopLength())
     source.connect(channelGains[channelId])
     source.start(at)
     voice.source = source
@@ -165,7 +166,8 @@ export function mountLaunchpad(container, themes) {
     const now = audioCtx.currentTime
     let startTime
     if (!clock.isRunning()) {
-      startTime = clock.start(now, clock.loopEndFor(voice.buffer.duration))
+      // Seed full bar from buffer; split selects full vs half via getLoopLength.
+      startTime = clock.start(now, voice.buffer.duration)
     } else {
       startTime = clock.getNextGrid(now)
     }
@@ -193,7 +195,10 @@ export function mountLaunchpad(container, themes) {
 
     setChannel(channelId, { type: 'STOP' })
 
-    if (!anyChannelSounding(channels)) clock.clear()
+    if (!anyChannelSounding(channels)) {
+      cancelPendingSplit()
+      clock.clear()
+    }
 
     if (voice.source) {
       const gain = channelGains[channelId]
@@ -323,16 +328,54 @@ export function mountLaunchpad(container, themes) {
     armStutterSource(channelId, voice, stutterDepth, startTime)
   }
 
-  function toggleSplit() {
-    const active = clock.setSplit(!clock.isSplit(), audioCtx.currentTime)
+  function cancelPendingSplit() {
+    if (!pendingSplit) return
+    uiTimers.cancel(pendingSplit.timerId)
+    pendingSplit = null
+  }
+
+  function applySplit(enabled, currentTime) {
+    const active = clock.setSplit(enabled, currentTime)
     for (const ch of Object.values(channels)) {
       if (!ch.activePad) continue
       const voice = padVoices[ch.activePad]
       if (voice && voice.source) {
-        voice.source.loopEnd = clock.loopEndFor(voice.buffer.duration)
+        voice.source.loopEnd = clock.getLoopLength()
       }
     }
     return active
+  }
+
+  function toggleSplit() {
+    const desired = pendingSplit
+      ? !pendingSplit.enabled
+      : !clock.isSplit()
+
+    // Idle: apply immediately
+    if (!clock.isRunning()) {
+      cancelPendingSplit()
+      return applySplit(desired, audioCtx.currentTime)
+    }
+
+    // Re-click back to current → cancel pending
+    if (desired === clock.isSplit()) {
+      cancelPendingSplit()
+      return clock.isSplit()
+    }
+
+    // ON: next half of the full bar (midpoint or end). OFF: next half-bar.
+    const subdivision = desired ? 2 : 1
+    const at = clock.getNextGrid(audioCtx.currentTime, subdivision)
+    const delayMs = ((at - audioCtx.currentTime) * 1000) | 0
+    const timerId = uiTimers.track(() => {
+      if (isTornDown || !pendingSplit) return
+      const { enabled } = pendingSplit
+      pendingSplit = null
+      applySplit(enabled, at)
+    }, delayMs)
+
+    pendingSplit = { enabled: desired, at, timerId }
+    return desired
   }
 
   function setVolume(channelId, v) {
@@ -369,6 +412,7 @@ export function mountLaunchpad(container, themes) {
       updateStutterBtn(byId, channelId, keptDepth, 0)
     }
 
+    cancelPendingSplit()
     clock.clear()
 
     await Promise.all(
@@ -419,6 +463,7 @@ export function mountLaunchpad(container, themes) {
     isTornDown = true
 
     stopProgress()
+    cancelPendingSplit()
     uiTimers.clearAll()
 
     for (const off of knobCleanups) off()
