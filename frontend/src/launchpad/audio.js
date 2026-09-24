@@ -46,7 +46,7 @@ export function createLoopSource(buffer, loopEndSec) {
   return source
 }
 
-export function stopPlayer(source, when) {
+export function stopSource(source, when) {
   if (!source) return
   try {
     if (when != null) source.stop(when)
@@ -54,9 +54,18 @@ export function stopPlayer(source, when) {
   } catch { /* already stopped */ }
 }
 
+/** Stop previous (optional) and start a new looping source on a channel. */
+export function replaceLoopSource(channelId, buffer, loopEndSec, when, previousSource) {
+  stopSource(previousSource, when)
+  const source = createLoopSource(buffer, loopEndSec)
+  source.connect(channelGains[channelId])
+  source.start(when)
+  return source
+}
+
 export function resetAudio() {
   for (const voice of Object.values(padVoices)) {
-    if (voice) stopPlayer(voice.source)
+    if (voice) stopSource(voice.source)
   }
   for (const key of Object.keys(padVoices))
     delete padVoices[key]

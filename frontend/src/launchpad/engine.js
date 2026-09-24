@@ -2,8 +2,8 @@ import {
   initAudio,
   initChannelChain,
   loadPadVoice,
-  createLoopSource,
-  stopPlayer,
+  replaceLoopSource,
+  stopSource,
   resetAudio,
   padVoices,
   audioCtx,
@@ -28,7 +28,7 @@ import { createSplitControl } from './split.js'
 import {
   createChannels,
   applyChannelEvent,
-  anyChannelSounding,
+  anyChannelActive,
   setPadFlags,
   getPadVisual,
   setAllPadsLoading,
@@ -56,7 +56,6 @@ export function mountLaunchpad(container, themes) {
     clock,
     channels,
     padVoices,
-    channelGains,
     uiTimers,
     getCurrentTime: () => audioCtx.currentTime,
     isUnmounted: () => isUnmounted,
@@ -81,7 +80,7 @@ export function mountLaunchpad(container, themes) {
   }
 
   function stopStutterSource(channelId, when) {
-    stopPlayer(stutterSources[channelId], when)
+    stopSource(stutterSources[channelId], when)
     delete stutterSources[channelId]
   }
 
@@ -104,14 +103,14 @@ export function mountLaunchpad(container, themes) {
   }
 
   function armStutterSource(channelId, voice, depth, startTime) {
-    const source = createLoopSource(
+    stutterSources[channelId] = replaceLoopSource(
+      channelId,
       voice.buffer,
       clock.getLoopLength() / depth,
+      startTime,
+      stutterSources[channelId],
     )
-    source.connect(channelGains[channelId])
-    source.start(startTime)
     dispatchChannelEvent(channelId, { type: 'STUTTER_ON', depth })
-    stutterSources[channelId] = source
   }
 
   // --- Audio functions ---
@@ -127,15 +126,15 @@ export function mountLaunchpad(container, themes) {
       voice.uiStartTimerId = null
     }
     if (voice && voice.source) {
-      stopPlayer(voice.source)
+      stopSource(voice.source)
       voice.source = null
     }
 
     dispatchChannelEvent(channelId, { type: 'CANCEL_PENDING' })
   }
 
-  // Shared: schedule a pad voice at `at`; FSM (armed/pending → playing) drives lights.
-  function schedulePadAt(pad, at, options) {
+  // Shared: schedule a loop at `at`; FSM (armed/pending → playing) drives lights.
+  function scheduleLoopAt(pad, at, options) {
     if (!options) options = {}
 
     const voice = padVoices[pad]
@@ -151,10 +150,13 @@ export function mountLaunchpad(container, themes) {
       }
     }
 
-    const source = createLoopSource(voice.buffer, clock.getLoopLength())
-    source.connect(channelGains[channelId])
-    source.start(at)
-    voice.source = source
+    voice.source = replaceLoopSource(
+      channelId,
+      voice.buffer,
+      clock.getLoopLength(),
+      at,
+      voice.source,
+    )
 
     if (options.onSchedule) options.onSchedule(channelId)
 
@@ -182,7 +184,7 @@ export function mountLaunchpad(container, themes) {
       startTime = clock.getNextGrid(now)
     }
 
-    schedulePadAt(pad, startTime, {
+    scheduleLoopAt(pad, startTime, {
       resetGain: true,
       requireSource: true,
       onSchedule: (channelId) => dispatchChannelEvent(channelId, { type: 'ARM', pad }),
@@ -205,7 +207,7 @@ export function mountLaunchpad(container, themes) {
 
     dispatchChannelEvent(channelId, { type: 'STOP' })
 
-    if (!anyChannelSounding(channels)) {
+    if (!anyChannelActive(channels)) {
       split.cancelPendingSplit()
       clock.clear()
     }
@@ -220,7 +222,7 @@ export function mountLaunchpad(container, themes) {
         voice.source = null
         const delayMs = currentFadeTime * 1000 + 50
         uiTimers.track(() => {
-          stopPlayer(source)
+          stopSource(source)
           if (!isUnmounted) channelGains[channelId].gain.setValueAtTime(channelVolumes[channelId], audioCtx.currentTime)
         }, delayMs)
       } else {
@@ -228,7 +230,7 @@ export function mountLaunchpad(container, themes) {
           gain.gain.cancelScheduledValues(audioCtx.currentTime)
           gain.gain.setValueAtTime(channelVolumes[channelId], audioCtx.currentTime)
         }
-        stopPlayer(voice.source)
+        stopSource(voice.source)
         voice.source = null
       }
     }
@@ -237,7 +239,7 @@ export function mountLaunchpad(container, themes) {
   function queueLoop(channelId, pad, handoffTime) {
     cancelPendingLoop(channelId)
 
-    schedulePadAt(pad, handoffTime, {
+    scheduleLoopAt(pad, handoffTime, {
       onSchedule: () =>
         dispatchChannelEvent(channelId, { type: 'QUEUE_HANDOFF', pad, at: handoffTime }),
       onFire: () => {
@@ -245,7 +247,7 @@ export function mountLaunchpad(container, themes) {
         if (!outgoing || outgoing === pad) return
         const outVoice = padVoices[outgoing]
         if (outVoice && outVoice.source) {
-          stopPlayer(outVoice.source)
+          stopSource(outVoice.source)
           outVoice.source = null
         }
       },
@@ -265,7 +267,7 @@ export function mountLaunchpad(container, themes) {
 
     const current = channels[channelId]
 
-    // Sounding pad pressed → stop (also drops any queued handoff).
+    // Active pad pressed → stop (also drops any queued handoff).
     if (current.activePad === pad) {
       cancelPendingLoop(channelId)
       stopLoop(pad)
@@ -331,7 +333,7 @@ export function mountLaunchpad(container, themes) {
 
     const startTime = clock.getNextGrid(audioCtx.currentTime)
     if (voice.source) {
-      stopPlayer(voice.source, startTime)
+      stopSource(voice.source, startTime)
       voice.source = null
     }
 
