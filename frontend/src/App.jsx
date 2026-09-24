@@ -5,6 +5,8 @@ import landing from './assets/landing.jpg'
 import LobbyView from './components/LobbyView.jsx'
 import LoginView from './components/LoginView.jsx'
 import ProfileView from './components/ProfileView.jsx'
+import NavButton from './components/NavButton.jsx'
+import Tag from './components/Tag.jsx'
 
 function App() {
   const [playMode, setPlayMode] = useState(false);
@@ -42,31 +44,31 @@ function App() {
   return (
     <>
       <header>
-        {!playMode && <div className="Logo">
+        {!playMode && <div className="fixed top-12.5 left-12.5 font-display font-extrabold text-base tracking-[0.1px] uppercase text-white/30 pointer-events-none select-none">
           LaunchpadBay
         </div>}
-        {loggedIn && <button className="UserTag" onClick={() => setProfileMode(!profileMode)}>{username}</button>}
-        <nav>
-          {!playMode && <button className="NavButton" onClick={() => setPlayMode(true)}>Play</button>}
-          {!playMode && <button className="NavButton" onClick={() => (loggedIn ? handleLogout() : setShowLogin(true))}>{loggedIn ? 'Logout' : 'Login'}</button>}
-        </nav>
+        {loggedIn && <Tag className="fixed top-12.5 right-12.5 z-20" onClick={() => setProfileMode(!profileMode)}>{username}</Tag>}
+        {!playMode && <nav>
+          <NavButton onClick={() => setPlayMode(true)}>Play</NavButton>
+          <NavButton onClick={() => (loggedIn ? handleLogout() : setShowLogin(true))}>{loggedIn ? 'Logout' : 'Login'}</NavButton>
+        </nav>}
       </header>
-      {!playMode && <div className="Tagline"></div>}
+      {!playMode && <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 font-display font-extrabold text-5xl leading-[1.1] text-center uppercase text-white/10 whitespace-pre-line pointer-events-none select-none"></div>}
       <main>
           {showLogin && !playMode &&
           <LoginView
             onLoggedIn={handleLoggedIn}
             setShowLogin={setShowLogin}
             />}
-          {loggedIn && <button
-                        className="Lobbybutton"
-                        onClick={() => setLobbyMode(!lobbyMode)}>{lobbyMode ? 'Hide' : 'Lobby'}</button>}
+          {loggedIn && <NavButton
+                        className="fixed bottom-6 right-7.5 w-28"
+                        onClick={() => setLobbyMode(!lobbyMode)}>{lobbyMode ? 'Hide' : 'Lobby'}</NavButton>}
           {lobbyMode && <LobbyView />}
           {profileMode && loggedIn && <ProfileView token={token} />}
           {playMode && <LaunchpadView onBack={() => setPlayMode(false)} />}
       </main>
       <footer>
-        {!playMode && <button className="FooterLink"> Terms & Conditions </button>}
+        {!playMode && <button className="bg-transparent text-white/40 text-xs tracking-nav font-sans cursor-pointer no-underline transition-colors hover:text-white/80 hover:underline"> Terms & Conditions </button>}
       </footer>
     </>
   )

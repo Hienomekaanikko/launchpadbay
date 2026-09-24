@@ -13,7 +13,7 @@ export default function LaunchpadView({ onBack }) {
   useEffect(() => {
     const styleTag = document.createElement('style')
     styleTag.setAttribute('data-launchpad-style', 'true')
-    styleTag.textContent = launchpadCss
+    styleTag.textContent = `@layer base {\n${launchpadCss}\n}`
     document.head.appendChild(styleTag)
 
     let cancelled = false
