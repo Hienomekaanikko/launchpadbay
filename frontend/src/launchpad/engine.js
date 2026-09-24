@@ -24,9 +24,10 @@ import {
   renderChannel,
 } from './ui.js'
 import { createClock } from './clock.js'
+import { createSplitControl } from './split.js'
 import {
   createChannels,
-  reduceChannel,
+  applyChannelEvent,
   anyChannelSounding,
   setPadFlags,
   getPadVisual,
@@ -36,7 +37,7 @@ import { createUiTimers } from './uiTimers.js'
 import { bindLaunchpadControls } from './bindings.js'
 
 export function mountLaunchpad(container, themes) {
-  let isTornDown = false
+  let isUnmounted = false
   const uiTimers = createUiTimers()
 
   const clock = createClock()
@@ -45,12 +46,21 @@ export function mountLaunchpad(container, themes) {
   const STUTTER_DEPTHS = [4, 8, 16]
 
   let currentFadeTime = 0
-  let pendingSplit = null // { enabled, at, timerId } | null
   const channelVolumes = {}
   for (let id = 1; id <= CHANNEL_COUNT; id++) channelVolumes[id] = 1
 
   initAudio()
   initChannelChain()
+
+  const split = createSplitControl({
+    clock,
+    channels,
+    padVoices,
+    channelGains,
+    uiTimers,
+    getCurrentTime: () => audioCtx.currentTime,
+    isUnmounted: () => isUnmounted,
+  })
 
   const byId = (id) => container.querySelector(`#${id}`)
   const padEl = (pad) => byId(padDomId(pad))
@@ -59,8 +69,8 @@ export function mountLaunchpad(container, themes) {
     if (audioCtx.state === 'suspended') audioCtx.resume()
   }
 
-  function setChannel(id, event) {
-    channels[id] = reduceChannel(channels[id], event)
+  function dispatchChannelEvent(id, event) {
+    channels[id] = applyChannelEvent(channels[id], event)
     renderChannel(padEl, channels[id])
     return channels[id]
   }
@@ -88,7 +98,7 @@ export function mountLaunchpad(container, themes) {
       // startLoop → ARM from stuttering (clears activeDepth, blinks until boundary)
       if (pad) startLoop(pad)
     } else {
-      setChannel(channelId, { type: 'STUTTER_OFF' })
+      dispatchChannelEvent(channelId, { type: 'STUTTER_OFF' })
     }
     refreshStutterBtn(channelId)
   }
@@ -100,7 +110,7 @@ export function mountLaunchpad(container, themes) {
     )
     source.connect(channelGains[channelId])
     source.start(startTime)
-    setChannel(channelId, { type: 'STUTTER_ON', depth })
+    dispatchChannelEvent(channelId, { type: 'STUTTER_ON', depth })
     stutterSources[channelId] = source
   }
 
@@ -121,7 +131,7 @@ export function mountLaunchpad(container, themes) {
       voice.source = null
     }
 
-    setChannel(channelId, { type: 'CANCEL_PENDING' })
+    dispatchChannelEvent(channelId, { type: 'CANCEL_PENDING' })
   }
 
   // Shared: schedule a pad voice at `at`; FSM (armed/pending → playing) drives lights.
@@ -151,7 +161,7 @@ export function mountLaunchpad(container, themes) {
     const delayMs = ((at - audioCtx.currentTime) * 1000) | 0
     voice.uiStartTimerId = uiTimers.track(() => {
       voice.uiStartTimerId = null
-      if (isTornDown) return
+      if (isUnmounted) return
       if (options.requireSource && !voice.source) return
 
       if (options.onFire) options.onFire(channelId)
@@ -175,8 +185,8 @@ export function mountLaunchpad(container, themes) {
     schedulePadAt(pad, startTime, {
       resetGain: true,
       requireSource: true,
-      onSchedule: (channelId) => setChannel(channelId, { type: 'ARM', pad }),
-      onStarted: (channelId) => setChannel(channelId, { type: 'STARTED', pad }),
+      onSchedule: (channelId) => dispatchChannelEvent(channelId, { type: 'ARM', pad }),
+      onStarted: (channelId) => dispatchChannelEvent(channelId, { type: 'STARTED', pad }),
     })
   }
 
@@ -193,10 +203,10 @@ export function mountLaunchpad(container, themes) {
       voice.uiStartTimerId = null
     }
 
-    setChannel(channelId, { type: 'STOP' })
+    dispatchChannelEvent(channelId, { type: 'STOP' })
 
     if (!anyChannelSounding(channels)) {
-      cancelPendingSplit()
+      split.cancelPendingSplit()
       clock.clear()
     }
 
@@ -211,7 +221,7 @@ export function mountLaunchpad(container, themes) {
         const delayMs = currentFadeTime * 1000 + 50
         uiTimers.track(() => {
           stopPlayer(source)
-          if (!isTornDown) channelGains[channelId].gain.setValueAtTime(channelVolumes[channelId], audioCtx.currentTime)
+          if (!isUnmounted) channelGains[channelId].gain.setValueAtTime(channelVolumes[channelId], audioCtx.currentTime)
         }, delayMs)
       } else {
         if (gain) {
@@ -229,7 +239,7 @@ export function mountLaunchpad(container, themes) {
 
     schedulePadAt(pad, handoffTime, {
       onSchedule: () =>
-        setChannel(channelId, { type: 'QUEUE_HANDOFF', pad, at: handoffTime }),
+        dispatchChannelEvent(channelId, { type: 'QUEUE_HANDOFF', pad, at: handoffTime }),
       onFire: () => {
         const outgoing = channels[channelId].activePad
         if (!outgoing || outgoing === pad) return
@@ -239,7 +249,7 @@ export function mountLaunchpad(container, themes) {
           outVoice.source = null
         }
       },
-      onStarted: () => setChannel(channelId, { type: 'STARTED', pad }),
+      onStarted: () => dispatchChannelEvent(channelId, { type: 'STARTED', pad }),
     })
   }
 
@@ -294,7 +304,7 @@ export function mountLaunchpad(container, themes) {
     const ch = channels[channelId]
     const idx = STUTTER_DEPTHS.indexOf(ch.stutter.depth)
     const depth = STUTTER_DEPTHS[(idx + 1) % STUTTER_DEPTHS.length]
-    setChannel(channelId, { type: 'STUTTER_DEPTH', depth })
+    dispatchChannelEvent(channelId, { type: 'STUTTER_DEPTH', depth })
 
     const next = channels[channelId]
     if (next.stutter.activeDepth !== 0) {
@@ -328,56 +338,6 @@ export function mountLaunchpad(container, themes) {
     armStutterSource(channelId, voice, stutterDepth, startTime)
   }
 
-  function cancelPendingSplit() {
-    if (!pendingSplit) return
-    uiTimers.cancel(pendingSplit.timerId)
-    pendingSplit = null
-  }
-
-  function applySplit(enabled, currentTime) {
-    const active = clock.setSplit(enabled, currentTime)
-    for (const ch of Object.values(channels)) {
-      if (!ch.activePad) continue
-      const voice = padVoices[ch.activePad]
-      if (voice && voice.source) {
-        voice.source.loopEnd = clock.getLoopLength()
-      }
-    }
-    return active
-  }
-
-  function toggleSplit() {
-    const desired = pendingSplit
-      ? !pendingSplit.enabled
-      : !clock.isSplit()
-
-    // Idle: apply immediately
-    if (!clock.isRunning()) {
-      cancelPendingSplit()
-      return applySplit(desired, audioCtx.currentTime)
-    }
-
-    // Re-click back to current → cancel pending
-    if (desired === clock.isSplit()) {
-      cancelPendingSplit()
-      return clock.isSplit()
-    }
-
-    // ON: next half of the full bar (midpoint or end). OFF: next half-bar.
-    const subdivision = desired ? 2 : 1
-    const at = clock.getNextGrid(audioCtx.currentTime, subdivision)
-    const delayMs = ((at - audioCtx.currentTime) * 1000) | 0
-    const timerId = uiTimers.track(() => {
-      if (isTornDown || !pendingSplit) return
-      const { enabled } = pendingSplit
-      pendingSplit = null
-      applySplit(enabled, at)
-    }, delayMs)
-
-    pendingSplit = { enabled: desired, at, timerId }
-    return desired
-  }
-
   function setVolume(channelId, v) {
     channelVolumes[channelId] = v / 100
     channelGains[channelId].gain.setValueAtTime(v / 100, audioCtx.currentTime)
@@ -405,14 +365,14 @@ export function mountLaunchpad(container, themes) {
 
     for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
       const keptDepth = channels[channelId].stutter.depth
-      setChannel(channelId, { type: 'RESET' })
+      dispatchChannelEvent(channelId, { type: 'RESET' })
       channels[channelId].stutter.depth = keptDepth
       setAllPadsLoading(channels[channelId], true)
       renderChannel(padEl, channels[channelId])
       updateStutterBtn(byId, channelId, keptDepth, 0)
     }
 
-    cancelPendingSplit()
+    split.cancelPendingSplit()
     clock.clear()
 
     await Promise.all(
@@ -422,13 +382,13 @@ export function mountLaunchpad(container, themes) {
         const channelId = channelOfPad(pad)
         return loadPadVoice(pad, url)
           .finally(() => {
-            if (isTornDown) return
+            if (isUnmounted) return
             setPadLoading(channelId, pad, false)
           })
       })
     )
 
-    if (isTornDown) return
+    if (isUnmounted) return
 
     if (Object.keys(theme.sampleUrls).length === 0) {
       for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
@@ -445,7 +405,7 @@ export function mountLaunchpad(container, themes) {
     padEl,
     trackUiTimer: uiTimers.track,
     onPad: toggleLoop,
-    toggleSplit,
+    toggleSplit: split.toggleSplit,
     onStutterTap: tapStutter,
     onStutterCycle: cycleStutterDepth,
     setVolume,
@@ -460,10 +420,10 @@ export function mountLaunchpad(container, themes) {
 
   // --- Destroy ---
   function destroy() {
-    isTornDown = true
+    isUnmounted = true
 
     stopProgress()
-    cancelPendingSplit()
+    split.cancelPendingSplit()
     uiTimers.clearAll()
 
     for (const off of knobCleanups) off()

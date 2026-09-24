@@ -49,13 +49,11 @@ export function createClock() {
     return elapsed / length
   }
 
-  function setSplit(enabled, currentTime) {
+  function setSplit(enabled, gridTime) {
     if (enabled === split) return split
-    let phase = null
-    if (isRunning()) phase = getPhase(currentTime)
     split = enabled
-    if (isRunning() && phase != null) {
-      loopOrigin = currentTime - phase * getLoopLength()
+    if (isRunning() && gridTime != null) {
+      loopOrigin = gridTime
     }
     return split
   }

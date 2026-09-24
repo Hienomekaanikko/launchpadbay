@@ -66,7 +66,7 @@ export function setAllPadsLoading(ch, loading) {
   return ch
 }
 
-export function reduceChannel(ch, event) {
+export function applyChannelEvent(ch, event) {
   switch (event.type) {
     case 'ARM':
       if (ch.state === 'idle') {
