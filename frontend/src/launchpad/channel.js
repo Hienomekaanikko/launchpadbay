@@ -29,7 +29,7 @@ export function createChannels(count) {
   return channels
 }
 
-export function anyChannelSounding(channels) {
+export function anyChannelActive(channels) {
   return Object.values(channels).some(
     (ch) => ch.state === 'playing' || ch.state === 'armed' || ch.state === 'pending' || ch.state === 'stuttering'
   )
@@ -42,14 +42,14 @@ export function getPadVisual(ch, slot) {
   const waiting =
     (ch.state === 'armed' && ch.activePad === pad) ||
     (ch.state === 'pending' && ch.pendingPad === pad)
-  const sounding =
+  const active =
     !waiting &&
     ch.activePad === pad &&
     (ch.state === 'playing' || ch.state === 'stuttering' || ch.state === 'pending')
   return {
     pad,
     blinking: waiting,
-    active: sounding,
+    active,
     loading: padState.loading,
   }
 }

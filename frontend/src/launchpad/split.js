@@ -1,13 +1,12 @@
 // Quantized SPLIT ½: arm on click, apply on next half/full grid boundary.
 // Live sources are restarted at the boundary — loopEnd-only updates are unreliable.
 
-import { createLoopSource, stopPlayer } from './audio.js'
+import { replaceLoopSource } from './audio.js'
 
 export function createSplitControl({
   clock,
   channels,
   padVoices,
-  channelGains,
   uiTimers,
   getCurrentTime,
   isUnmounted,
@@ -27,15 +26,13 @@ export function createSplitControl({
       const voice = padVoices[ch.activePad]
       if (!voice || !voice.buffer) continue
 
-      if (voice.source) {
-        stopPlayer(voice.source, when)
-        voice.source = null
-      }
-
-      const source = createLoopSource(voice.buffer, loopEnd)
-      source.connect(channelGains[ch.id])
-      source.start(when)
-      voice.source = source
+      voice.source = replaceLoopSource(
+        ch.id,
+        voice.buffer,
+        loopEnd,
+        when,
+        voice.source,
+      )
     }
   }
 
