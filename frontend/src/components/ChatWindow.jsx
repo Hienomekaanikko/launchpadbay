@@ -3,16 +3,7 @@ import GlassPanel from './GlassPanel.jsx'
 import CloseButton from './CloseButton.jsx'
 import Input from './Input.jsx'
 import FormButton from './FormButton.jsx'
-
-function MessageBubble({ text, fromMe }) {
-  return (
-    <div className={`flex ${fromMe ? 'justify-end' : 'justify-start'}`}>
-      <div className={`px-3 py-2 rounded-[10px] text-sm font-sans max-w-[75%] ${fromMe ? 'bg-brand/20 text-white' : 'bg-white/10 text-white'}`}>
-        {text}
-      </div>
-    </div>
-  )
-}
+import MessageBubble from './MessageBubble.jsx'
 
 export default function ChatWindow({ recipient, messages, onSendMessage, onClose }) {
   const [draft, setDraft] = useState('')
@@ -30,7 +21,7 @@ export default function ChatWindow({ recipient, messages, onSendMessage, onClose
       <div className="text-white text-sm font-medium font-sans">{recipient}</div>
       <div className="flex-1 overflow-y-auto flex flex-col gap-2">
         {messages.length === 0
-          ? <div className="text-white/60 text-xs text-center py-2 font-sans">Say hi to {recipient}!</div>
+          ? <div className="text-white text-xs text-center py-2 font-sans">Say hi to {recipient}!</div>
           : messages.map((message) => <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}
       </div>
       <form onSubmit={handleSubmit} className="flex gap-2">
