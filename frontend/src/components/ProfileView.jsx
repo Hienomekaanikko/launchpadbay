@@ -27,18 +27,18 @@ function FriendsButton({ open, onClick }) {
   )
 }
 
-function FriendsPanel({ friends }) {
+function FriendsPanel({ friends, onChatClick }) {
   return (
     <div className="flex flex-col gap-1">
       <div>Friends: maybe their avatars to left side too?</div>
       {friends.length === 0
         ? <div className="text-white/60 text-xs text-center py-2 font-sans">No friends yet</div>
-        : friends.map((friend) => <UserRow key={friend.username} {...friend} />)}
+        : friends.map((friend) => <UserRow key={friend.username} {...friend} onChatClick={onChatClick} />)}
     </div>
   )
 }
 
-export default function ProfileView({ token }) {
+export default function ProfileView({ token, onChatClick }) {
   const [profile, setProfile] = useState(null)
   const [error, setError] = useState('')
   const [showFriends, setShowFriends] = useState(false)
@@ -57,7 +57,7 @@ export default function ProfileView({ token }) {
       {!error && !profile && <div>Loading...</div>}
       {profile && (
         <div>
-          {showFriends ? <FriendsPanel friends={MOCK_FRIENDS} /> : 'Some additional information here?'}
+          {showFriends ? <FriendsPanel friends={MOCK_FRIENDS} onChatClick={onChatClick} /> : 'Some additional information here?'}
         </div>
       )}
       {profile && <Avatar />}

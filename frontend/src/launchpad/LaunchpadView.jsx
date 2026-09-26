@@ -6,7 +6,7 @@ import landing from '../assets/landing.jpg'
 
 const MIN_LOADING_MS = 1000
 
-export default function LaunchpadView({ onBack }) {
+export default function LaunchpadView({ sessionId, onBack }) {
   const containerRef = useRef(null)
   const [ready, setReady] = useState(false)
 
@@ -66,6 +66,7 @@ export default function LaunchpadView({ onBack }) {
   return (
     <div ref={containerRef}>
       <button type="button" className="home-btn" onClick={onBack}>&larr; Home</button>
+      {sessionId && <span className="ml-3 text-white text-xs font-sans align-middle">Session: {sessionId}</span>}
 
       <div className="dot-grid" />
 
