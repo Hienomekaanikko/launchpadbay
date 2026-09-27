@@ -1,6 +1,3 @@
-// Per-channel stutter: short loop slice quantized to depth grid (1/4, 1/8, 1/16).
-// Engage/depth-change snap to depth grid; release keeps chopping until next full/half bar.
-
 import { replaceLoopSource, stopSource } from './audio.js'
 import { CHANNEL_COUNT } from './pads.js'
 
