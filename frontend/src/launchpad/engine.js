@@ -314,7 +314,7 @@ export function mountLaunchpad(container, themes) {
       let voice = null
       if (pad) voice = padVoices[pad]
       if (voice && voice.buffer && stutterSources[channelId]) {
-        const startTime = clock.getNextGrid(audioCtx.currentTime)
+        const startTime = clock.getNextGrid(audioCtx.currentTime, depth)
         stopStutterSource(channelId, startTime)
         armStutterSource(channelId, voice, depth, startTime)
       }
@@ -331,7 +331,7 @@ export function mountLaunchpad(container, themes) {
 
     stopStutterSource(channelId)
 
-    const startTime = clock.getNextGrid(audioCtx.currentTime)
+    const startTime = clock.getNextGrid(audioCtx.currentTime, stutterDepth)
     if (voice.source) {
       stopSource(voice.source, startTime)
       voice.source = null
