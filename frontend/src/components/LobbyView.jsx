@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import GlassPanel from './GlassPanel.jsx'
 import NavButton from './NavButton.jsx'
 import Input from './Input.jsx'
 import FormButton from './FormButton.jsx'
 import MessageBubble from './MessageBubble.jsx'
+import UserRow from './UserRow.jsx'
+import SessionRow from './SessionRow.jsx'
 
 const MOCK_ONLINE = [
   { username: 'superdj', online: true },
