@@ -45,8 +45,8 @@ export function mountLaunchpad(container, themes) {
   const channels = createChannels(CHANNEL_COUNT)
 
   let currentFadeTime = 0
-  const channelVolumes = {}
-  for (let id = 1; id <= CHANNEL_COUNT; id++) channelVolumes[id] = 1
+  const channelLevels = {}
+  for (let id = 1; id <= CHANNEL_COUNT; id++) channelLevels[id] = 1
 
   initAudio()
   initChannelChain()
@@ -58,8 +58,8 @@ export function mountLaunchpad(container, themes) {
     if (audioCtx.state === 'suspended') audioCtx.resume()
   }
 
-  /** Apply a channel FSM event and project lights. */
-  function syncChannel(id, event) {
+  /** Apply a channel FSM event and light the pads. */
+  function lightChannel(id, event) {
     channels[id] = applyChannelEvent(channels[id], event)
     renderChannel(padEl, channels[id])
     return channels[id]
@@ -79,59 +79,57 @@ export function mountLaunchpad(container, themes) {
     isUnmounted: () => isUnmounted,
   })
 
-  // resumeLoopAt closes over scheduleLoopAt (function declaration, hoisted).
+  // resumeClipAt closes over scheduleClipAt (function declaration, hoisted).
   const stutter = createStutterControl({
     clock,
     channels,
     padVoices,
     getCurrentTime: () => audioCtx.currentTime,
-    syncChannel,
+    lightChannel,
     updateBtn: (channelId, depth, activeDepth) =>
       updateStutterBtn(byId, channelId, depth, activeDepth),
-    resumeLoopAt: (pad, when) => {
-      scheduleLoopAt(pad, when, {
+    resumeClipAt: (pad, when) => {
+      scheduleClipAt(pad, when, {
         resetGain: true,
         requireSource: true,
-        onSchedule: (channelId) => syncChannel(channelId, { type: 'ARM', pad }),
+        onSchedule: (channelId) => lightChannel(channelId, { type: 'ARM', pad }),
         onStarted: (channelId) =>
-          fireCue({ type: 'LOOP_STARTED', channelId, pad }),
+          launchCue({ type: 'CLIP_STARTED', channelId, pad }),
       })
     },
     ensureAudioRunning,
   })
 
-  // --- Cue dispatcher: trigger → resolve → fireCue ---
+  // --- Cue dispatcher: handleUiAction → resolve → launchCue ---
 
-  /** Pad hit → list of cues (decide only; no audio/DOM).
-   *  Caller releases stutter first so this always sees live post-release state. */
-  function resolvePadHit(pad) {
+  function resolvePadLaunch(pad) {
     const channelId = channelOfPad(pad)
     const ch = channels[channelId]
 
     if (ch.activePad === pad) {
       return [
         { type: 'CANCEL_HANDOFF', channelId },
-        { type: 'STOP_LOOP', pad },
+        { type: 'STOP_CLIP', pad },
       ]
     }
 
-    if (ch.state === 'pending' && ch.pendingPad === pad) {
+    if (ch.state === 'queued' && ch.queuedPad === pad) {
       return [{ type: 'CANCEL_HANDOFF', channelId }]
     }
 
     if (ch.state === 'idle') {
-      return [{ type: 'ARM_LOOP', pad }]
+      return [{ type: 'ARM_CLIP', pad }]
     }
 
     return [{
       type: 'QUEUE_HANDOFF',
       channelId,
       pad,
-      at: ch.pendingAt ?? clock.getNextGrid(audioCtx.currentTime),
+      at: ch.queuedAt ?? clock.getNextGrid(audioCtx.currentTime),
     }]
   }
 
-  function fireCue(cue) {
+  function launchCue(cue) {
     switch (cue.type) {
       case 'RELEASE_STUTTER':
         stutter.end(cue.channelId)
@@ -139,32 +137,32 @@ export function mountLaunchpad(container, themes) {
       case 'CANCEL_HANDOFF':
         cancelHandoff(cue.channelId)
         break
-      case 'ARM_LOOP':
-        startLoop(cue.pad)
+      case 'ARM_CLIP':
+        launchClip(cue.pad)
         break
-      case 'STOP_LOOP':
-        stopLoop(cue.pad, cue.skipFade)
+      case 'STOP_CLIP':
+        stopClip(cue.pad, cue.skipFade)
         break
       case 'QUEUE_HANDOFF':
-        queueLoop(cue.channelId, cue.pad, cue.at)
+        queueClip(cue.channelId, cue.pad, cue.at)
         break
-      case 'LOOP_STARTED':
-        syncChannel(cue.channelId, { type: 'STARTED', pad: cue.pad })
+      case 'CLIP_STARTED':
+        lightChannel(cue.channelId, { type: 'STARTED', pad: cue.pad })
         break
       default:
         break
     }
   }
 
-  function trigger(action) {
+  function handleUiAction(action) {
     switch (action.type) {
       case 'PAD_HIT': {
         ensureAudioRunning()
         const channelId = channelOfPad(action.pad)
         if (channels[channelId].stutter.activeDepth !== 0) {
-          fireCue({ type: 'RELEASE_STUTTER', channelId })
+          launchCue({ type: 'RELEASE_STUTTER', channelId })
         }
-        for (const cue of resolvePadHit(action.pad)) fireCue(cue)
+        for (const cue of resolvePadLaunch(action.pad)) launchCue(cue)
         break
       }
       case 'SPLIT_TOGGLE': {
@@ -180,10 +178,17 @@ export function mountLaunchpad(container, themes) {
         stutter.cycleDepth(action.channelId)
         break
       case 'SET_GAIN':
-        setGain(action.channelId, action.value)
+        channelLevels[action.channelId] = action.value / 100
+        channelGains[action.channelId].gain.setValueAtTime(
+          action.value / 100,
+          audioCtx.currentTime,
+        )
         break
       case 'SET_FILTER':
-        setFilter(action.channelId, action.value)
+        channelFilters[action.channelId].frequency.setValueAtTime(
+          200 * Math.pow(100, action.value / 100),
+          audioCtx.currentTime,
+        )
         break
       default:
         break
@@ -194,10 +199,10 @@ export function mountLaunchpad(container, themes) {
 
   function cancelHandoff(channelId) {
     const ch = channels[channelId]
-    if (ch.state !== 'pending' || ch.pendingPad == null) return
+    if (ch.state !== 'queued' || ch.queuedPad == null) return
 
-    const pendingPad = ch.pendingPad
-    const voice = padVoices[pendingPad]
+    const queuedPad = ch.queuedPad
+    const voice = padVoices[queuedPad]
     if (voice && voice.uiStartTimerId) {
       uiTimers.cancel(voice.uiStartTimerId)
       voice.uiStartTimerId = null
@@ -207,11 +212,11 @@ export function mountLaunchpad(container, themes) {
       voice.source = null
     }
 
-    syncChannel(channelId, { type: 'CANCEL_HANDOFF' })
+    lightChannel(channelId, { type: 'CANCEL_HANDOFF' })
   }
 
-  // Shared: schedule a loop at `at`; FSM (armed/pending → playing) drives lights.
-  function scheduleLoopAt(pad, at, options) {
+  // Shared: schedule a clip at `at`; FSM (armed/queued → playing) drives lights.
+  function scheduleClipAt(pad, at, options) {
     if (!options) options = {}
 
     const voice = padVoices[pad]
@@ -223,7 +228,7 @@ export function mountLaunchpad(container, themes) {
       const gain = channelGains[channelId]
       if (gain) {
         gain.gain.cancelScheduledValues(at)
-        gain.gain.setValueAtTime(channelVolumes[channelId], at)
+        gain.gain.setValueAtTime(channelLevels[channelId], at)
       }
     }
 
@@ -248,7 +253,7 @@ export function mountLaunchpad(container, themes) {
     }, delayMs)
   }
 
-  function startLoop(pad) {
+  function launchClip(pad) {
     const voice = padVoices[pad]
     if (!voice) return
 
@@ -261,16 +266,16 @@ export function mountLaunchpad(container, themes) {
       startTime = clock.getNextGrid(now)
     }
 
-    scheduleLoopAt(pad, startTime, {
+    scheduleClipAt(pad, startTime, {
       resetGain: true,
       requireSource: true,
-      onSchedule: (channelId) => syncChannel(channelId, { type: 'ARM', pad }),
+      onSchedule: (channelId) => lightChannel(channelId, { type: 'ARM', pad }),
       onStarted: (channelId) =>
-        fireCue({ type: 'LOOP_STARTED', channelId, pad }),
+        launchCue({ type: 'CLIP_STARTED', channelId, pad }),
     })
   }
 
-  function stopLoop(pad, skipFade) {
+  function stopClip(pad, skipFade) {
     if (skipFade == null) skipFade = false
 
     const voice = padVoices[pad]
@@ -283,7 +288,7 @@ export function mountLaunchpad(container, themes) {
       voice.uiStartTimerId = null
     }
 
-    syncChannel(channelId, { type: 'STOP' })
+    lightChannel(channelId, { type: 'STOP' })
 
     if (!anyChannelActive(channels)) {
       split.cancelPendingSplit()
@@ -301,12 +306,12 @@ export function mountLaunchpad(container, themes) {
         const delayMs = currentFadeTime * 1000 + 50
         uiTimers.track(() => {
           stopSource(source)
-          if (!isUnmounted) channelGains[channelId].gain.setValueAtTime(channelVolumes[channelId], audioCtx.currentTime)
+          if (!isUnmounted) channelGains[channelId].gain.setValueAtTime(channelLevels[channelId], audioCtx.currentTime)
         }, delayMs)
       } else {
         if (gain) {
           gain.gain.cancelScheduledValues(audioCtx.currentTime)
-          gain.gain.setValueAtTime(channelVolumes[channelId], audioCtx.currentTime)
+          gain.gain.setValueAtTime(channelLevels[channelId], audioCtx.currentTime)
         }
         stopSource(voice.source)
         voice.source = null
@@ -314,12 +319,12 @@ export function mountLaunchpad(container, themes) {
     }
   }
 
-  function queueLoop(channelId, pad, handoffTime) {
+  function queueClip(channelId, pad, handoffTime) {
     cancelHandoff(channelId)
 
-    scheduleLoopAt(pad, handoffTime, {
+    scheduleClipAt(pad, handoffTime, {
       onSchedule: () =>
-        syncChannel(channelId, { type: 'QUEUE_HANDOFF', pad, at: handoffTime }),
+        lightChannel(channelId, { type: 'QUEUE_HANDOFF', pad, at: handoffTime }),
       onFire: () => {
         const outgoing = channels[channelId].activePad
         if (!outgoing || outgoing === pad) return
@@ -330,20 +335,8 @@ export function mountLaunchpad(container, themes) {
         }
       },
       onStarted: () =>
-        fireCue({ type: 'LOOP_STARTED', channelId, pad }),
+        launchCue({ type: 'CLIP_STARTED', channelId, pad }),
     })
-  }
-
-  function setGain(channelId, v) {
-    channelVolumes[channelId] = v / 100
-    channelGains[channelId].gain.setValueAtTime(v / 100, audioCtx.currentTime)
-  }
-
-  function setFilter(channelId, v) {
-    channelFilters[channelId].frequency.setValueAtTime(
-      200 * Math.pow(100, v / 100),
-      audioCtx.currentTime,
-    )
   }
 
   // --- Theme voice loading ---
@@ -353,13 +346,13 @@ export function mountLaunchpad(container, themes) {
     for (const key of Object.keys(padVoices)) {
       const pad = Number(key)
       const voice = padVoices[pad]
-      if (voice && voice.source) stopLoop(pad, true)
+      if (voice && voice.source) stopClip(pad, true)
     }
     for (const key of Object.keys(padVoices)) delete padVoices[key]
 
     for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
       const keptDepth = channels[channelId].stutter.depth
-      syncChannel(channelId, { type: 'RESET' })
+      lightChannel(channelId, { type: 'RESET' })
       channels[channelId].stutter.depth = keptDepth
       setAllPadsLoading(channels[channelId], true)
       renderChannel(padEl, channels[channelId])
@@ -370,7 +363,6 @@ export function mountLaunchpad(container, themes) {
     clock.clear()
 
     await Promise.all(
-      // theme.sampleUrls keys are pad indexes 1–25 (DB column name: "slot")
       Object.entries(theme.sampleUrls).map(([key, url]) => {
         const pad = Number(key)
         const channelId = channelOfPad(pad)
@@ -398,7 +390,7 @@ export function mountLaunchpad(container, themes) {
     byId,
     padEl,
     trackUiTimer: uiTimers.track,
-    trigger,
+    handleUiAction,
   })
   const stopProgress = startProgressLoop(byId('master-bar-fill'), () =>
     clock.getPhase(audioCtx.currentTime)

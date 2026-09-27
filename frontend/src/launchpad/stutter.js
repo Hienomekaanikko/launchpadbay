@@ -11,9 +11,9 @@ export function createStutterControl({
   channels,
   padVoices,
   getCurrentTime,
-  syncChannel,
+  lightChannel,
   updateBtn,
-  resumeLoopAt,
+  resumeClipAt,
   ensureAudioRunning,
 }) {
   const stutterSources = {}
@@ -36,7 +36,7 @@ export function createStutterControl({
       startTime,
       stutterSources[channelId],
     )
-    syncChannel(channelId, { type: 'STUTTER_ON', depth })
+    lightChannel(channelId, { type: 'STUTTER_ON', depth })
   }
 
   function startStutter(channelId, stutterDepth) {
@@ -63,18 +63,18 @@ export function createStutterControl({
       const pad = channels[channelId].activePad
       if (!pad) {
         stopStutterSource(channelId)
-        syncChannel(channelId, { type: 'STUTTER_OFF' })
+        lightChannel(channelId, { type: 'STUTTER_OFF' })
         refreshBtn(channelId)
         return
       }
       // Keep stutter until next full/half bar; hand off to full loop at same `when`.
       const when = clock.getNextGrid(getCurrentTime())
       stopStutterSource(channelId, when)
-      // resumeLoopAt → ARM from stuttering (clears activeDepth, blinks until boundary)
-      resumeLoopAt(pad, when)
+      // resumeClipAt → ARM from stuttering (clears activeDepth, blinks until boundary)
+      resumeClipAt(pad, when)
     } else {
       stopStutterSource(channelId)
-      syncChannel(channelId, { type: 'STUTTER_OFF' })
+      lightChannel(channelId, { type: 'STUTTER_OFF' })
     }
     refreshBtn(channelId)
   }
@@ -95,7 +95,7 @@ export function createStutterControl({
     const ch = channels[channelId]
     const idx = STUTTER_DEPTHS.indexOf(ch.stutter.depth)
     const depth = STUTTER_DEPTHS[(idx + 1) % STUTTER_DEPTHS.length]
-    syncChannel(channelId, { type: 'STUTTER_DEPTH', depth })
+    lightChannel(channelId, { type: 'STUTTER_DEPTH', depth })
 
     const next = channels[channelId]
     if (next.stutter.activeDepth !== 0) {

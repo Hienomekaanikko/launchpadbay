@@ -14,10 +14,10 @@ function createPads(channelId) {
 export function createChannel(id) {
   return {
     id,
-    state: 'idle', // idle | armed | playing | pending | stuttering
+    state: 'idle', // idle | armed | playing | queued | stuttering
     activePad: null,
-    pendingPad: null,
-    pendingAt: null,
+    queuedPad: null,
+    queuedAt: null,
     stutter: { depth: 4, activeDepth: 0 },
     pads: createPads(id),
   }
@@ -31,7 +31,7 @@ export function createChannels(count) {
 
 export function anyChannelActive(channels) {
   return Object.values(channels).some(
-    (ch) => ch.state === 'playing' || ch.state === 'armed' || ch.state === 'pending' || ch.state === 'stuttering'
+    (ch) => ch.state === 'playing' || ch.state === 'armed' || ch.state === 'queued' || ch.state === 'stuttering'
   )
 }
 
@@ -41,11 +41,11 @@ export function getPadVisual(ch, slot) {
   const pad = padState.pad
   const waiting =
     (ch.state === 'armed' && ch.activePad === pad) ||
-    (ch.state === 'pending' && ch.pendingPad === pad)
+    (ch.state === 'queued' && ch.queuedPad === pad)
   const active =
     !waiting &&
     ch.activePad === pad &&
-    (ch.state === 'playing' || ch.state === 'stuttering' || ch.state === 'pending')
+    (ch.state === 'playing' || ch.state === 'stuttering' || ch.state === 'queued')
   return {
     pad,
     blinking: waiting,
@@ -91,31 +91,31 @@ export function applyChannelEvent(ch, event) {
       return ch
 
     case 'STARTED':
-      if (ch.state === 'armed' || ch.state === 'pending') {
+      if (ch.state === 'armed' || ch.state === 'queued') {
         return {
           ...ch,
           state: 'playing',
           activePad: event.pad,
-          pendingPad: null,
-          pendingAt: null,
+          queuedPad: null,
+          queuedAt: null,
         }
       }
       return ch
 
     case 'QUEUE_HANDOFF':
-      if (ch.state === 'playing' || ch.state === 'pending') {
+      if (ch.state === 'playing' || ch.state === 'queued') {
         return {
           ...ch,
-          state: 'pending',
-          pendingPad: event.pad,
-          pendingAt: event.at,
+          state: 'queued',
+          queuedPad: event.pad,
+          queuedAt: event.at,
         }
       }
       return ch
 
     case 'CANCEL_HANDOFF':
-      if (ch.state === 'pending') {
-        return { ...ch, state: 'playing', pendingPad: null, pendingAt: null }
+      if (ch.state === 'queued') {
+        return { ...ch, state: 'playing', queuedPad: null, queuedAt: null }
       }
       return ch
 
@@ -124,8 +124,8 @@ export function applyChannelEvent(ch, event) {
         ...ch,
         state: 'idle',
         activePad: null,
-        pendingPad: null,
-        pendingAt: null,
+        queuedPad: null,
+        queuedAt: null,
         stutter: { ...ch.stutter, activeDepth: 0 },
       }
 
