@@ -1,5 +1,5 @@
 // Per-channel stutter: short loop slice quantized to depth grid (1/4, 1/8, 1/16).
-// Engage/depth-change snap to getNextGrid(now, depth); release resumes via engine startLoop.
+// Engage/depth-change snap to depth grid; release keeps chopping until next full/half bar.
 
 import { replaceLoopSource, stopSource } from './audio.js'
 import { CHANNEL_COUNT } from './pads.js'
@@ -13,7 +13,7 @@ export function createStutterControl({
   getCurrentTime,
   dispatchChannelEvent,
   updateBtn,
-  resumeLoop,
+  resumeLoopAt,
   ensureAudioRunning,
 }) {
   const stutterSources = {}
@@ -59,12 +59,21 @@ export function createStutterControl({
 
   function end(channelId, options) {
     if (!options) options = {}
-    stopStutterSource(channelId)
     if (options.resume) {
       const pad = channels[channelId].activePad
-      // startLoop → ARM from stuttering (clears activeDepth, blinks until boundary)
-      if (pad) resumeLoop(pad)
+      if (!pad) {
+        stopStutterSource(channelId)
+        dispatchChannelEvent(channelId, { type: 'STUTTER_OFF' })
+        refreshBtn(channelId)
+        return
+      }
+      // Keep stutter until next full/half bar; hand off to full loop at same `when`.
+      const when = clock.getNextGrid(getCurrentTime())
+      stopStutterSource(channelId, when)
+      // resumeLoopAt → ARM from stuttering (clears activeDepth, blinks until boundary)
+      resumeLoopAt(pad, when)
     } else {
+      stopStutterSource(channelId)
       dispatchChannelEvent(channelId, { type: 'STUTTER_OFF' })
     }
     refreshBtn(channelId)

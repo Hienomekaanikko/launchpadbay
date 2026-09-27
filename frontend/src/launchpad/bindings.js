@@ -1,5 +1,3 @@
-// DOM wiring only. Audio/state side effects live in engine callbacks.
-
 import { CHANNEL_COUNT, PAD_COUNT } from './pads.js'
 import {
   createKnob,

@@ -78,7 +78,7 @@ export function mountLaunchpad(container, themes) {
     isUnmounted: () => isUnmounted,
   })
 
-  // resumeLoop closes over startLoop (function declaration, hoisted).
+  // resumeLoopAt closes over scheduleLoopAt (function declaration, hoisted).
   const stutter = createStutterControl({
     clock,
     channels,
@@ -87,7 +87,14 @@ export function mountLaunchpad(container, themes) {
     dispatchChannelEvent,
     updateBtn: (channelId, depth, activeDepth) =>
       updateStutterBtn(byId, channelId, depth, activeDepth),
-    resumeLoop: (pad) => startLoop(pad),
+    resumeLoopAt: (pad, when) => {
+      scheduleLoopAt(pad, when, {
+        resetGain: true,
+        requireSource: true,
+        onSchedule: (channelId) => dispatchChannelEvent(channelId, { type: 'ARM', pad }),
+        onStarted: (channelId) => dispatchChannelEvent(channelId, { type: 'STARTED', pad }),
+      })
+    },
     ensureAudioRunning,
   })
 
