@@ -102,51 +102,33 @@ export function mountLaunchpad(container, themes) {
 
   // --- Cue dispatcher: trigger → resolve → fireCue ---
 
-  /** Pad hit → list of cues (decide only; no audio/DOM). */
+  /** Pad hit → list of cues (decide only; no audio/DOM).
+   *  Caller releases stutter first so this always sees live post-release state. */
   function resolvePadHit(pad) {
     const channelId = channelOfPad(pad)
     const ch = channels[channelId]
-    const cues = []
 
-    if (ch.stutter.activeDepth !== 0) {
-      cues.push({ type: 'RELEASE_STUTTER', channelId })
-    }
-
-    // Project post-release state so branches match a re-read after stutter.end.
-    const state =
-      ch.stutter.activeDepth !== 0
-        ? {
-            ...ch,
-            state: ch.state === 'stuttering' ? 'playing' : ch.state,
-            stutter: { ...ch.stutter, activeDepth: 0 },
-          }
-        : ch
-
-    if (state.activePad === pad) {
-      cues.push(
+    if (ch.activePad === pad) {
+      return [
         { type: 'CANCEL_HANDOFF', channelId },
         { type: 'STOP_LOOP', pad },
-      )
-      return cues
+      ]
     }
 
-    if (state.state === 'pending' && state.pendingPad === pad) {
-      cues.push({ type: 'CANCEL_HANDOFF', channelId })
-      return cues
+    if (ch.state === 'pending' && ch.pendingPad === pad) {
+      return [{ type: 'CANCEL_HANDOFF', channelId }]
     }
 
-    if (state.state === 'idle') {
-      cues.push({ type: 'ARM_LOOP', pad })
-      return cues
+    if (ch.state === 'idle') {
+      return [{ type: 'ARM_LOOP', pad }]
     }
 
-    cues.push({
+    return [{
       type: 'QUEUE_HANDOFF',
       channelId,
       pad,
-      at: state.pendingAt ?? clock.getNextGrid(audioCtx.currentTime),
-    })
-    return cues
+      at: ch.pendingAt ?? clock.getNextGrid(audioCtx.currentTime),
+    }]
   }
 
   function fireCue(cue) {
@@ -169,24 +151,6 @@ export function mountLaunchpad(container, themes) {
       case 'LOOP_STARTED':
         syncChannel(cue.channelId, { type: 'STARTED', pad: cue.pad })
         break
-      case 'SPLIT_TOGGLE': {
-        const active = split.toggleSplit()
-        const splitBtn = byId('split-btn')
-        if (splitBtn) splitBtn.classList.toggle('active', active)
-        break
-      }
-      case 'STUTTER_TAP':
-        stutter.tap(cue.channelId)
-        break
-      case 'STUTTER_CYCLE':
-        stutter.cycleDepth(cue.channelId)
-        break
-      case 'SET_GAIN':
-        setVolume(cue.channelId, cue.value)
-        break
-      case 'SET_FILTER':
-        setFilter(cue.channelId, cue.value)
-        break
       default:
         break
     }
@@ -194,32 +158,32 @@ export function mountLaunchpad(container, themes) {
 
   function trigger(action) {
     switch (action.type) {
-      case 'PAD_HIT':
+      case 'PAD_HIT': {
         ensureAudioRunning()
+        const channelId = channelOfPad(action.pad)
+        if (channels[channelId].stutter.activeDepth !== 0) {
+          fireCue({ type: 'RELEASE_STUTTER', channelId })
+        }
         for (const cue of resolvePadHit(action.pad)) fireCue(cue)
         break
-      case 'SPLIT_TOGGLE':
-        fireCue({ type: 'SPLIT_TOGGLE' })
+      }
+      case 'SPLIT_TOGGLE': {
+        const active = split.toggleSplit()
+        const splitBtn = byId('split-btn')
+        if (splitBtn) splitBtn.classList.toggle('active', active)
         break
+      }
       case 'STUTTER_TAP':
-        fireCue({ type: 'STUTTER_TAP', channelId: action.channelId })
+        stutter.tap(action.channelId)
         break
       case 'STUTTER_CYCLE':
-        fireCue({ type: 'STUTTER_CYCLE', channelId: action.channelId })
+        stutter.cycleDepth(action.channelId)
         break
       case 'SET_GAIN':
-        fireCue({
-          type: 'SET_GAIN',
-          channelId: action.channelId,
-          value: action.value,
-        })
+        setVolume(action.channelId, action.value)
         break
       case 'SET_FILTER':
-        fireCue({
-          type: 'SET_FILTER',
-          channelId: action.channelId,
-          value: action.value,
-        })
+        setFilter(action.channelId, action.value)
         break
       default:
         break
