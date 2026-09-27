@@ -137,7 +137,7 @@ export function mountLaunchpad(container, themes) {
         stutter.end(cue.channelId)
         break
       case 'CANCEL_HANDOFF':
-        cancelPendingLoop(cue.channelId)
+        cancelHandoff(cue.channelId)
         break
       case 'ARM_LOOP':
         startLoop(cue.pad)
@@ -180,7 +180,7 @@ export function mountLaunchpad(container, themes) {
         stutter.cycleDepth(action.channelId)
         break
       case 'SET_GAIN':
-        setVolume(action.channelId, action.value)
+        setGain(action.channelId, action.value)
         break
       case 'SET_FILTER':
         setFilter(action.channelId, action.value)
@@ -192,7 +192,7 @@ export function mountLaunchpad(container, themes) {
 
   // --- Audio functions ---
 
-  function cancelPendingLoop(channelId) {
+  function cancelHandoff(channelId) {
     const ch = channels[channelId]
     if (ch.state !== 'pending' || ch.pendingPad == null) return
 
@@ -207,7 +207,7 @@ export function mountLaunchpad(container, themes) {
       voice.source = null
     }
 
-    syncChannel(channelId, { type: 'CANCEL_PENDING' })
+    syncChannel(channelId, { type: 'CANCEL_HANDOFF' })
   }
 
   // Shared: schedule a loop at `at`; FSM (armed/pending → playing) drives lights.
@@ -315,7 +315,7 @@ export function mountLaunchpad(container, themes) {
   }
 
   function queueLoop(channelId, pad, handoffTime) {
-    cancelPendingLoop(channelId)
+    cancelHandoff(channelId)
 
     scheduleLoopAt(pad, handoffTime, {
       onSchedule: () =>
@@ -334,7 +334,7 @@ export function mountLaunchpad(container, themes) {
     })
   }
 
-  function setVolume(channelId, v) {
+  function setGain(channelId, v) {
     channelVolumes[channelId] = v / 100
     channelGains[channelId].gain.setValueAtTime(v / 100, audioCtx.currentTime)
   }

@@ -113,7 +113,7 @@ export function applyChannelEvent(ch, event) {
       }
       return ch
 
-    case 'CANCEL_PENDING':
+    case 'CANCEL_HANDOFF':
       if (ch.state === 'pending') {
         return { ...ch, state: 'playing', pendingPad: null, pendingAt: null }
       }
