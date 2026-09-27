@@ -68,10 +68,8 @@ function App() {
       session.id === sessionId ? { ...session, status: 'pending' } : session
     ))
 
-    // Stand-in for a real "session accepted" event arriving over the
-    // WebSocket. Once that exists, this setTimeout goes away entirely —
-    // a socket message handler does this same status reset and calls
-    // handleSessionJoined(sessionId) instead, whenever the server actually says yes.
+    // stand-in for a real "session accepted" event arriving over the
+    // websocket and then this setTimeout goes away entirely
     setTimeout(() => {
       setSessions((prev) => prev.map((session) =>
         session.id === sessionId ? { ...session, status: 'open' } : session
@@ -90,10 +88,10 @@ function App() {
     setActiveChat(username)
   }
 
-  // Local-only for now: appends the message straight to state. Once the
-  // WebSocket exists, this becomes "send over the socket" instead, and a
+  // local-only for now: appends the message straight to state. Once the
+  // webSocket exists, this becomes "send over the socket" instead, and a
   // socket message handler calls setConversations the same way incoming
-  // messages do — ChatWindow itself won't need to change either way.
+  // messages do. ChatWindow itself won't need to change.
   const handleSendMessage = (username, text) => {
     setConversations((prev) => ({
       ...prev,
@@ -101,9 +99,9 @@ function App() {
     }))
   }
 
-  // Same local-only stand-in as handleSendMessage above — once the
+  // local-only stand-in as handleSendMessage above — once the
   // WebSocket exists, this sends to the session's room instead, and a
-  // socket handler appends incoming messages from the other participant(s).
+  // socket handler appends incoming messages from the other participants.
   const handleSendSessionMessage = (text) => {
     setSessionMessages((prev) => [...prev, { id: crypto.randomUUID(), text, fromMe: true }])
   }
