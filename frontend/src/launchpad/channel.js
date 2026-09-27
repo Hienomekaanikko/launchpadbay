@@ -25,7 +25,8 @@ export function createChannel(id) {
 
 export function createChannels(count) {
   const channels = {}
-  for (let id = 1; id <= count; id++) channels[id] = createChannel(id)
+  for (let id = 1; id <= count; id++)
+    channels[id] = createChannel(id)
   return channels
 }
 
@@ -35,7 +36,6 @@ export function anyChannelActive(channels) {
   )
 }
 
-/** Derive blink/active from channel FSM — pad slots only store loading. */
 export function getPadVisual(ch, slot) {
   const padState = ch.pads[slot]
   const pad = padState.pad
@@ -72,11 +72,9 @@ export function applyChannelEvent(ch, event) {
       if (ch.state === 'idle') {
         return { ...ch, state: 'armed', activePad: event.pad }
       }
-      // Idempotent re-arm (same pad already waiting).
       if (ch.state === 'armed' && ch.activePad === event.pad) {
         return ch
       }
-      // Stutter release / resume: drop stutter and wait for the next boundary.
       if (ch.state === 'stuttering' && ch.activePad === event.pad) {
         return {
           ...ch,
@@ -84,7 +82,6 @@ export function applyChannelEvent(ch, event) {
           stutter: { ...ch.stutter, activeDepth: 0 },
         }
       }
-      // Re-arm while playing (same pad) — e.g. schedule-ahead after a stop gap.
       if (ch.state === 'playing' && ch.activePad === event.pad) {
         return { ...ch, state: 'armed' }
       }

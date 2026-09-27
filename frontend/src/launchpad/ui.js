@@ -23,7 +23,8 @@ function knobAngleXY(angleDeg, r) {
 }
 
 function knobArcPath(value) {
-  if (value <= 0) return ''
+  if (value <= 0)
+    return ''
   const endDeg = -135 + (value / 100) * 270
   const s = knobAngleXY(-135, 16)
   const e = knobAngleXY(endDeg, 16)
@@ -34,7 +35,8 @@ function knobArcPath(value) {
 export function updateKnobVisual(wrap, value) {
   const fill = wrap.querySelector('.knob-fill')
   const dot = wrap.querySelector('.knob-dot')
-  if (fill) fill.setAttribute('d', knobArcPath(value))
+  if (fill)
+    fill.setAttribute('d', knobArcPath(value))
   if (dot) {
     const p = knobAngleXY(-135 + (value / 100) * 270, 11)
     dot.setAttribute('cx', p.x)
@@ -58,7 +60,8 @@ export function setupKnobDrag(wrap, getValue, setValue) {
     e.preventDefault()
   })
   listen(window, 'mousemove', (e) => {
-    if (!dragging) return
+    if (!dragging)
+      return
     setValue(Math.max(0, Math.min(100, startVal + (startY - e.clientY))))
   })
   listen(window, 'mouseup', () => { dragging = false })
@@ -68,7 +71,8 @@ export function setupKnobDrag(wrap, getValue, setValue) {
     e.preventDefault()
   }, { passive: false })
   listen(window, 'touchmove', (e) => {
-    if (!dragging) return
+    if (!dragging)
+      return
     setValue(Math.max(0, Math.min(100, startVal + (startY - e.touches[0].clientY))))
     e.preventDefault()
   }, { passive: false })
@@ -80,14 +84,16 @@ export function setupKnobDrag(wrap, getValue, setValue) {
   }, { passive: false })
 
   return () => {
-    for (const off of cleanups) off()
+    for (const off of cleanups)
+      off()
     cleanups.length = 0
   }
 }
 
 export function updateStutterBtn(byId, channel, depth, activeDepth) {
   const btn = byId(`stutter-btn-${channel}`)
-  if (!btn) return
+  if (!btn)
+    return
   btn.textContent = `1/${depth}`
   btn.classList.toggle('stutter-active', activeDepth !== 0)
 }
@@ -95,7 +101,8 @@ export function updateStutterBtn(byId, channel, depth, activeDepth) {
 /** Project one pad's derived visual onto the DOM. */
 export function renderPad(padEl, visual) {
   const el = padEl(visual.pad)
-  if (!el) return
+  if (!el)
+    return
   el.classList.toggle('blink', visual.blinking)
   el.classList.toggle('active', visual.active)
   el.classList.toggle('btn-loading', visual.loading)
@@ -114,7 +121,8 @@ export function applyThemeColors(theme) {
 
 /** phase: 0..1 while the clock is running, or null when idle */
 function updateProgressBar(fillElement, getPhase) {
-  if (!fillElement) return
+  if (!fillElement)
+    return
   if (getPhase != null) {
     fillElement.style.width = getPhase * 100 + '%'
     fillElement.style.opacity = '1'
@@ -127,13 +135,15 @@ export function startProgressLoop(fillElement, getPhase) {
   let rafId = 0
   let running = true
   function frame() {
-    if (!running) return
+    if (!running)
+      return
     updateProgressBar(fillElement, getPhase())
     rafId = requestAnimationFrame(frame)
   }
   rafId = requestAnimationFrame(frame)
   return () => {
     running = false
-    if (rafId) cancelAnimationFrame(rafId)
+    if (rafId)
+      cancelAnimationFrame(rafId)
   }
 }

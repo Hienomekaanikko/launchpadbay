@@ -4,7 +4,8 @@
 // theme images now live on the backend, not in the frontend build.
 async function fetchThemesOnce() {
   const res = await fetch('/api/themes')
-  if (!res.ok) throw new Error(`Failed to load themes: ${res.status}`)
+  if (!res.ok)
+    throw new Error(`Failed to load themes: ${res.status}`)
   return res.json()
 }
 
@@ -19,7 +20,8 @@ export async function fetchThemes(isCancelled = () => false) {
     try {
       return await fetchThemesOnce()
     } catch (err) {
-      if (isCancelled()) throw err
+      if (isCancelled())
+        throw err
       console.warn(`Themes not available yet, retrying in ${delay}ms:`, err.message)
       await new Promise((resolve) => setTimeout(resolve, delay))
       delay = Math.min(delay * 2, 10000)

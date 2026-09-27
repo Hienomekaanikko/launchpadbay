@@ -42,9 +42,11 @@ export function createStutterControl({
   function startStutter(channelId, stutterDepth) {
     const ch = channels[channelId]
     const pad = ch.activePad
-    if (!pad || ch.state !== 'playing') return
+    if (!pad || ch.state !== 'playing')
+      return
     const voice = padVoices[pad]
-    if (!voice || !voice.buffer) return
+    if (!voice || !voice.buffer)
+      return
 
     stopStutterSource(channelId)
 
@@ -58,7 +60,8 @@ export function createStutterControl({
   }
 
   function end(channelId, options) {
-    if (!options) options = {}
+    if (!options)
+      options = {}
     if (options.resume) {
       const pad = channels[channelId].activePad
       if (!pad) {
@@ -86,7 +89,8 @@ export function createStutterControl({
       end(channelId, { resume: true })
     } else {
       startStutter(channelId, ch.stutter.depth)
-      if (stutterSources[channelId]) refreshBtn(channelId)
+      if (stutterSources[channelId])
+        refreshBtn(channelId)
     }
   }
 
@@ -101,7 +105,8 @@ export function createStutterControl({
     if (next.stutter.activeDepth !== 0) {
       const pad = next.activePad
       let voice = null
-      if (pad) voice = padVoices[pad]
+      if (pad)
+        voice = padVoices[pad]
       if (voice && voice.buffer && stutterSources[channelId]) {
         const startTime = clock.getNextGrid(getCurrentTime(), depth)
         stopStutterSource(channelId, startTime)

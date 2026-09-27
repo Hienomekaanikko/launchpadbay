@@ -15,7 +15,8 @@ export function createClock() {
   }
 
   function getLoopLength() {
-    if (split) return halfLength
+    if (split)
+      return halfLength
     return fullLength
   }
 
@@ -33,8 +34,10 @@ export function createClock() {
   }
 
   function getNextGrid(currentTime, subdivision) {
-    if (subdivision == null) subdivision = 1
-    if (!isRunning()) return null
+    if (subdivision == null)
+      subdivision = 1
+    if (!isRunning())
+      return null
     const length = getLoopLength()
     const gridStep = length / subdivision
     const elapsed = currentTime - loopOrigin
@@ -43,14 +46,16 @@ export function createClock() {
   }
 
   function getPhase(currentTime) {
-    if (!isRunning()) return null
+    if (!isRunning())
+      return null
     const length = getLoopLength()
     const elapsed = Math.max(0, (currentTime - loopOrigin) % length)
     return elapsed / length
   }
 
   function setSplit(enabled, gridTime) {
-    if (enabled === split) return split
+    if (enabled === split)
+      return split
     split = enabled
     if (isRunning() && gridTime != null) {
       loopOrigin = gridTime

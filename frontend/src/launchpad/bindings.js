@@ -16,7 +16,8 @@ function bindClickAndTouch(el, handler) {
 function bindPads(padEl, handleUiAction) {
   for (let pad = 1; pad <= PAD_COUNT; pad++) {
     const btn = padEl(pad)
-    if (!btn) continue
+    if (!btn)
+      continue
     bindClickAndTouch(btn, () => handleUiAction({ type: 'PAD_HIT', pad }))
   }
 }
@@ -42,8 +43,10 @@ function bindStutterControls(byId, trackUiTimer, handleUiAction) {
       tapCount++
       clearTimeout(tapTimer)
       tapTimer = trackUiTimer(() => {
-        if (tapCount === 1) handleUiAction({ type: 'STUTTER_CYCLE', channelId })
-        else handleUiAction({ type: 'STUTTER_TAP', channelId })
+        if (tapCount === 1)
+          handleUiAction({ type: 'STUTTER_CYCLE', channelId })
+        else
+          handleUiAction({ type: 'STUTTER_TAP', channelId })
         tapCount = 0
       }, 280)
     }

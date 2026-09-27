@@ -1,6 +1,3 @@
-// Quantized SPLIT ½: arm on click, apply on next half/full grid boundary.
-// Live sources are restarted at the boundary — loopEnd-only updates are unreliable.
-
 import { replaceLoopSource } from './audio.js'
 
 export function createSplitControl({
@@ -14,7 +11,8 @@ export function createSplitControl({
   let pending = null // { enabled, at, timerId } | null
 
   function cancelPendingSplit() {
-    if (!pending) return
+    if (!pending)
+      return
     uiTimers.cancel(pending.timerId)
     pending = null
   }
@@ -22,9 +20,11 @@ export function createSplitControl({
   function restartActiveSources(when) {
     const loopEnd = clock.getLoopLength()
     for (const ch of Object.values(channels)) {
-      if (!ch.activePad) continue
+      if (!ch.activePad)
+        continue
       const voice = padVoices[ch.activePad]
-      if (!voice || !voice.buffer) continue
+      if (!voice || !voice.buffer)
+        continue
 
       voice.source = replaceLoopSource(
         ch.id,
@@ -39,10 +39,12 @@ export function createSplitControl({
   function applySplit(enabled, boundaryTime) {
     const now = getCurrentTime()
     let when = boundaryTime
-    if (when == null || when < now) when = now
+    if (when == null || when < now)
+      when = now
 
     const active = clock.setSplit(enabled, when)
-    if (clock.isRunning()) restartActiveSources(when)
+    if (clock.isRunning())
+      restartActiveSources(when)
     return active
   }
 
@@ -65,7 +67,8 @@ export function createSplitControl({
     const at = clock.getNextGrid(now, subdivision)
     const delayMs = ((at - now) * 1000) | 0
     const timerId = uiTimers.track(() => {
-      if (isUnmounted() || !pending) return
+      if (isUnmounted() || !pending)
+        return
       const { enabled } = pending
       pending = null
       applySplit(enabled, at)
@@ -75,5 +78,5 @@ export function createSplitControl({
     return desired
   }
 
-  return { toggleSplit, cancelPendingSplit, applySplit }
+  return { toggleSplit, cancelPendingSplit }
 }

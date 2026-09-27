@@ -3,7 +3,6 @@ import { CHANNEL_COUNT } from './pads.js'
 export let audioCtx = null
 export const channelGains = {}
 export const channelFilters = {}
-// pad index (1..25) -> { buffer, source, uiStartTimerId }
 export const padVoices = {}
 const bufferCache = new Map()
 
@@ -11,7 +10,7 @@ export function initAudio() {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)()
 }
 
-export function initChannelChain() {
+export function initChannelProcessors() {
   for (let channel = 1; channel <= CHANNEL_COUNT; channel++) {
     const filter = audioCtx.createBiquadFilter()
     filter.type = 'lowpass'
@@ -38,7 +37,7 @@ export async function loadPadVoice(pad, url) {
   }
 }
 
-export function createLoopSource(buffer, loopEndSec) {
+function createLoopSource(buffer, loopEndSec) {
   const source = audioCtx.createBufferSource()
   source.buffer = buffer
   source.loop = true
@@ -47,10 +46,13 @@ export function createLoopSource(buffer, loopEndSec) {
 }
 
 export function stopSource(source, when) {
-  if (!source) return
+  if (!source)
+    return
   try {
-    if (when != null) source.stop(when)
-    else source.stop()
+    if (when != null)
+      source.stop(when)
+    else
+      source.stop()
   } catch { /* already stopped */ }
 }
 
@@ -65,7 +67,8 @@ export function replaceLoopSource(channelId, buffer, loopEndSec, when, previousS
 
 export function resetAudio() {
   for (const voice of Object.values(padVoices)) {
-    if (voice) stopSource(voice.source)
+    if (voice)
+      stopSource(voice.source)
   }
   for (const key of Object.keys(padVoices))
     delete padVoices[key]

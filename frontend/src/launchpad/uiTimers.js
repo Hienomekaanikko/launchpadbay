@@ -18,7 +18,8 @@ export function createUiTimers() {
   }
 
   function clearAll() {
-    for (const id of ids) clearTimeout(id)
+    for (const id of ids)
+      clearTimeout(id)
     ids.clear()
   }
 
