@@ -11,7 +11,7 @@ export function createStutterControl({
   channels,
   padVoices,
   getCurrentTime,
-  dispatchChannelEvent,
+  syncChannel,
   updateBtn,
   resumeLoopAt,
   ensureAudioRunning,
@@ -36,7 +36,7 @@ export function createStutterControl({
       startTime,
       stutterSources[channelId],
     )
-    dispatchChannelEvent(channelId, { type: 'STUTTER_ON', depth })
+    syncChannel(channelId, { type: 'STUTTER_ON', depth })
   }
 
   function startStutter(channelId, stutterDepth) {
@@ -63,7 +63,7 @@ export function createStutterControl({
       const pad = channels[channelId].activePad
       if (!pad) {
         stopStutterSource(channelId)
-        dispatchChannelEvent(channelId, { type: 'STUTTER_OFF' })
+        syncChannel(channelId, { type: 'STUTTER_OFF' })
         refreshBtn(channelId)
         return
       }
@@ -74,7 +74,7 @@ export function createStutterControl({
       resumeLoopAt(pad, when)
     } else {
       stopStutterSource(channelId)
-      dispatchChannelEvent(channelId, { type: 'STUTTER_OFF' })
+      syncChannel(channelId, { type: 'STUTTER_OFF' })
     }
     refreshBtn(channelId)
   }
@@ -95,7 +95,7 @@ export function createStutterControl({
     const ch = channels[channelId]
     const idx = STUTTER_DEPTHS.indexOf(ch.stutter.depth)
     const depth = STUTTER_DEPTHS[(idx + 1) % STUTTER_DEPTHS.length]
-    dispatchChannelEvent(channelId, { type: 'STUTTER_DEPTH', depth })
+    syncChannel(channelId, { type: 'STUTTER_DEPTH', depth })
 
     const next = channels[channelId]
     if (next.stutter.activeDepth !== 0) {

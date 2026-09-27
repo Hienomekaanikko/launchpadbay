@@ -13,25 +13,21 @@ function bindClickAndTouch(el, handler) {
   }, { passive: false })
 }
 
-function bindPads(padEl, onPad) {
+function bindPads(padEl, trigger) {
   for (let pad = 1; pad <= PAD_COUNT; pad++) {
     const btn = padEl(pad)
     if (!btn) continue
-    bindClickAndTouch(btn, () => onPad(pad))
+    bindClickAndTouch(btn, () => trigger({ type: 'PAD_HIT', pad }))
   }
 }
 
-function bindTransport(byId, toggleSplit) {
+function bindTransport(byId, trigger) {
   const splitBtn = byId('split-btn')
-  const handle = () => {
-    const active = toggleSplit()
-    splitBtn.classList.toggle('active', active)
-  }
-  bindClickAndTouch(splitBtn, handle)
+  bindClickAndTouch(splitBtn, () => trigger({ type: 'SPLIT_TOGGLE' }))
 }
 
 // Double-tap: single = cycle depth, double = toggle stutter
-function bindStutterControls(byId, trackUiTimer, onStutterTap, onStutterCycle) {
+function bindStutterControls(byId, trackUiTimer, trigger) {
   const stutterCol = byId('stutter-btns')
   for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
     const btn = document.createElement('button')
@@ -46,8 +42,8 @@ function bindStutterControls(byId, trackUiTimer, onStutterTap, onStutterCycle) {
       tapCount++
       clearTimeout(tapTimer)
       tapTimer = trackUiTimer(() => {
-        if (tapCount === 1) onStutterCycle(channelId)
-        else onStutterTap(channelId)
+        if (tapCount === 1) trigger({ type: 'STUTTER_CYCLE', channelId })
+        else trigger({ type: 'STUTTER_TAP', channelId })
         tapCount = 0
       }, 280)
     }
@@ -55,7 +51,7 @@ function bindStutterControls(byId, trackUiTimer, onStutterTap, onStutterCycle) {
   }
 }
 
-function bindKnobs(byId, setVolume, setFilter) {
+function bindKnobs(byId, trigger) {
   const cleanups = []
   const volCol = byId('vol-knobs')
   const filterCol = byId('filter-knobs')
@@ -68,7 +64,7 @@ function bindKnobs(byId, setVolume, setFilter) {
     let volVal = 100
     cleanups.push(setupKnobDrag(volWrap, () => volVal, (v) => {
       volVal = v
-      setVolume(channelId, v)
+      trigger({ type: 'SET_GAIN', channelId, value: v })
       updateKnobVisual(volWrap, v)
     }))
 
@@ -77,7 +73,7 @@ function bindKnobs(byId, setVolume, setFilter) {
     let filterVal = 100
     cleanups.push(setupKnobDrag(filterWrap, () => filterVal, (v) => {
       filterVal = v
-      setFilter(channelId, v)
+      trigger({ type: 'SET_FILTER', channelId, value: v })
       updateKnobVisual(filterWrap, v)
     }))
   }
@@ -89,16 +85,11 @@ export function bindLaunchpadControls({
   byId,
   padEl,
   trackUiTimer,
-  onPad,
-  toggleSplit,
-  onStutterTap,
-  onStutterCycle,
-  setVolume,
-  setFilter,
+  trigger,
 }) {
-  bindTransport(byId, toggleSplit)
-  bindStutterControls(byId, trackUiTimer, onStutterTap, onStutterCycle)
-  const knobCleanups = bindKnobs(byId, setVolume, setFilter)
-  bindPads(padEl, onPad)
+  bindTransport(byId, trigger)
+  bindStutterControls(byId, trackUiTimer, trigger)
+  const knobCleanups = bindKnobs(byId, trigger)
+  bindPads(padEl, trigger)
   return { knobCleanups }
 }

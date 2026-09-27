@@ -58,7 +58,8 @@ export function mountLaunchpad(container, themes) {
     if (audioCtx.state === 'suspended') audioCtx.resume()
   }
 
-  function dispatchChannelEvent(id, event) {
+  /** Apply a channel FSM event and project lights. */
+  function syncChannel(id, event) {
     channels[id] = applyChannelEvent(channels[id], event)
     renderChannel(padEl, channels[id])
     return channels[id]
@@ -84,19 +85,146 @@ export function mountLaunchpad(container, themes) {
     channels,
     padVoices,
     getCurrentTime: () => audioCtx.currentTime,
-    dispatchChannelEvent,
+    syncChannel,
     updateBtn: (channelId, depth, activeDepth) =>
       updateStutterBtn(byId, channelId, depth, activeDepth),
     resumeLoopAt: (pad, when) => {
       scheduleLoopAt(pad, when, {
         resetGain: true,
         requireSource: true,
-        onSchedule: (channelId) => dispatchChannelEvent(channelId, { type: 'ARM', pad }),
-        onStarted: (channelId) => dispatchChannelEvent(channelId, { type: 'STARTED', pad }),
+        onSchedule: (channelId) => syncChannel(channelId, { type: 'ARM', pad }),
+        onStarted: (channelId) =>
+          fireCue({ type: 'LOOP_STARTED', channelId, pad }),
       })
     },
     ensureAudioRunning,
   })
+
+  // --- Cue dispatcher: trigger → resolve → fireCue ---
+
+  /** Pad hit → list of cues (decide only; no audio/DOM). */
+  function resolvePadHit(pad) {
+    const channelId = channelOfPad(pad)
+    const ch = channels[channelId]
+    const cues = []
+
+    if (ch.stutter.activeDepth !== 0) {
+      cues.push({ type: 'RELEASE_STUTTER', channelId })
+    }
+
+    // Project post-release state so branches match a re-read after stutter.end.
+    const state =
+      ch.stutter.activeDepth !== 0
+        ? {
+            ...ch,
+            state: ch.state === 'stuttering' ? 'playing' : ch.state,
+            stutter: { ...ch.stutter, activeDepth: 0 },
+          }
+        : ch
+
+    if (state.activePad === pad) {
+      cues.push(
+        { type: 'CANCEL_HANDOFF', channelId },
+        { type: 'STOP_LOOP', pad },
+      )
+      return cues
+    }
+
+    if (state.state === 'pending' && state.pendingPad === pad) {
+      cues.push({ type: 'CANCEL_HANDOFF', channelId })
+      return cues
+    }
+
+    if (state.state === 'idle') {
+      cues.push({ type: 'ARM_LOOP', pad })
+      return cues
+    }
+
+    cues.push({
+      type: 'QUEUE_HANDOFF',
+      channelId,
+      pad,
+      at: state.pendingAt ?? clock.getNextGrid(audioCtx.currentTime),
+    })
+    return cues
+  }
+
+  function fireCue(cue) {
+    switch (cue.type) {
+      case 'RELEASE_STUTTER':
+        stutter.end(cue.channelId)
+        break
+      case 'CANCEL_HANDOFF':
+        cancelPendingLoop(cue.channelId)
+        break
+      case 'ARM_LOOP':
+        startLoop(cue.pad)
+        break
+      case 'STOP_LOOP':
+        stopLoop(cue.pad, cue.skipFade)
+        break
+      case 'QUEUE_HANDOFF':
+        queueLoop(cue.channelId, cue.pad, cue.at)
+        break
+      case 'LOOP_STARTED':
+        syncChannel(cue.channelId, { type: 'STARTED', pad: cue.pad })
+        break
+      case 'SPLIT_TOGGLE': {
+        const active = split.toggleSplit()
+        const splitBtn = byId('split-btn')
+        if (splitBtn) splitBtn.classList.toggle('active', active)
+        break
+      }
+      case 'STUTTER_TAP':
+        stutter.tap(cue.channelId)
+        break
+      case 'STUTTER_CYCLE':
+        stutter.cycleDepth(cue.channelId)
+        break
+      case 'SET_GAIN':
+        setVolume(cue.channelId, cue.value)
+        break
+      case 'SET_FILTER':
+        setFilter(cue.channelId, cue.value)
+        break
+      default:
+        break
+    }
+  }
+
+  function trigger(action) {
+    switch (action.type) {
+      case 'PAD_HIT':
+        ensureAudioRunning()
+        for (const cue of resolvePadHit(action.pad)) fireCue(cue)
+        break
+      case 'SPLIT_TOGGLE':
+        fireCue({ type: 'SPLIT_TOGGLE' })
+        break
+      case 'STUTTER_TAP':
+        fireCue({ type: 'STUTTER_TAP', channelId: action.channelId })
+        break
+      case 'STUTTER_CYCLE':
+        fireCue({ type: 'STUTTER_CYCLE', channelId: action.channelId })
+        break
+      case 'SET_GAIN':
+        fireCue({
+          type: 'SET_GAIN',
+          channelId: action.channelId,
+          value: action.value,
+        })
+        break
+      case 'SET_FILTER':
+        fireCue({
+          type: 'SET_FILTER',
+          channelId: action.channelId,
+          value: action.value,
+        })
+        break
+      default:
+        break
+    }
+  }
 
   // --- Audio functions ---
 
@@ -115,7 +243,7 @@ export function mountLaunchpad(container, themes) {
       voice.source = null
     }
 
-    dispatchChannelEvent(channelId, { type: 'CANCEL_PENDING' })
+    syncChannel(channelId, { type: 'CANCEL_PENDING' })
   }
 
   // Shared: schedule a loop at `at`; FSM (armed/pending → playing) drives lights.
@@ -172,8 +300,9 @@ export function mountLaunchpad(container, themes) {
     scheduleLoopAt(pad, startTime, {
       resetGain: true,
       requireSource: true,
-      onSchedule: (channelId) => dispatchChannelEvent(channelId, { type: 'ARM', pad }),
-      onStarted: (channelId) => dispatchChannelEvent(channelId, { type: 'STARTED', pad }),
+      onSchedule: (channelId) => syncChannel(channelId, { type: 'ARM', pad }),
+      onStarted: (channelId) =>
+        fireCue({ type: 'LOOP_STARTED', channelId, pad }),
     })
   }
 
@@ -190,7 +319,7 @@ export function mountLaunchpad(container, themes) {
       voice.uiStartTimerId = null
     }
 
-    dispatchChannelEvent(channelId, { type: 'STOP' })
+    syncChannel(channelId, { type: 'STOP' })
 
     if (!anyChannelActive(channels)) {
       split.cancelPendingSplit()
@@ -226,7 +355,7 @@ export function mountLaunchpad(container, themes) {
 
     scheduleLoopAt(pad, handoffTime, {
       onSchedule: () =>
-        dispatchChannelEvent(channelId, { type: 'QUEUE_HANDOFF', pad, at: handoffTime }),
+        syncChannel(channelId, { type: 'QUEUE_HANDOFF', pad, at: handoffTime }),
       onFire: () => {
         const outgoing = channels[channelId].activePad
         if (!outgoing || outgoing === pad) return
@@ -236,43 +365,9 @@ export function mountLaunchpad(container, themes) {
           outVoice.source = null
         }
       },
-      onStarted: () => dispatchChannelEvent(channelId, { type: 'STARTED', pad }),
+      onStarted: () =>
+        fireCue({ type: 'LOOP_STARTED', channelId, pad }),
     })
-  }
-
-  function toggleLoop(pad) {
-    ensureAudioRunning()
-
-    const channelId = channelOfPad(pad)
-    const ch = channels[channelId]
-
-    if (ch.stutter.activeDepth !== 0) {
-      stutter.end(channelId)
-    }
-
-    const current = channels[channelId]
-
-    // Active pad pressed → stop (also drops any queued handoff).
-    if (current.activePad === pad) {
-      cancelPendingLoop(channelId)
-      stopLoop(pad)
-      return
-    }
-
-    // Pending pad pressed again → cancel the queued handoff only.
-    if (current.state === 'pending' && current.pendingPad === pad) {
-      cancelPendingLoop(channelId)
-      return
-    }
-
-    if (current.state === 'idle') {
-      startLoop(pad)
-      return
-    }
-
-    let handoffTime = current.pendingAt
-    if (handoffTime == null) handoffTime = clock.getNextGrid(audioCtx.currentTime)
-    queueLoop(channelId, pad, handoffTime)
   }
 
   function setVolume(channelId, v) {
@@ -300,7 +395,7 @@ export function mountLaunchpad(container, themes) {
 
     for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
       const keptDepth = channels[channelId].stutter.depth
-      dispatchChannelEvent(channelId, { type: 'RESET' })
+      syncChannel(channelId, { type: 'RESET' })
       channels[channelId].stutter.depth = keptDepth
       setAllPadsLoading(channels[channelId], true)
       renderChannel(padEl, channels[channelId])
@@ -339,12 +434,7 @@ export function mountLaunchpad(container, themes) {
     byId,
     padEl,
     trackUiTimer: uiTimers.track,
-    onPad: toggleLoop,
-    toggleSplit: split.toggleSplit,
-    onStutterTap: stutter.tap,
-    onStutterCycle: stutter.cycleDepth,
-    setVolume,
-    setFilter,
+    trigger,
   })
   const stopProgress = startProgressLoop(byId('master-bar-fill'), () =>
     clock.getPhase(audioCtx.currentTime)
