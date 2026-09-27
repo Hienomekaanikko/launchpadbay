@@ -25,6 +25,7 @@ import {
 } from './ui.js'
 import { createClock } from './clock.js'
 import { createSplitControl } from './split.js'
+import { createStutterControl } from './stutter.js'
 import {
   createChannels,
   applyChannelEvent,
@@ -42,8 +43,6 @@ export function mountLaunchpad(container, themes) {
 
   const clock = createClock()
   const channels = createChannels(CHANNEL_COUNT)
-  const stutterSources = {}
-  const STUTTER_DEPTHS = [4, 8, 16]
 
   let currentFadeTime = 0
   const channelVolumes = {}
@@ -51,15 +50,6 @@ export function mountLaunchpad(container, themes) {
 
   initAudio()
   initChannelChain()
-
-  const split = createSplitControl({
-    clock,
-    channels,
-    padVoices,
-    uiTimers,
-    getCurrentTime: () => audioCtx.currentTime,
-    isUnmounted: () => isUnmounted,
-  })
 
   const byId = (id) => container.querySelector(`#${id}`)
   const padEl = (pad) => byId(padDomId(pad))
@@ -79,39 +69,27 @@ export function mountLaunchpad(container, themes) {
     renderPad(padEl, getPadVisual(channels[channelId], slotOfPad(pad)))
   }
 
-  function stopStutterSource(channelId, when) {
-    stopSource(stutterSources[channelId], when)
-    delete stutterSources[channelId]
-  }
+  const split = createSplitControl({
+    clock,
+    channels,
+    padVoices,
+    uiTimers,
+    getCurrentTime: () => audioCtx.currentTime,
+    isUnmounted: () => isUnmounted,
+  })
 
-  function refreshStutterBtn(channelId) {
-    const { depth, activeDepth } = channels[channelId].stutter
-    updateStutterBtn(byId, channelId, depth, activeDepth)
-  }
-
-  function endStutter(channelId, options) {
-    if (!options) options = {}
-    stopStutterSource(channelId)
-    if (options.resume) {
-      const pad = channels[channelId].activePad
-      // startLoop → ARM from stuttering (clears activeDepth, blinks until boundary)
-      if (pad) startLoop(pad)
-    } else {
-      dispatchChannelEvent(channelId, { type: 'STUTTER_OFF' })
-    }
-    refreshStutterBtn(channelId)
-  }
-
-  function armStutterSource(channelId, voice, depth, startTime) {
-    stutterSources[channelId] = replaceLoopSource(
-      channelId,
-      voice.buffer,
-      clock.getLoopLength() / depth,
-      startTime,
-      stutterSources[channelId],
-    )
-    dispatchChannelEvent(channelId, { type: 'STUTTER_ON', depth })
-  }
+  // resumeLoop closes over startLoop (function declaration, hoisted).
+  const stutter = createStutterControl({
+    clock,
+    channels,
+    padVoices,
+    getCurrentTime: () => audioCtx.currentTime,
+    dispatchChannelEvent,
+    updateBtn: (channelId, depth, activeDepth) =>
+      updateStutterBtn(byId, channelId, depth, activeDepth),
+    resumeLoop: (pad) => startLoop(pad),
+    ensureAudioRunning,
+  })
 
   // --- Audio functions ---
 
@@ -262,7 +240,7 @@ export function mountLaunchpad(container, themes) {
     const ch = channels[channelId]
 
     if (ch.stutter.activeDepth !== 0) {
-      endStutter(channelId)
+      stutter.end(channelId)
     }
 
     const current = channels[channelId]
@@ -290,56 +268,6 @@ export function mountLaunchpad(container, themes) {
     queueLoop(channelId, pad, handoffTime)
   }
 
-  function tapStutter(channelId) {
-    ensureAudioRunning()
-    const ch = channels[channelId]
-    if (ch.stutter.activeDepth !== 0) {
-      endStutter(channelId, { resume: true })
-    } else {
-      startStutter(channelId, ch.stutter.depth)
-      if (stutterSources[channelId]) refreshStutterBtn(channelId)
-    }
-  }
-
-  function cycleStutterDepth(channelId) {
-    ensureAudioRunning()
-    const ch = channels[channelId]
-    const idx = STUTTER_DEPTHS.indexOf(ch.stutter.depth)
-    const depth = STUTTER_DEPTHS[(idx + 1) % STUTTER_DEPTHS.length]
-    dispatchChannelEvent(channelId, { type: 'STUTTER_DEPTH', depth })
-
-    const next = channels[channelId]
-    if (next.stutter.activeDepth !== 0) {
-      const pad = next.activePad
-      let voice = null
-      if (pad) voice = padVoices[pad]
-      if (voice && voice.buffer && stutterSources[channelId]) {
-        const startTime = clock.getNextGrid(audioCtx.currentTime, depth)
-        stopStutterSource(channelId, startTime)
-        armStutterSource(channelId, voice, depth, startTime)
-      }
-    }
-    refreshStutterBtn(channelId)
-  }
-
-  function startStutter(channelId, stutterDepth) {
-    const ch = channels[channelId]
-    const pad = ch.activePad
-    if (!pad || ch.state !== 'playing') return
-    const voice = padVoices[pad]
-    if (!voice || !voice.buffer) return
-
-    stopStutterSource(channelId)
-
-    const startTime = clock.getNextGrid(audioCtx.currentTime, stutterDepth)
-    if (voice.source) {
-      stopSource(voice.source, startTime)
-      voice.source = null
-    }
-
-    armStutterSource(channelId, voice, stutterDepth, startTime)
-  }
-
   function setVolume(channelId, v) {
     channelVolumes[channelId] = v / 100
     channelGains[channelId].gain.setValueAtTime(v / 100, audioCtx.currentTime)
@@ -354,9 +282,7 @@ export function mountLaunchpad(container, themes) {
 
   // --- Theme voice loading ---
   async function loadThemeSounds(theme) {
-    for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
-      stopStutterSource(channelId)
-    }
+    stutter.stopAll()
 
     for (const key of Object.keys(padVoices)) {
       const pad = Number(key)
@@ -371,7 +297,7 @@ export function mountLaunchpad(container, themes) {
       channels[channelId].stutter.depth = keptDepth
       setAllPadsLoading(channels[channelId], true)
       renderChannel(padEl, channels[channelId])
-      updateStutterBtn(byId, channelId, keptDepth, 0)
+      stutter.refreshBtn(channelId)
     }
 
     split.cancelPendingSplit()
@@ -408,8 +334,8 @@ export function mountLaunchpad(container, themes) {
     trackUiTimer: uiTimers.track,
     onPad: toggleLoop,
     toggleSplit: split.toggleSplit,
-    onStutterTap: tapStutter,
-    onStutterCycle: cycleStutterDepth,
+    onStutterTap: stutter.tap,
+    onStutterCycle: stutter.cycleDepth,
     setVolume,
     setFilter,
   })
@@ -426,14 +352,11 @@ export function mountLaunchpad(container, themes) {
 
     stopProgress()
     split.cancelPendingSplit()
+    stutter.stopAll()
     uiTimers.clearAll()
 
     for (const off of knobCleanups) off()
     knobCleanups.length = 0
-
-    for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
-      stopStutterSource(channelId)
-    }
 
     resetAudio()
     clock.clear()
