@@ -108,7 +108,7 @@ export function applyChannelEvent(ch, event) {
           ...ch,
           state: 'queued',
           queuedPad: event.pad,
-          queuedAt: event.at,
+          queuedAt: event.when,
         }
       }
       return ch
