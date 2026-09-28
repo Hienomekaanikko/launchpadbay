@@ -56,7 +56,7 @@ export function createStutterControl({
     armStutterSource(channelId, voice, stutterDepth, startTime)
   }
 
-  function end(channelId, options) {
+  function stopStutter(channelId, options) {
     if (!options)
       options = {}
     if (options.resume) {
@@ -83,7 +83,7 @@ export function createStutterControl({
     ensureAudioRunning()
     const ch = channels[channelId]
     if (ch.stutter.activeDepth !== 0) {
-      end(channelId, { resume: true })
+      stopStutter(channelId, { resume: true })
     } else {
       startStutter(channelId, ch.stutter.depth)
       if (stutterSources[channelId])
@@ -119,5 +119,5 @@ export function createStutterControl({
     }
   }
 
-  return { tap, cycleDepth, end, stopAll, refreshBtn }
+  return { tap, cycleDepth, stopStutter, stopAll, refreshBtn }
 }

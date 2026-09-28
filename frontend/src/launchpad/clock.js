@@ -20,7 +20,7 @@ export function createClock() {
     return fullLength
   }
 
-  function start(currentTime, fullDuration) {
+  function startClock(currentTime, fullDuration) {
     loopOrigin = currentTime + LOOKAHEAD
     fullLength = fullDuration
     halfLength = fullDuration / 2
@@ -67,7 +67,7 @@ export function createClock() {
     isRunning,
     isSplit,
     getLoopLength,
-    start,
+    startClock,
     clear,
     getNextGrid,
     getPhase,

@@ -6,7 +6,7 @@ import {
   stopSource,
   resetAudio,
   padVoices,
-  audioCtx,
+  audioContext,
   channelGains,
   channelFilters,
 } from './audio.js'
@@ -69,7 +69,7 @@ export function mountLaunchpad(container, themes) {
 
   // --- clip playback ---
 
-  function clearPadVoice(pad, options) {
+  function clearPadVoiceAudio(pad, options) {
     if (!options)
       options = {}
     const stop = options.stop !== false
@@ -93,7 +93,7 @@ export function mountLaunchpad(container, themes) {
     if (channel.state !== 'queued' || channel.queuedPad == null)
       return
 
-    clearPadVoice(channel.queuedPad)
+    clearPadVoiceAudio(channel.queuedPad)
     lightChannel(channelId, { type: 'CANCEL_HANDOFF' })
   }
 
@@ -118,7 +118,7 @@ export function mountLaunchpad(container, themes) {
     if (options.onSchedule)
       options.onSchedule(channelId)
 
-    const delayMs = ((when - audioCtx.currentTime) * 1000) | 0
+    const delayMs = ((when - audioContext.currentTime) * 1000) | 0
     voice.uiStartTimerId = uiTimers.track(() => {
       voice.uiStartTimerId = null
       if (isUnmounted)
@@ -148,10 +148,10 @@ export function mountLaunchpad(container, themes) {
     if (!voice)
       return
 
-    const now = audioCtx.currentTime
+    const now = audioContext.currentTime
     let startTime
     if (!clock.isRunning()) {
-      startTime = clock.start(now, voice.buffer.duration)
+      startTime = clock.startClock(now, voice.buffer.duration)
     } else {
       startTime = clock.getNextGrid(now)
     }
@@ -162,7 +162,7 @@ export function mountLaunchpad(container, themes) {
   // Fade later: ramp channelGain → 0 over N ms, stop after, restore to
   // channelLevels; on next launch reset gain to channelLevels at `when`.
   function stopClip(pad) {
-    const voice = clearPadVoice(pad)
+    const voice = clearPadVoiceAudio(pad)
     if (!voice)
       return
 
@@ -199,8 +199,8 @@ export function mountLaunchpad(container, themes) {
   // --- split / stutter ---
 
   function ensureAudioRunning() {
-    if (audioCtx.state === 'suspended')
-      audioCtx.resume()
+    if (audioContext.state === 'suspended')
+      audioContext.resume()
   }
 
   const split = createSplitControl({
@@ -208,7 +208,7 @@ export function mountLaunchpad(container, themes) {
     channels,
     padVoices,
     uiTimers,
-    getCurrentTime: () => audioCtx.currentTime,
+    getCurrentTime: () => audioContext.currentTime,
     isUnmounted: () => isUnmounted,
   })
 
@@ -216,7 +216,7 @@ export function mountLaunchpad(container, themes) {
     clock,
     channels,
     padVoices,
-    getCurrentTime: () => audioCtx.currentTime,
+    getCurrentTime: () => audioContext.currentTime,
     lightChannel,
     updateBtn: (channelId, depth, activeDepth) =>
       updateStutterBtn(byId, channelId, depth, activeDepth),
@@ -251,7 +251,7 @@ export function mountLaunchpad(container, themes) {
       type: 'QUEUE_HANDOFF',
       channelId,
       pad,
-      when: channel.queuedAt ?? clock.getNextGrid(audioCtx.currentTime),
+      when: channel.queuedAt ?? clock.getNextGrid(audioContext.currentTime),
     }]
   }
 
@@ -309,13 +309,13 @@ export function mountLaunchpad(container, themes) {
         channelLevels[action.channelId] = action.value / 100
         channelGains[action.channelId].gain.setValueAtTime(
           action.value / 100,
-          audioCtx.currentTime,
+          audioContext.currentTime,
         )
         break
       case 'SET_FILTER':
         channelFilters[action.channelId].frequency.setValueAtTime(
           200 * Math.pow(100, action.value / 100),
-          audioCtx.currentTime,
+          audioContext.currentTime,
         )
         break
       default:
@@ -383,7 +383,7 @@ export function mountLaunchpad(container, themes) {
     handleUiAction,
   })
   const stopProgress = startProgressLoop(byId('master-bar-fill'), () =>
-    clock.getPhase(audioCtx.currentTime)
+    clock.getPhase(audioContext.currentTime)
   )
   loadThemeSounds(themes[0]).catch((err) => {
     console.error('Launchpad init error:', err)

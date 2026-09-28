@@ -5,9 +5,9 @@ import {
   updateKnobVisual,
 } from './ui.js'
 
-function bindClickAndTouch(el, handler) {
-  el.addEventListener('click', handler)
-  el.addEventListener('touchend', (e) => {
+function bindClickAndTouch(element, handler) {
+  element.addEventListener('click', handler)
+  element.addEventListener('touchend', (e) => {
     e.preventDefault()
     handler()
   }, { passive: false })

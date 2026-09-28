@@ -44,7 +44,7 @@ export function updateKnobVisual(wrap, value) {
   }
 }
 
-export function setupKnobDrag(wrap, getValue, setValue) {
+export function setupKnobDrag(wrap, getKnobValue, setKnobValue) {
   let dragging = false
   let startY = 0
   let startVal = 0
@@ -56,31 +56,31 @@ export function setupKnobDrag(wrap, getValue, setValue) {
   }
 
   listen(wrap, 'mousedown', (e) => {
-    dragging = true; startY = e.clientY; startVal = getValue()
+    dragging = true; startY = e.clientY; startVal = getKnobValue()
     e.preventDefault()
   })
   listen(window, 'mousemove', (e) => {
     if (!dragging)
       return
-    setValue(Math.max(0, Math.min(100, startVal + (startY - e.clientY))))
+    setKnobValue(Math.max(0, Math.min(100, startVal + (startY - e.clientY))))
   })
   listen(window, 'mouseup', () => { dragging = false })
 
   listen(wrap, 'touchstart', (e) => {
-    dragging = true; startY = e.touches[0].clientY; startVal = getValue()
+    dragging = true; startY = e.touches[0].clientY; startVal = getKnobValue()
     e.preventDefault()
   }, { passive: false })
   listen(window, 'touchmove', (e) => {
     if (!dragging)
       return
-    setValue(Math.max(0, Math.min(100, startVal + (startY - e.touches[0].clientY))))
+    setKnobValue(Math.max(0, Math.min(100, startVal + (startY - e.touches[0].clientY))))
     e.preventDefault()
   }, { passive: false })
   listen(window, 'touchend', () => { dragging = false })
 
   listen(wrap, 'wheel', (e) => {
     e.preventDefault()
-    setValue(Math.max(0, Math.min(100, getValue() + (e.deltaY < 0 ? 2 : -2))))
+    setKnobValue(Math.max(0, Math.min(100, getKnobValue() + (e.deltaY < 0 ? 2 : -2))))
   }, { passive: false })
 
   return () => {
