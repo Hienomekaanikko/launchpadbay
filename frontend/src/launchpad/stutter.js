@@ -28,7 +28,7 @@ export function createStutterControl({
       updateBtn(channelId, depth, activeDepth)
     }
 
-    function armStutterSource(channelId, voice, depth, startTime) {
+    function playStutterLoop(channelId, voice, depth, startTime) {
       stutterSources[channelId] = replaceLoopSource(stutterSources[channelId], {
         channelId,
         buffer: voice.buffer,
@@ -38,14 +38,15 @@ export function createStutterControl({
       lightChannel(channelId, { type: 'STUTTER_ON', depth })
     }
 
+    // Returns true if stutter was started.
     function startStutter(channelId, stutterDepth) {
       const ch = channels[channelId]
       const pad = ch.activePad
       if (!pad || ch.state !== 'playing')
-        return
+        return false
       const voice = padVoices[pad]
       if (!voice || !voice.buffer)
-        return
+        return false
 
       stopStutterSource(channelId)
 
@@ -55,34 +56,38 @@ export function createStutterControl({
         voice.source = null
       }
 
-      armStutterSource(channelId, voice, stutterDepth, startTime)
+      playStutterLoop(channelId, voice, stutterDepth, startTime)
+      return true
     }
 
-    function stopStutter(channelId, options = {}) {
-      const pad = channels[channelId].activePad
-      if (options.resume && pad) {
-        // Keep stutter until next full/half bar; hand off to full loop at same `when`.
-        const when = clock.getNextGrid(audioContext.currentTime)
-        stopStutterSource(channelId, when)
-        // resumeClipAt → ARM (clears activeDepth, blinks until boundary)
-        resumeClipAt(pad, when)
-      } else {
-        stopStutterSource(channelId)
-        lightChannel(channelId, { type: 'STUTTER_OFF' })
-      }
+    // Stop immediately, without resuming the full loop.
+    function stopStutter(channelId) {
+      stopStutterSource(channelId)
+      lightChannel(channelId, { type: 'STUTTER_OFF' })
       refreshBtn(channelId)
     }
 
-    function tap(channelId) {
+    // Keep stuttering until the next loop boundary, then hand back to the full loop there.
+    function releaseStutter(channelId) {
+      const pad = channels[channelId].activePad
+      if (!pad) {
+        stopStutter(channelId)
+        return
+      }
+      const when = clock.getNextGrid(audioContext.currentTime)
+      stopStutterSource(channelId, when)
+      // ARM clears activeDepth; the pad blinks until the boundary.
+      resumeClipAt(pad, when)
+      refreshBtn(channelId)
+    }
+
+    function toggleStutter(channelId) {
       resumeAudio()
       const ch = channels[channelId]
-      if (ch.stutter.activeDepth !== 0) {
-        stopStutter(channelId, { resume: true })
-      } else {
-        startStutter(channelId, ch.stutter.depth)
-        if (stutterSources[channelId])
-          refreshBtn(channelId)
-      }
+      if (ch.stutter.activeDepth !== 0)
+        releaseStutter(channelId)
+      else if (startStutter(channelId, ch.stutter.depth))
+        refreshBtn(channelId)
     }
 
     function cycleDepth(channelId) {
@@ -96,7 +101,7 @@ export function createStutterControl({
       if (ch.stutter.activeDepth !== 0 && voice && voice.buffer && stutterSources[channelId]) {
         const startTime = clock.getNextGrid(audioContext.currentTime, depth)
         stopStutterSource(channelId, startTime)
-        armStutterSource(channelId, voice, depth, startTime)
+        playStutterLoop(channelId, voice, depth, startTime)
       }
       refreshBtn(channelId)
     }
@@ -106,5 +111,5 @@ export function createStutterControl({
         stopStutterSource(channelId)
     }
 
-    return { tap, cycleDepth, stopStutter, stopAll, refreshBtn }
+    return { toggleStutter, cycleDepth, stopStutter, stopAll, refreshBtn }
 }

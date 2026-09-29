@@ -6,6 +6,7 @@ import {
     stopSource,
     resetAudio,
     resumeAudio,
+    msUntil,
     padVoices,
     audioContext,
     setChannelGain,
@@ -19,7 +20,8 @@ import {
 } from './pads.js'
 import {
     updateStutterBtn,
-    applyThemeColors,
+    updateSplitBtn,
+    applyTheme,
     startProgressLoop,
     renderPad,
     renderChannel,
@@ -33,7 +35,6 @@ import {
     anyChannelActive,
     setPadLoading,
     getPadVisual,
-    setAllPadsLoading,
 } from './channel.js'
 import { createUiTimers } from './uiTimers.js'
 import { bindLaunchpadControls } from './bindings.js'
@@ -60,7 +61,7 @@ export function mountLaunchpad(container, themes) {
 
     // --- clip playback ---
 
-    function clearPadVoiceAudio(pad) {
+    function silencePad(pad) {
       const voice = padVoices[pad]
       if (!voice)
         return null
@@ -80,7 +81,7 @@ export function mountLaunchpad(container, themes) {
       if (channel.state !== 'queued' || channel.queuedPad == null)
         return
 
-      clearPadVoiceAudio(channel.queuedPad)
+      silencePad(channel.queuedPad)
 
       // A scheduled stop can't be undone: restart the outgoing loop at the same
       // grid boundary instead, where offset 0 is in phase.
@@ -104,12 +105,10 @@ export function mountLaunchpad(container, themes) {
         when,
       })
 
-      const delayMs = ((when - audioContext.currentTime) * 1000) | 0
       startTimers[pad] = uiTimers.track(() => {
         delete startTimers[pad]
-        if (!isUnmounted)
-          onStart()
-      }, delayMs)
+        onStart()
+      }, msUntil(when))
     }
 
     function armClipAt(pad, when) {
@@ -142,9 +141,9 @@ export function mountLaunchpad(container, themes) {
     }
 
     // Fade later: ramp channelGain → 0 over N ms, stop after, restore to
-    // channelLevels; on next launch reset gain to channelLevels at `when`.
+    // the knob level; on next launch reset gain to the knob level at `when`.
     function stopClip(pad) {
-      const voice = clearPadVoiceAudio(pad)
+      const voice = silencePad(pad)
       if (!voice)
         return
 
@@ -207,13 +206,17 @@ export function mountLaunchpad(container, themes) {
         stutter.stopStutter(channelId)
 
       if (channel.activePad === pad) {
+        // Hit the playing pad: stop it
         cancelHandoff(channelId)
         stopClip(pad)
       } else if (channel.state === 'queued' && channel.queuedPad === pad) {
+        // Hit the queued pad again: cancel the switch
         cancelHandoff(channelId)
       } else if (channel.state === 'idle') {
+        // Row silent: start at the next boundary
         launchClip(pad)
       } else {
+        // Another pad in a playing row: queue a switch (reuse an existing queue time)
         let when = channel.queuedAt
         if (when == null)
           when = clock.getNextGrid(audioContext.currentTime)
@@ -226,15 +229,11 @@ export function mountLaunchpad(container, themes) {
         case 'PAD_HIT':
           padHit(action.pad)
           break
-        case 'SPLIT_TOGGLE': {
-          const active = split.toggleSplit()
-          const splitBtn = byId('split-btn')
-          if (splitBtn)
-            splitBtn.classList.toggle('active', active)
+        case 'SPLIT_TOGGLE':
+          updateSplitBtn(byId, split.toggleSplit())
           break
-        }
         case 'STUTTER_TAP':
-          stutter.tap(action.channelId)
+          stutter.toggleStutter(action.channelId)
           break
         case 'STUTTER_CYCLE':
           stutter.cycleDepth(action.channelId)
@@ -250,57 +249,46 @@ export function mountLaunchpad(container, themes) {
       }
     }
 
+    function stopAllPlayback() {
+      stutter.stopAll()
+      for (const key of Object.keys(padVoices))
+        silencePad(Number(key))
+      split.cancelPendingSplit()
+      clock.clear()
+    }
+
     // --- themes ---
 
     async function loadThemeSounds(theme) {
-      stutter.stopAll()
-
-      for (const key of Object.keys(padVoices)) {
-        const pad = Number(key)
-        const voice = padVoices[pad]
-        if (voice && voice.source)
-          stopClip(pad)
-      }
+      stopAllPlayback()
       clearPadVoices()
 
+      for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++)
+        applyChannelEvent(channels[channelId], { type: 'RESET' })
+
+      const samples = Object.entries(theme.sampleUrls).map(([key, url]) => ({ pad: Number(key), url }))
+      for (const { pad } of samples)
+        setPadLoading(channels[channelOfPad(pad)], pad, true)
+
       for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
-        lightChannel(channelId, { type: 'RESET' })
-        setAllPadsLoading(channels[channelId], true)
         renderChannel(padEl, channels[channelId])
         stutter.refreshBtn(channelId)
       }
 
-      split.cancelPendingSplit()
-      clock.clear()
-
-      await Promise.all(
-        Object.entries(theme.sampleUrls).map(([key, url]) => {
-          const pad = Number(key)
-          const channelId = channelOfPad(pad)
-          return loadPadVoice(pad, url)
-            .finally(() => {
-              if (isUnmounted)
-                return
-              setPadLoading(channels[channelId], pad, false)
-              renderPad(padEl, getPadVisual(channels[channelId], slotOfPad(pad)))
-            })
+      await Promise.all(samples.map(({ pad, url }) =>
+        loadPadVoice(pad, url).finally(() => {
+          if (isUnmounted)
+            return
+          const channel = channels[channelOfPad(pad)]
+          setPadLoading(channel, pad, false)
+          renderPad(padEl, getPadVisual(channel, slotOfPad(pad)))
         })
-      )
-
-      if (isUnmounted)
-        return
-
-      if (Object.keys(theme.sampleUrls).length === 0) {
-        for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
-          setAllPadsLoading(channels[channelId], false)
-          renderChannel(padEl, channels[channelId])
-        }
-      }
+      ))
     }
 
     // --- mount / destroy ---
 
-    applyThemeColors(themes[0])
+    applyTheme(themes[0])
     const { knobCleanups } = bindLaunchpadControls({
       byId,
       padEl,
@@ -318,8 +306,7 @@ export function mountLaunchpad(container, themes) {
       isUnmounted = true
 
       stopProgress()
-      split.cancelPendingSplit()
-      stutter.stopAll()
+      stopAllPlayback()
       uiTimers.clearAll()
 
       for (const off of knobCleanups)
@@ -327,7 +314,6 @@ export function mountLaunchpad(container, themes) {
       knobCleanups.length = 0
 
       resetAudio()
-      clock.clear()
 
       document.body.style.backgroundImage = ''
       themes.forEach((theme) =>

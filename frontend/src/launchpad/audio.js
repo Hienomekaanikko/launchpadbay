@@ -32,6 +32,11 @@ export function resumeAudio() {
       audioContext.resume()
 }
 
+// Milliseconds from now until an AudioContext time, for UI timers.
+export function msUntil(audioTime) {
+    return Math.max(0, Math.round((audioTime - audioContext.currentTime) * 1000))
+}
+
 // level: 0..1
 export function setChannelGain(channelId, level) {
     channelGains[channelId].gain.setTargetAtTime(

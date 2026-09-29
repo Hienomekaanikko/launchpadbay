@@ -51,11 +51,6 @@ export function setPadLoading(ch, pad, loading) {
     ch.padLoading[slotOfPad(pad)] = loading
 }
 
-export function setAllPadsLoading(ch, loading) {
-    for (let slot = 1; slot <= SLOTS_PER_CHANNEL; slot++)
-      ch.padLoading[slot] = loading
-}
-
 function clearQueue(ch) {
     ch.queuedPad = null
     ch.queuedAt = null

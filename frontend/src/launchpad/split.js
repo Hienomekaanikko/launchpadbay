@@ -1,17 +1,17 @@
-import { replaceLoopSource, padVoices, audioContext } from './audio.js'
+import { replaceLoopSource, msUntil, padVoices, audioContext } from './audio.js'
 
 export function createSplitControl({
     clock,
     channels,
     uiTimers,
 }) {
-    let pending = null // { enabled, timerId } | null
+    let pendingTimerId = null
 
     function cancelPendingSplit() {
-      if (!pending)
+      if (!pendingTimerId)
         return
-      uiTimers.cancel(pending.timerId)
-      pending = null
+      uiTimers.cancel(pendingTimerId)
+      pendingTimerId = null
     }
 
     function restartActiveSources(when) {
@@ -45,33 +45,26 @@ export function createSplitControl({
     }
 
     function toggleSplit() {
-      const desired = pending ? !pending.enabled : !clock.isSplit()
-
-      if (!clock.isRunning()) {
-        cancelPendingSplit()
-        return applySplit(desired, null)
-      }
-
-      if (desired === clock.isSplit()) {
+      // Pressed again before the boundary: cancel the pending switch.
+      if (pendingTimerId) {
         cancelPendingSplit()
         return clock.isSplit()
       }
 
-      // ON: next half of the full bar (midpoint or end). OFF: next half-bar.
-      const subdivision = desired ? 2 : 1
-      const now = audioContext.currentTime
-      const at = clock.getNextGrid(now, subdivision)
-      const delayMs = ((at - now) * 1000) | 0
-      const timerId = uiTimers.track(() => {
-        if (!pending)
-          return
-        const { enabled } = pending
-        pending = null
-        applySplit(enabled, at)
-      }, delayMs)
+      const wantSplit = !clock.isSplit()
 
-      pending = { enabled: desired, timerId }
-      return desired
+      if (!clock.isRunning())
+        return applySplit(wantSplit, null)
+
+      // ON: next half of the full bar (midpoint or end). OFF: next half-bar.
+      const subdivision = wantSplit ? 2 : 1
+      const at = clock.getNextGrid(audioContext.currentTime, subdivision)
+      pendingTimerId = uiTimers.track(() => {
+        pendingTimerId = null
+        applySplit(wantSplit, at)
+      }, msUntil(at))
+
+      return wantSplit
     }
 
     return { toggleSplit, cancelPendingSplit }

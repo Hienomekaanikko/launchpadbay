@@ -1,4 +1,4 @@
-const LOOKAHEAD = 0.1
+const LOOKAHEAD_SEC = 0.1
 
 export function createClock() {
     let loopOrigin = null
@@ -20,7 +20,7 @@ export function createClock() {
     }
 
     function startClock(currentTime, fullDuration) {
-      loopOrigin = currentTime + LOOKAHEAD
+      loopOrigin = currentTime + LOOKAHEAD_SEC
       fullLength = fullDuration
       return loopOrigin
     }
@@ -52,9 +52,9 @@ export function createClock() {
       if (enabled === split)
         return split
       split = enabled
-      if (isRunning() && gridTime != null) {
+      // Every loop restarts from offset 0 at the switch, so the grid restarts there too.
+      if (isRunning() && gridTime != null)
         loopOrigin = gridTime
-      }
       return split
     }
 

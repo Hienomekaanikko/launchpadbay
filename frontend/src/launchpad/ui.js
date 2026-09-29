@@ -1,36 +1,50 @@
 import { getPadVisual } from './channel.js'
 import { SLOTS_PER_CHANNEL } from './pads.js'
 
-export function createKnob(id, colorClass) {
-    const wrap = document.createElement('div')
-    wrap.className = `knob-wrap ${colorClass}`
-    wrap.id = id
-    const initDot = knobAngleXY(135, 11)
-    wrap.innerHTML = `
-      <svg class="knob-svg" viewBox="0 0 44 44">
-        <circle class="knob-bg" cx="22" cy="22" r="20"/>
-        <path class="knob-track" d="${KNOB_TRACK}"/>
-        <path class="knob-fill" d="${KNOB_TRACK}"/>
-        <circle class="knob-dot" cx="${initDot.x}" cy="${initDot.y}" r="2.5"/>
-      </svg>`
-    return wrap
-}
-
+// Knob geometry in SVG units (viewBox 0 0 44 44). Angles: 0° = up, clockwise.
+const KNOB_CENTER = 22
+const KNOB_START_DEG = -135
+const KNOB_SWEEP_DEG = 270
+const ARC_RADIUS = 16
+const DOT_RADIUS = 11
 const KNOB_TRACK = 'M 10.69 33.31 A 16 16 0 1 1 33.31 33.31'
 
-function knobAngleXY(angleDeg, r) {
+// value: 0..100
+function valueToAngle(value) {
+    return KNOB_START_DEG + (value / 100) * KNOB_SWEEP_DEG
+}
+
+function knobAngleXY(angleDeg, radius) {
     const rad = (angleDeg * Math.PI) / 180
-    return { x: +(22 + r * Math.sin(rad)).toFixed(2), y: +(22 - r * Math.cos(rad)).toFixed(2) }
+    return {
+      x: +(KNOB_CENTER + radius * Math.sin(rad)).toFixed(2),
+      y: +(KNOB_CENTER - radius * Math.cos(rad)).toFixed(2),
+    }
 }
 
 function knobArcPath(value) {
     if (value <= 0)
       return ''
-    const endDeg = -135 + (value / 100) * 270
-    const s = knobAngleXY(-135, 16)
-    const e = knobAngleXY(endDeg, 16)
-    const large = (value / 100) * 270 > 180 ? 1 : 0
-    return `M ${s.x} ${s.y} A 16 16 0 ${large} 1 ${e.x} ${e.y}`
+    const endDeg = valueToAngle(value)
+    const start = knobAngleXY(KNOB_START_DEG, ARC_RADIUS)
+    const end = knobAngleXY(endDeg, ARC_RADIUS)
+    const largeArc = endDeg - KNOB_START_DEG > 180 ? 1 : 0
+    return `M ${start.x} ${start.y} A ${ARC_RADIUS} ${ARC_RADIUS} 0 ${largeArc} 1 ${end.x} ${end.y}`
+}
+
+export function createKnob(id, colorClass) {
+    const wrap = document.createElement('div')
+    wrap.className = `knob-wrap ${colorClass}`
+    wrap.id = id
+    const initDot = knobAngleXY(valueToAngle(100), DOT_RADIUS)
+    wrap.innerHTML = `
+      <svg class="knob-svg" viewBox="0 0 44 44">
+        <circle class="knob-bg" cx="${KNOB_CENTER}" cy="${KNOB_CENTER}" r="20"/>
+        <path class="knob-track" d="${KNOB_TRACK}"/>
+        <path class="knob-fill" d="${KNOB_TRACK}"/>
+        <circle class="knob-dot" cx="${initDot.x}" cy="${initDot.y}" r="2.5"/>
+      </svg>`
+    return wrap
 }
 
 export function updateKnobVisual(wrap, value) {
@@ -39,7 +53,7 @@ export function updateKnobVisual(wrap, value) {
     if (fill)
       fill.setAttribute('d', knobArcPath(value))
     if (dot) {
-      const p = knobAngleXY(-135 + (value / 100) * 270, 11)
+      const p = knobAngleXY(valueToAngle(value), DOT_RADIUS)
       dot.setAttribute('cx', p.x)
       dot.setAttribute('cy', p.y)
     }
@@ -91,12 +105,18 @@ export function setupKnobDrag(wrap, getKnobValue, setKnobValue) {
     }
 }
 
-export function updateStutterBtn(byId, channel, depth, activeDepth) {
-    const btn = byId(`stutter-btn-${channel}`)
+export function updateStutterBtn(byId, channelId, depth, activeDepth) {
+    const btn = byId(`stutter-btn-${channelId}`)
     if (!btn)
       return
     btn.textContent = `1/${depth}`
     btn.classList.toggle('stutter-active', activeDepth !== 0)
+}
+
+export function updateSplitBtn(byId, active) {
+    const btn = byId('split-btn')
+    if (btn)
+      btn.classList.toggle('active', active)
 }
 
 /** Project one pad's derived visual onto the DOM. */
@@ -115,18 +135,18 @@ export function renderChannel(padEl, ch) {
       renderPad(padEl, getPadVisual(ch, slot))
 }
 
-export function applyThemeColors(theme) {
+export function applyTheme(theme) {
     document.body.style.backgroundImage = theme.bgImage ? `url('${theme.bgImage}')` : ''
     if (theme.bodyClass)
       document.body.classList.add(theme.bodyClass)
 }
 
 /** phase: 0..1 while the clock is running, or null when idle */
-function updateProgressBar(fillElement, getPhase) {
+function updateProgressBar(fillElement, phase) {
     if (!fillElement)
       return
-    if (getPhase != null) {
-      fillElement.style.width = getPhase * 100 + '%'
+    if (phase != null) {
+      fillElement.style.width = phase * 100 + '%'
       fillElement.style.opacity = '1'
     } else {
       fillElement.style.opacity = '0'
