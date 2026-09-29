@@ -3,7 +3,6 @@ const LOOKAHEAD = 0.1
 export function createClock() {
     let loopOrigin = null
     let fullLength = null
-    let halfLength = null
     let split = false
 
     function isRunning() {
@@ -16,26 +15,22 @@ export function createClock() {
 
     function getLoopLength() {
       if (split)
-        return halfLength
+        return fullLength / 2
       return fullLength
     }
 
     function startClock(currentTime, fullDuration) {
       loopOrigin = currentTime + LOOKAHEAD
       fullLength = fullDuration
-      halfLength = fullDuration / 2
       return loopOrigin
     }
 
     function clear() {
       loopOrigin = null
       fullLength = null
-      halfLength = null
     }
 
-    function getNextGrid(currentTime, subdivision) {
-      if (subdivision == null)
-        subdivision = 1
+    function getNextGrid(currentTime, subdivision = 1) {
       if (!isRunning())
         return null
       const length = getLoopLength()

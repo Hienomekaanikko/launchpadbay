@@ -1,14 +1,11 @@
-import { replaceLoopSource } from './audio.js'
+import { replaceLoopSource, padVoices, audioContext } from './audio.js'
 
 export function createSplitControl({
     clock,
     channels,
-    padVoices,
     uiTimers,
-    getCurrentTime,
-    isUnmounted,
 }) {
-    let pending = null // { enabled, at, timerId } | null
+    let pending = null // { enabled, timerId } | null
 
     function cancelPendingSplit() {
       if (!pending)
@@ -26,18 +23,17 @@ export function createSplitControl({
         if (!voice || !voice.buffer)
           continue
 
-        voice.source = replaceLoopSource(
-          ch.id,
-          voice.buffer,
+        voice.source = replaceLoopSource(voice.source, {
+          channelId: ch.id,
+          buffer: voice.buffer,
           loopEnd,
           when,
-          voice.source,
-        )
+        })
       }
     }
 
     function applySplit(enabled, boundaryTime) {
-      const now = getCurrentTime()
+      const now = audioContext.currentTime
       let when = boundaryTime
       if (when == null || when < now)
         when = now
@@ -63,18 +59,18 @@ export function createSplitControl({
 
       // ON: next half of the full bar (midpoint or end). OFF: next half-bar.
       const subdivision = desired ? 2 : 1
-      const now = getCurrentTime()
+      const now = audioContext.currentTime
       const at = clock.getNextGrid(now, subdivision)
       const delayMs = ((at - now) * 1000) | 0
       const timerId = uiTimers.track(() => {
-        if (isUnmounted() || !pending)
+        if (!pending)
           return
         const { enabled } = pending
         pending = null
         applySplit(enabled, at)
       }, delayMs)
 
-      pending = { enabled: desired, at, timerId }
+      pending = { enabled: desired, timerId }
       return desired
     }
 

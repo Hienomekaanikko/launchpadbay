@@ -1,4 +1,5 @@
 import { getPadVisual } from './channel.js'
+import { SLOTS_PER_CHANNEL } from './pads.js'
 
 export function createKnob(id, colorClass) {
     const wrap = document.createElement('div')
@@ -110,13 +111,14 @@ export function renderPad(padEl, visual) {
 
 /** Project all 5 slots of a channel onto the DOM. */
 export function renderChannel(padEl, ch) {
-    for (const slot of Object.keys(ch.pads)) {
+    for (let slot = 1; slot <= SLOTS_PER_CHANNEL; slot++)
       renderPad(padEl, getPadVisual(ch, slot))
-    }
 }
 
 export function applyThemeColors(theme) {
     document.body.style.backgroundImage = theme.bgImage ? `url('${theme.bgImage}')` : ''
+    if (theme.bodyClass)
+      document.body.classList.add(theme.bodyClass)
 }
 
 /** phase: 0..1 while the clock is running, or null when idle */

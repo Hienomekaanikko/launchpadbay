@@ -28,7 +28,7 @@ function bindTransport(byId, handleUiAction) {
 }
 
 // Double-tap: single = cycle depth, double = toggle stutter
-function bindStutterControls(byId, trackUiTimer, handleUiAction) {
+function bindStutterControls(byId, uiTimers, handleUiAction) {
     const stutterCol = byId('stutter-btns')
     for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
       const btn = document.createElement('button')
@@ -41,8 +41,8 @@ function bindStutterControls(byId, trackUiTimer, handleUiAction) {
       let tapTimer = null
       const onTap = () => {
         tapCount++
-        clearTimeout(tapTimer)
-        tapTimer = trackUiTimer(() => {
+        uiTimers.cancel(tapTimer)
+        tapTimer = uiTimers.track(() => {
           if (tapCount === 1)
             handleUiAction({ type: 'STUTTER_CYCLE', channelId })
           else
@@ -87,11 +87,11 @@ function bindKnobs(byId, handleUiAction) {
 export function bindLaunchpadControls({
     byId,
     padEl,
-    trackUiTimer,
+    uiTimers,
     handleUiAction,
 }) {
     bindTransport(byId, handleUiAction)
-    bindStutterControls(byId, trackUiTimer, handleUiAction)
+    bindStutterControls(byId, uiTimers, handleUiAction)
     const knobCleanups = bindKnobs(byId, handleUiAction)
     bindPads(padEl, handleUiAction)
     return { knobCleanups }

@@ -1,25 +1,21 @@
 import { SLOTS_PER_CHANNEL, padAt, slotOfPad } from './pads.js'
 
-function createPads(channelId) {
-    const pads = {}
-    for (let slot = 1; slot <= SLOTS_PER_CHANNEL; slot++) {
-      pads[slot] = {
-        pad: padAt(channelId, slot),
-        loading: false,
-      }
-    }
-    return pads
+function createPadLoading() {
+    const padLoading = {}
+    for (let slot = 1; slot <= SLOTS_PER_CHANNEL; slot++)
+      padLoading[slot] = false
+    return padLoading
 }
 
 export function createChannel(id) {
     return {
       id,
-      state: 'idle', // idle | armed | playing | queued | stuttering
+      state: 'idle', // idle | armed | playing | queued
       activePad: null,
       queuedPad: null,
       queuedAt: null,
-      stutter: { depth: 4, activeDepth: 0 },
-      pads: createPads(id),
+      stutter: { depth: 4, activeDepth: 0 }, // activeDepth > 0 while stuttering
+      padLoading: createPadLoading(),
     }
 }
 
@@ -31,131 +27,103 @@ export function createChannels(count) {
 }
 
 export function anyChannelActive(channels) {
-    return Object.values(channels).some(
-      (ch) => ch.state === 'playing' || ch.state === 'armed' || ch.state === 'queued' || ch.state === 'stuttering'
-    )
+    return Object.values(channels).some((ch) => ch.state !== 'idle')
 }
 
 export function getPadVisual(ch, slot) {
-    const padState = ch.pads[slot]
-    const pad = padState.pad
+    const pad = padAt(ch.id, slot)
     const waiting =
       (ch.state === 'armed' && ch.activePad === pad) ||
       (ch.state === 'queued' && ch.queuedPad === pad)
     const active =
       !waiting &&
       ch.activePad === pad &&
-      (ch.state === 'playing' || ch.state === 'stuttering' || ch.state === 'queued')
+      (ch.state === 'playing' || ch.state === 'queued')
     return {
       pad,
       blinking: waiting,
       active,
-      loading: padState.loading,
+      loading: ch.padLoading[slot],
     }
 }
 
-export function setPadFlags(ch, pad, flags) {
-    Object.assign(ch.pads[slotOfPad(pad)], flags)
-    return ch
+export function setPadLoading(ch, pad, loading) {
+    ch.padLoading[slotOfPad(pad)] = loading
 }
 
 export function setAllPadsLoading(ch, loading) {
-    for (let slot = 1; slot <= SLOTS_PER_CHANNEL; slot++) {
-      ch.pads[slot].loading = loading
-    }
-    return ch
+    for (let slot = 1; slot <= SLOTS_PER_CHANNEL; slot++)
+      ch.padLoading[slot] = loading
+}
+
+function clearQueue(ch) {
+    ch.queuedPad = null
+    ch.queuedAt = null
 }
 
 export function applyChannelEvent(ch, event) {
     switch (event.type) {
       case 'ARM':
         if (ch.state === 'idle') {
-          return { ...ch, state: 'armed', activePad: event.pad }
+          ch.state = 'armed'
+          ch.activePad = event.pad
+        } else if (ch.state === 'playing' && ch.activePad === event.pad) {
+          ch.state = 'armed'
+          ch.stutter.activeDepth = 0
         }
-        if (ch.state === 'armed' && ch.activePad === event.pad) {
-          return ch
-        }
-        if (ch.state === 'stuttering' && ch.activePad === event.pad) {
-          return {
-            ...ch,
-            state: 'armed',
-            stutter: { ...ch.stutter, activeDepth: 0 },
-          }
-        }
-        if (ch.state === 'playing' && ch.activePad === event.pad) {
-          return { ...ch, state: 'armed' }
-        }
-        return ch
+        break
 
       case 'STARTED':
         if (ch.state === 'armed' || ch.state === 'queued') {
-          return {
-            ...ch,
-            state: 'playing',
-            activePad: event.pad,
-            queuedPad: null,
-            queuedAt: null,
-          }
+          ch.state = 'playing'
+          ch.activePad = event.pad
+          clearQueue(ch)
         }
-        return ch
+        break
 
       case 'QUEUE_HANDOFF':
         if (ch.state === 'playing' || ch.state === 'queued') {
-          return {
-            ...ch,
-            state: 'queued',
-            queuedPad: event.pad,
-            queuedAt: event.when,
-          }
+          ch.state = 'queued'
+          ch.queuedPad = event.pad
+          ch.queuedAt = event.when
         }
-        return ch
+        break
 
       case 'CANCEL_HANDOFF':
         if (ch.state === 'queued') {
-          return { ...ch, state: 'playing', queuedPad: null, queuedAt: null }
+          ch.state = 'playing'
+          clearQueue(ch)
         }
-        return ch
+        break
 
       case 'STOP':
-        return {
-          ...ch,
-          state: 'idle',
-          activePad: null,
-          queuedPad: null,
-          queuedAt: null,
-          stutter: { ...ch.stutter, activeDepth: 0 },
-        }
+        ch.state = 'idle'
+        ch.activePad = null
+        clearQueue(ch)
+        ch.stutter.activeDepth = 0
+        break
 
       case 'STUTTER_ON':
-        if (ch.state === 'playing' || ch.state === 'stuttering') {
-          return {
-            ...ch,
-            state: 'stuttering',
-            stutter: { ...ch.stutter, activeDepth: event.depth },
-          }
-        }
-        return ch
+        if (ch.state === 'playing')
+          ch.stutter.activeDepth = event.depth
+        break
 
       case 'STUTTER_OFF':
-        if (ch.state === 'stuttering') {
-          return {
-            ...ch,
-            state: 'playing',
-            stutter: { ...ch.stutter, activeDepth: 0 },
-          }
-        }
-        return ch
+        ch.stutter.activeDepth = 0
+        break
 
       case 'STUTTER_DEPTH':
-        return {
-          ...ch,
-          stutter: { ...ch.stutter, depth: event.depth },
-        }
+        ch.stutter.depth = event.depth
+        break
 
-      case 'RESET':
-        return createChannel(ch.id)
+      case 'RESET': {
+        const depth = ch.stutter.depth
+        Object.assign(ch, createChannel(ch.id))
+        ch.stutter.depth = depth
+        break
+      }
 
       default:
-        return ch
+        break
     }
 }
