@@ -7,6 +7,7 @@ import { PrismaMariaDb } from '@prisma/adapter-mariadb'
 import fastifyStatic from '@fastify/static'
 import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
+import websocket from '@fastify/websocket'
 import bcrypt from 'bcrypt'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -44,6 +45,8 @@ await fastify.register(fastifyStatic, {
 await fastify.register(jwt, {
     secret: process.env.JWT_SECRET
   })
+
+await fastify.register(websocket)
 
 fastify.decorate('authenticate', async function (request, reply) {
     try {
@@ -119,6 +122,17 @@ fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, r
       return reply.code(404).send({ error: 'User not found' })
     }
     return { id: user.id, username: user.username, email: user.email }
+})
+
+fastify.get('/ws', { websocket: true }, async (socket, request) => {
+    const token = request.query.token
+
+    try {
+        await fastify.jwt.verify(token)
+    } catch (err) {
+        socket.close(1008, 'Unauthorized')
+        return
+    }
 })
 
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {
