@@ -1,0 +1,41 @@
+click btnN
+  ↓ handleUiAction({PAD_HIT, pad:N})
+  ↓ padLaunchHandler(pad) → [ARM/QUEUE/STOP] cue
+  ↓ dispatchCue(cue) → launchClip / queueClip
+  ↓ scheduleClipAt(pad, when, opts)
+  ↓ audio.js:replaceLoopSource → BufferSource.start(when)
+  ↓ source → channelGains → channelFilters → destination
+  ↓ uiTimers delay → dispatchCue(CLIP_STARTED) → renderChannel
+
+Clock (clock.js):
+  ├─ startClock(t0, duration): loopOrigin = t0 + 0.1 (LOOKAHEAD)
+  ├─ getNextGrid(t): floor((t−loopOrigin)/gridStep)+1 → next grid
+  └─ getPhase(t): (t−loopOrigin) % loopLength / loopLength
+
+Events monitor clock:
+  ├─ launchClip → clock.getNextGrid(now) for quntized start
+  └─ queueClip → when = queuedAt ?? clock.getNextGrid(...)
+
+ uiTimers tracks: delay = (when − now) × 1000
+LOOKAHED gives a bit of reaction time to the audiocontext
+
+button: DOM-side id btn1–btn25. Mapped 1:1 to pads.
+pad: Logical slot (1–25) = Holds a voice (audio buffer + playback state). Not the DOM element.
+voice: Per-pad object (pad payload): { buffer, source, uiStartTimerId }.
+source: The AudioBufferSourceNode currently playing a voice (a player). Replaced on each loop boundary or handoff.
+cue: audio engine side action object. launchCue() used to mutate channel state and schedule audio.
+action: User-facing input event similar to cue (PAD_HIT, STUTTER_TAP etc).
+state: Channel state machine: idle → armed → playing ↔ queued ↔ stuttering → idle. Drives LED feedback (blinking/active).
+channel: One of 5 vertical columns (each 5 pads). Independent gain/filter/stutter/state.
+queue: The act of scheduling a clip to start at the next grid boundary (QUEUE_HANDOFF cue). A channel in queued state has queuedPad + queuedAt.
+grid: Quantized timeline: loopOrigin + n × (loopLength/subdivision). subdivision=1 = bar lines; 2 = half-bars; 4/8/16 = stutter steps.
+loop: A looping AudioBufferSourceNode (source.loop = true). Length = full bar or half-bar (split mode).
+clip: The audio content loaded into a pad (a buffer). "Launch clip" = schedule its looped playback.
+lookahead: Constant 0.1s added to loopOrigin so getNextGrid() always returns a future time (avoids race with audio thread).
+slot: Row index within a channel (1–5). padAt(channel, slot) gives global pad number.
+handoff: clip swap at a grid boundary: outgoing source stopped, incoming started at same when.
+split: Halves the loop length (full bar → half bar). Toggled on next half-bar boundary.
+stutter: Repeats a slice of the loop at depth divisions (4/8/16). Creates a retrigger effect; resumes full loop on release.
+ARM: User pressed a pad while channel idle → clip will start at next grid (or immediately if clock stopped).
+UI timers: setTimeout-like wrappers (uiTimers.track) that cancel on unmount to prevent leaks.
+phase: 0–1 progress through current loop (used for master progress bar, not on audio side).

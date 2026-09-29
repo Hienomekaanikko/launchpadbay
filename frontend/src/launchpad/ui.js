@@ -1,149 +1,149 @@
 import { getPadVisual } from './channel.js'
 
 export function createKnob(id, colorClass) {
-  const wrap = document.createElement('div')
-  wrap.className = `knob-wrap ${colorClass}`
-  wrap.id = id
-  const initDot = knobAngleXY(135, 11)
-  wrap.innerHTML = `
-    <svg class="knob-svg" viewBox="0 0 44 44">
-      <circle class="knob-bg" cx="22" cy="22" r="20"/>
-      <path class="knob-track" d="${KNOB_TRACK}"/>
-      <path class="knob-fill" d="${KNOB_TRACK}"/>
-      <circle class="knob-dot" cx="${initDot.x}" cy="${initDot.y}" r="2.5"/>
-    </svg>`
-  return wrap
+    const wrap = document.createElement('div')
+    wrap.className = `knob-wrap ${colorClass}`
+    wrap.id = id
+    const initDot = knobAngleXY(135, 11)
+    wrap.innerHTML = `
+      <svg class="knob-svg" viewBox="0 0 44 44">
+        <circle class="knob-bg" cx="22" cy="22" r="20"/>
+        <path class="knob-track" d="${KNOB_TRACK}"/>
+        <path class="knob-fill" d="${KNOB_TRACK}"/>
+        <circle class="knob-dot" cx="${initDot.x}" cy="${initDot.y}" r="2.5"/>
+      </svg>`
+    return wrap
 }
 
 const KNOB_TRACK = 'M 10.69 33.31 A 16 16 0 1 1 33.31 33.31'
 
 function knobAngleXY(angleDeg, r) {
-  const rad = (angleDeg * Math.PI) / 180
-  return { x: +(22 + r * Math.sin(rad)).toFixed(2), y: +(22 - r * Math.cos(rad)).toFixed(2) }
+    const rad = (angleDeg * Math.PI) / 180
+    return { x: +(22 + r * Math.sin(rad)).toFixed(2), y: +(22 - r * Math.cos(rad)).toFixed(2) }
 }
 
 function knobArcPath(value) {
-  if (value <= 0)
-    return ''
-  const endDeg = -135 + (value / 100) * 270
-  const s = knobAngleXY(-135, 16)
-  const e = knobAngleXY(endDeg, 16)
-  const large = (value / 100) * 270 > 180 ? 1 : 0
-  return `M ${s.x} ${s.y} A 16 16 0 ${large} 1 ${e.x} ${e.y}`
+    if (value <= 0)
+      return ''
+    const endDeg = -135 + (value / 100) * 270
+    const s = knobAngleXY(-135, 16)
+    const e = knobAngleXY(endDeg, 16)
+    const large = (value / 100) * 270 > 180 ? 1 : 0
+    return `M ${s.x} ${s.y} A 16 16 0 ${large} 1 ${e.x} ${e.y}`
 }
 
 export function updateKnobVisual(wrap, value) {
-  const fill = wrap.querySelector('.knob-fill')
-  const dot = wrap.querySelector('.knob-dot')
-  if (fill)
-    fill.setAttribute('d', knobArcPath(value))
-  if (dot) {
-    const p = knobAngleXY(-135 + (value / 100) * 270, 11)
-    dot.setAttribute('cx', p.x)
-    dot.setAttribute('cy', p.y)
-  }
+    const fill = wrap.querySelector('.knob-fill')
+    const dot = wrap.querySelector('.knob-dot')
+    if (fill)
+      fill.setAttribute('d', knobArcPath(value))
+    if (dot) {
+      const p = knobAngleXY(-135 + (value / 100) * 270, 11)
+      dot.setAttribute('cx', p.x)
+      dot.setAttribute('cy', p.y)
+    }
 }
 
 export function setupKnobDrag(wrap, getKnobValue, setKnobValue) {
-  let dragging = false
-  let startY = 0
-  let startVal = 0
-  const cleanups = []
+    let dragging = false
+    let startY = 0
+    let startVal = 0
+    const cleanups = []
 
-  function listen(target, type, handler, opts) {
-    target.addEventListener(type, handler, opts)
-    cleanups.push(() => target.removeEventListener(type, handler, opts))
-  }
+    function listen(target, type, handler, opts) {
+      target.addEventListener(type, handler, opts)
+      cleanups.push(() => target.removeEventListener(type, handler, opts))
+    }
 
-  listen(wrap, 'mousedown', (e) => {
-    dragging = true; startY = e.clientY; startVal = getKnobValue()
-    e.preventDefault()
-  })
-  listen(window, 'mousemove', (e) => {
-    if (!dragging)
-      return
-    setKnobValue(Math.max(0, Math.min(100, startVal + (startY - e.clientY))))
-  })
-  listen(window, 'mouseup', () => { dragging = false })
+    listen(wrap, 'mousedown', (e) => {
+      dragging = true; startY = e.clientY; startVal = getKnobValue()
+      e.preventDefault()
+    })
+    listen(window, 'mousemove', (e) => {
+      if (!dragging)
+        return
+      setKnobValue(Math.max(0, Math.min(100, startVal + (startY - e.clientY))))
+    })
+    listen(window, 'mouseup', () => { dragging = false })
 
-  listen(wrap, 'touchstart', (e) => {
-    dragging = true; startY = e.touches[0].clientY; startVal = getKnobValue()
-    e.preventDefault()
-  }, { passive: false })
-  listen(window, 'touchmove', (e) => {
-    if (!dragging)
-      return
-    setKnobValue(Math.max(0, Math.min(100, startVal + (startY - e.touches[0].clientY))))
-    e.preventDefault()
-  }, { passive: false })
-  listen(window, 'touchend', () => { dragging = false })
+    listen(wrap, 'touchstart', (e) => {
+      dragging = true; startY = e.touches[0].clientY; startVal = getKnobValue()
+      e.preventDefault()
+    }, { passive: false })
+    listen(window, 'touchmove', (e) => {
+      if (!dragging)
+        return
+      setKnobValue(Math.max(0, Math.min(100, startVal + (startY - e.touches[0].clientY))))
+      e.preventDefault()
+    }, { passive: false })
+    listen(window, 'touchend', () => { dragging = false })
 
-  listen(wrap, 'wheel', (e) => {
-    e.preventDefault()
-    setKnobValue(Math.max(0, Math.min(100, getKnobValue() + (e.deltaY < 0 ? 2 : -2))))
-  }, { passive: false })
+    listen(wrap, 'wheel', (e) => {
+      e.preventDefault()
+      setKnobValue(Math.max(0, Math.min(100, getKnobValue() + (e.deltaY < 0 ? 2 : -2))))
+    }, { passive: false })
 
-  return () => {
-    for (const off of cleanups)
-      off()
-    cleanups.length = 0
-  }
+    return () => {
+      for (const off of cleanups)
+        off()
+      cleanups.length = 0
+    }
 }
 
 export function updateStutterBtn(byId, channel, depth, activeDepth) {
-  const btn = byId(`stutter-btn-${channel}`)
-  if (!btn)
-    return
-  btn.textContent = `1/${depth}`
-  btn.classList.toggle('stutter-active', activeDepth !== 0)
+    const btn = byId(`stutter-btn-${channel}`)
+    if (!btn)
+      return
+    btn.textContent = `1/${depth}`
+    btn.classList.toggle('stutter-active', activeDepth !== 0)
 }
 
 /** Project one pad's derived visual onto the DOM. */
 export function renderPad(padEl, visual) {
-  const el = padEl(visual.pad)
-  if (!el)
-    return
-  el.classList.toggle('blink', visual.blinking)
-  el.classList.toggle('active', visual.active)
-  el.classList.toggle('btn-loading', visual.loading)
+    const el = padEl(visual.pad)
+    if (!el)
+      return
+    el.classList.toggle('blink', visual.blinking)
+    el.classList.toggle('active', visual.active)
+    el.classList.toggle('btn-loading', visual.loading)
 }
 
 /** Project all 5 slots of a channel onto the DOM. */
 export function renderChannel(padEl, ch) {
-  for (const slot of Object.keys(ch.pads)) {
-    renderPad(padEl, getPadVisual(ch, slot))
-  }
+    for (const slot of Object.keys(ch.pads)) {
+      renderPad(padEl, getPadVisual(ch, slot))
+    }
 }
 
 export function applyThemeColors(theme) {
-  document.body.style.backgroundImage = theme.bgImage ? `url('${theme.bgImage}')` : ''
+    document.body.style.backgroundImage = theme.bgImage ? `url('${theme.bgImage}')` : ''
 }
 
 /** phase: 0..1 while the clock is running, or null when idle */
 function updateProgressBar(fillElement, getPhase) {
-  if (!fillElement)
-    return
-  if (getPhase != null) {
-    fillElement.style.width = getPhase * 100 + '%'
-    fillElement.style.opacity = '1'
-  } else {
-    fillElement.style.opacity = '0'
-  }
+    if (!fillElement)
+      return
+    if (getPhase != null) {
+      fillElement.style.width = getPhase * 100 + '%'
+      fillElement.style.opacity = '1'
+    } else {
+      fillElement.style.opacity = '0'
+    }
 }
 
 export function startProgressLoop(fillElement, getPhase) {
-  let rafId = 0
-  let running = true
-  function frame() {
-    if (!running)
-      return
-    updateProgressBar(fillElement, getPhase())
+    let rafId = 0
+    let running = true
+    function frame() {
+      if (!running)
+        return
+      updateProgressBar(fillElement, getPhase())
+      rafId = requestAnimationFrame(frame)
+    }
     rafId = requestAnimationFrame(frame)
-  }
-  rafId = requestAnimationFrame(frame)
-  return () => {
-    running = false
-    if (rafId)
-      cancelAnimationFrame(rafId)
-  }
+    return () => {
+      running = false
+      if (rafId)
+        cancelAnimationFrame(rafId)
+    }
 }
