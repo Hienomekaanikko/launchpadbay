@@ -1,12 +1,12 @@
 import {
     initAudio,
-    loadPadVoice,
+    loadPadClip,
     clearPadVoices,
-    replaceLoopSource,
-    stopSource,
+    launchLoop,
+    stopLoop,
     resetAudio,
     resumeAudio,
-    msUntil,
+    audioTimeToDelayMs,
     padVoices,
     audioContext,
     setChannelGain,
@@ -33,7 +33,7 @@ import {
     createChannels,
     applyChannelEvent,
     anyChannelActive,
-    setPadLoading,
+    setPadLoadingUi,
     getPadVisual,
 } from './channel.js'
 import { createUiTimers } from './uiTimers.js'
@@ -45,7 +45,7 @@ export function mountLaunchpad(container, themes) {
 
     const clock = createClock()
     const channels = createChannels(CHANNEL_COUNT)
-    const startTimers = {} // pad → ui timer that fires at the clip's scheduled start
+    const startUiTimers = {} // pad → ui timer that fires at the clip's scheduled start
 
     initAudio()
 
@@ -61,54 +61,55 @@ export function mountLaunchpad(container, themes) {
 
     // --- clip playback ---
 
-    function silencePad(pad) {
+    function stopPad(pad) {
       const voice = padVoices[pad]
       if (!voice)
         return null
-      if (startTimers[pad]) {
-        uiTimers.cancel(startTimers[pad])
-        delete startTimers[pad]
+      if (startUiTimers[pad]) {
+        uiTimers.cancel(startUiTimers[pad])
+        delete startUiTimers[pad]
       }
-      if (voice.source) {
-        stopSource(voice.source)
-        voice.source = null
+      if (voice.playback) {
+        stopLoop(voice.playback)
+        voice.playback = null
       }
       return voice
     }
 
-    function cancelHandoff(channelId) {
+    function cancelQueue(channelId) {
       const channel = channels[channelId]
       if (channel.state !== 'queued' || channel.queuedPad == null)
         return
 
-      silencePad(channel.queuedPad)
+      stopPad(channel.queuedPad)
 
       // A scheduled stop can't be undone: restart the outgoing loop at the same
-      // grid boundary instead, where offset 0 is in phase.
+      // grid boundary instead, where offset 0 is in phase. Also covers stutter,
+      // where playback is null and the stutter node stops at queuedAt.
       const outVoice = padVoices[channel.activePad]
-      if (outVoice && outVoice.source) {
-        outVoice.source = replaceLoopSource(outVoice.source, {
+      if (outVoice && outVoice.buffer) {
+        outVoice.playback = launchLoop(outVoice.playback, {
           channelId,
           buffer: outVoice.buffer,
-          loopEnd: clock.getLoopLength(),
+          loopLength: clock.getLoopLength(),
           when: channel.queuedAt,
         })
       }
-      lightChannel(channelId, { type: 'CANCEL_HANDOFF' })
+      lightChannel(channelId, { type: 'CANCEL_QUEUE' })
     }
 
-    function scheduleClipAt(voice, pad, when, onStart) {
-      voice.source = replaceLoopSource(voice.source, {
+    function launchClipAt(voice, pad, when, onStart) {
+      voice.playback = launchLoop(voice.playback, {
         channelId: channelOfPad(pad),
         buffer: voice.buffer,
-        loopEnd: clock.getLoopLength(),
+        loopLength: clock.getLoopLength(),
         when,
       })
 
-      startTimers[pad] = uiTimers.track(() => {
-        delete startTimers[pad]
+      startUiTimers[pad] = uiTimers.track(() => {
+        delete startUiTimers[pad]
         onStart()
-      }, msUntil(when))
+      }, audioTimeToDelayMs(when))
     }
 
     function armClipAt(pad, when) {
@@ -117,8 +118,8 @@ export function mountLaunchpad(container, themes) {
         return
 
       const channelId = channelOfPad(pad)
-      scheduleClipAt(voice, pad, when, () => {
-        if (voice.source)
+      launchClipAt(voice, pad, when, () => {
+        if (voice.playback)
           lightChannel(channelId, { type: 'STARTED', pad })
       })
       lightChannel(channelId, { type: 'ARM', pad })
@@ -140,10 +141,10 @@ export function mountLaunchpad(container, themes) {
       armClipAt(pad, startTime)
     }
 
-    // Fade later: ramp channelGain → 0 over N ms, stop after, restore to
+    // Fade later if needed: ramp channelGain → 0 over N ms, stop after, restore to
     // the knob level; on next launch reset gain to the knob level at `when`.
     function stopClip(pad) {
-      const voice = silencePad(pad)
+      const voice = stopPad(pad)
       if (!voice)
         return
 
@@ -159,26 +160,28 @@ export function mountLaunchpad(container, themes) {
       clock.clear()
     }
 
-    function queueClip(channelId, pad, handoffTime) {
-      cancelHandoff(channelId)
+    function queueClip(channelId, pad, queueTime) {
+      cancelQueue(channelId)
 
       const voice = padVoices[pad]
       if (!voice)
         return
 
       const outVoice = padVoices[channels[channelId].activePad]
-      if (outVoice && outVoice !== voice)
-        stopSource(outVoice.source, handoffTime)
+      if (channels[channelId].stutter.activeDivision !== 0)
+        stutter.stopStutterAt(channelId, queueTime)
+      else if (outVoice && outVoice !== voice)
+        stopLoop(outVoice.playback, queueTime)
 
-      scheduleClipAt(voice, pad, handoffTime, () => {
-        // Split may have replaced the outgoing source since it was queued.
+      launchClipAt(voice, pad, queueTime, () => {
+        // Split may have replaced the outgoing loop since it was queued.
         if (outVoice && outVoice !== voice) {
-          stopSource(outVoice.source, handoffTime)
-          outVoice.source = null
+          stopLoop(outVoice.playback, queueTime)
+          outVoice.playback = null
         }
         lightChannel(channelId, { type: 'STARTED', pad })
       })
-      lightChannel(channelId, { type: 'QUEUE_HANDOFF', pad, when: handoffTime })
+      lightChannel(channelId, { type: 'QUEUE', pad, when: queueTime })
     }
 
     // --- split / stutter ---
@@ -193,8 +196,8 @@ export function mountLaunchpad(container, themes) {
       clock,
       channels,
       lightChannel,
-      updateBtn: (channelId, depth, activeDepth) =>
-        updateStutterBtn(byId, channelId, depth, activeDepth),
+      updateBtn: (channelId, division, activeDivision) =>
+        updateStutterBtn(byId, channelId, division, activeDivision),
       resumeClipAt: armClipAt,
     })
 
@@ -205,14 +208,13 @@ export function mountLaunchpad(container, themes) {
       const channelId = channelOfPad(pad)
       const channel = channels[channelId]
 
-      if (channel.stutter.activeDepth !== 0)
-        stutter.stopStutter(channelId)
-
       if (channel.activePad === pad) {
-        cancelHandoff(channelId)
+        if (channel.stutter.activeDivision !== 0)
+          stutter.stopStutter(channelId)
+        cancelQueue(channelId)
         stopClip(pad)
       } else if (channel.state === 'queued' && channel.queuedPad === pad) {
-        cancelHandoff(channelId)
+        cancelQueue(channelId)
       } else if (channel.state === 'idle') {
         launchClip(pad)
       } else {
@@ -236,7 +238,7 @@ export function mountLaunchpad(container, themes) {
           stutter.toggleStutter(action.channelId)
           break
         case 'STUTTER_CYCLE':
-          stutter.cycleDepth(action.channelId)
+          stutter.cycleDivision(action.channelId)
           break
         case 'SET_GAIN':
           setChannelGain(action.channelId, action.value / 100)
@@ -252,7 +254,7 @@ export function mountLaunchpad(container, themes) {
     function stopAllPlayback() {
       stutter.stopAll()
       for (const key of Object.keys(padVoices))
-        silencePad(Number(key))
+        stopPad(Number(key))
       resetTransport()
     }
 
@@ -267,7 +269,7 @@ export function mountLaunchpad(container, themes) {
 
       const samples = Object.entries(theme.sampleUrls).map(([key, url]) => ({ pad: Number(key), url }))
       for (const { pad } of samples)
-        setPadLoading(channels[channelOfPad(pad)], pad, true)
+        setPadLoadingUi(channels[channelOfPad(pad)], pad, true)
 
       for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
         renderChannel(padEl, channels[channelId])
@@ -275,11 +277,11 @@ export function mountLaunchpad(container, themes) {
       }
 
       await Promise.all(samples.map(({ pad, url }) =>
-        loadPadVoice(pad, url).finally(() => {
+        loadPadClip(pad, url).finally(() => {
           if (isUnmounted)
             return
           const channel = channels[channelOfPad(pad)]
-          setPadLoading(channel, pad, false)
+          setPadLoadingUi(channel, pad, false)
           renderPad(padEl, getPadVisual(channel, slotOfPad(pad)))
         })
       ))

@@ -1,21 +1,17 @@
 import { SLOTS_PER_CHANNEL, padAt, slotOfPad } from './pads.js'
 
-function createPadLoading() {
-    const padLoading = {}
-    for (let slot = 1; slot <= SLOTS_PER_CHANNEL; slot++)
-      padLoading[slot] = false
-    return padLoading
-}
-
 export function createChannel(id) {
+    const padLoadingUi = {}
+    for (let slot = 1; slot <= SLOTS_PER_CHANNEL; slot++)
+      padLoadingUi[slot] = false
     return {
       id,
       state: 'idle', // idle | armed | playing | queued
       activePad: null,
       queuedPad: null,
       queuedAt: null,
-      stutter: { depth: 4, activeDepth: 0 }, // activeDepth > 0 while stuttering
-      padLoading: createPadLoading(),
+      stutter: { division: 4, activeDivision: 0 }, // activeDivision > 0 while stuttering
+      padLoadingUi,
     }
 }
 
@@ -43,12 +39,12 @@ export function getPadVisual(ch, slot) {
       pad,
       blinking: waiting,
       active,
-      loading: ch.padLoading[slot],
+      loadingUi: ch.padLoadingUi[slot],
     }
 }
 
-export function setPadLoading(ch, pad, loading) {
-    ch.padLoading[slotOfPad(pad)] = loading
+export function setPadLoadingUi(ch, pad, loading) {
+    ch.padLoadingUi[slotOfPad(pad)] = loading
 }
 
 function clearQueue(ch) {
@@ -64,7 +60,7 @@ export function applyChannelEvent(ch, event) {
           ch.activePad = event.pad
         } else if (ch.state === 'playing' && ch.activePad === event.pad) {
           ch.state = 'armed'
-          ch.stutter.activeDepth = 0
+          ch.stutter.activeDivision = 0
         }
         break
 
@@ -76,7 +72,7 @@ export function applyChannelEvent(ch, event) {
         }
         break
 
-      case 'QUEUE_HANDOFF':
+      case 'QUEUE':
         if (ch.state === 'playing' || ch.state === 'queued') {
           ch.state = 'queued'
           ch.queuedPad = event.pad
@@ -84,7 +80,7 @@ export function applyChannelEvent(ch, event) {
         }
         break
 
-      case 'CANCEL_HANDOFF':
+      case 'CANCEL_QUEUE':
         if (ch.state === 'queued') {
           ch.state = 'playing'
           clearQueue(ch)
@@ -95,26 +91,26 @@ export function applyChannelEvent(ch, event) {
         ch.state = 'idle'
         ch.activePad = null
         clearQueue(ch)
-        ch.stutter.activeDepth = 0
+        ch.stutter.activeDivision = 0
         break
 
       case 'STUTTER_ON':
         if (ch.state === 'playing')
-          ch.stutter.activeDepth = event.depth
+          ch.stutter.activeDivision = event.division
         break
 
       case 'STUTTER_OFF':
-        ch.stutter.activeDepth = 0
+        ch.stutter.activeDivision = 0
         break
 
-      case 'STUTTER_DEPTH':
-        ch.stutter.depth = event.depth
+      case 'STUTTER_DIVISION':
+        ch.stutter.division = event.division
         break
 
       case 'RESET': {
-        const depth = ch.stutter.depth
+        const division = ch.stutter.division
         Object.assign(ch, createChannel(ch.id))
-        ch.stutter.depth = depth
+        ch.stutter.division = division
         break
       }
 

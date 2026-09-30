@@ -8,10 +8,10 @@ const KNOB_SMOOTHING_SEC = 0.01
 export let audioContext = null
 const channelGains = {}
 const channelFilters = {}
-export const padVoices = {} // pad → { buffer, source }
+export const padVoices = {} // pad → { buffer, playback }
 const bufferCache = new Map() // url → Promise<AudioBuffer>
 
-// Per channel: source → gain → lowpass → destination
+// Per channel: loop → gain → lowpass → destination
 export function initAudio() {
     audioContext = new AudioContext()
     for (let channel = 1; channel <= CHANNEL_COUNT; channel++) {
@@ -33,7 +33,7 @@ export function resumeAudio() {
 }
 
 // Milliseconds from now until an AudioContext time, for UI timers.
-export function msUntil(audioTime) {
+export function audioTimeToDelayMs(audioTime) {
     return Math.max(0, Math.round((audioTime - audioContext.currentTime) * 1000))
 }
 
@@ -75,44 +75,44 @@ function loadBuffer(url) {
     return bufferCache.get(url)
 }
 
-export async function loadPadVoice(pad, url) {
+export async function loadPadClip(pad, url) {
     const buffer = await loadBuffer(url)
-    padVoices[pad] = { buffer, source: null }
+    padVoices[pad] = { buffer, playback: null }
 }
 
 export function clearPadVoices() {
     for (const voice of Object.values(padVoices))
-      stopSource(voice.source)
+      stopLoop(voice.playback)
     for (const key of Object.keys(padVoices))
       delete padVoices[key]
 }
 
-function createLoopSource(buffer, loopEnd) {
-    const source = audioContext.createBufferSource()
-    source.buffer = buffer
-    source.loop = true
-    source.loopEnd = loopEnd
-    return source
+function createLoop(buffer, loopLength) {
+    const node = audioContext.createBufferSource()
+    node.buffer = buffer
+    node.loop = true
+    node.loopEnd = loopLength
+    return node
 }
 
-export function stopSource(source, when) {
-    if (!source)
+export function stopLoop(playback, when) {
+    if (!playback)
       return
     try {
       if (when != null)
-        source.stop(when)
+        playback.stop(when)
       else
-        source.stop()
+        playback.stop()
     } catch { /* already stopped */ }
 }
 
-// Stops previousSource and starts a new loop at the same `when`.
-export function replaceLoopSource(previousSource, { channelId, buffer, loopEnd, when }) {
-    stopSource(previousSource, when)
-    const source = createLoopSource(buffer, loopEnd)
-    source.connect(channelGains[channelId])
-    source.start(when)
-    return source
+// Stop the previous loop and start a new one at the same `when`.
+export function launchLoop(previous, { channelId, buffer, loopLength, when }) {
+    stopLoop(previous, when)
+    const playback = createLoop(buffer, loopLength)
+    playback.connect(channelGains[channelId])
+    playback.start(when)
+    return playback
 }
 
 export function resetAudio() {

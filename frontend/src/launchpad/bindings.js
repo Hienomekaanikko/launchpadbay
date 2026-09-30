@@ -27,7 +27,7 @@ function bindTransport(byId, handleUiAction) {
     bindClickAndTouch(splitBtn, () => handleUiAction({ type: 'SPLIT_TOGGLE' }))
 }
 
-// Double-tap: single = cycle depth, double = toggle stutter
+// Double-tap: single = cycle division, double = toggle stutter
 function bindStutterControls(byId, uiTimers, handleUiAction) {
     const stutterCol = byId('stutter-btns')
     for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {

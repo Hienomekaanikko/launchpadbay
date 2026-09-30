@@ -1,21 +1,21 @@
-import { replaceLoopSource, msUntil, padVoices, audioContext } from './audio.js'
+import { launchLoop, audioTimeToDelayMs, padVoices, audioContext } from './audio.js'
 
 export function createSplitControl({
     clock,
     channels,
     uiTimers,
 }) {
-    let pendingTimerId = null
+    let pendingUiTimerId = null
 
     function cancelPendingSplit() {
-      if (!pendingTimerId)
+      if (!pendingUiTimerId)
         return
-      uiTimers.cancel(pendingTimerId)
-      pendingTimerId = null
+      uiTimers.cancel(pendingUiTimerId)
+      pendingUiTimerId = null
     }
 
-    function restartActiveSources(when) {
-      const loopEnd = clock.getLoopLength()
+    function retriggerActiveLoops(when) {
+      const loopLength = clock.getLoopLength()
       for (const ch of Object.values(channels)) {
         if (!ch.activePad)
           continue
@@ -23,24 +23,28 @@ export function createSplitControl({
         if (!voice || !voice.buffer)
           continue
 
-        voice.source = replaceLoopSource(voice.source, {
+        voice.playback = launchLoop(voice.playback, {
           channelId: ch.id,
           buffer: voice.buffer,
-          loopEnd,
+          loopLength,
           when,
         })
       }
     }
 
-    function applySplit(enabled, gridTime) {
-      const when = Math.max(gridTime, audioContext.currentTime)
+    function commitSplit(enabled, when) {
+      if (when == null) {
+        clock.setSplit(enabled)
+        return
+      }
+      when = Math.max(when, audioContext.currentTime)
       clock.setSplit(enabled, when)
-      restartActiveSources(when)
+      retriggerActiveLoops(when)
     }
 
     function toggleSplit() {
       // Pressed again before the switch lands: cancel it.
-      if (pendingTimerId) {
+      if (pendingUiTimerId) {
         cancelPendingSplit()
         return clock.isSplit()
       }
@@ -48,17 +52,17 @@ export function createSplitControl({
       const wantSplit = !clock.isSplit()
 
       if (!clock.isRunning()) {
-        clock.setSplit(wantSplit)
+        commitSplit(wantSplit)
         return wantSplit
       }
 
       // ON: next half of the full bar (midpoint or end). OFF: next half-bar.
       const subdivision = wantSplit ? 2 : 1
       const at = clock.getNextGrid(audioContext.currentTime, subdivision)
-      pendingTimerId = uiTimers.track(() => {
-        pendingTimerId = null
-        applySplit(wantSplit, at)
-      }, msUntil(at))
+      pendingUiTimerId = uiTimers.track(() => {
+        pendingUiTimerId = null
+        commitSplit(wantSplit, at)
+      }, audioTimeToDelayMs(at))
 
       return wantSplit
     }

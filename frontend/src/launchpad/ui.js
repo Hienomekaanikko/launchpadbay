@@ -105,12 +105,12 @@ export function setupKnobDrag(wrap, getKnobValue, setKnobValue) {
     }
 }
 
-export function updateStutterBtn(byId, channelId, depth, activeDepth) {
+export function updateStutterBtn(byId, channelId, division, activeDivision) {
     const btn = byId(`stutter-btn-${channelId}`)
     if (!btn)
       return
-    btn.textContent = `1/${depth}`
-    btn.classList.toggle('stutter-active', activeDepth !== 0)
+    btn.textContent = `1/${division}`
+    btn.classList.toggle('stutter-active', activeDivision !== 0)
 }
 
 export function updateSplitBtn(byId, active) {
@@ -126,7 +126,7 @@ export function renderPad(padEl, visual) {
       return
     el.classList.toggle('blink', visual.blinking)
     el.classList.toggle('active', visual.active)
-    el.classList.toggle('btn-loading', visual.loading)
+    el.classList.toggle('btn-loading', visual.loadingUi)
 }
 
 /** Project all 5 slots of a channel onto the DOM. */
