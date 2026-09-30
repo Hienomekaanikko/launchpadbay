@@ -7,7 +7,6 @@ const KNOB_START_DEG = -135
 const KNOB_SWEEP_DEG = 270
 const ARC_RADIUS = 16
 const DOT_RADIUS = 11
-const KNOB_TRACK = 'M 10.69 33.31 A 16 16 0 1 1 33.31 33.31'
 
 // value: 0..100
 function valueToAngle(value) {
@@ -37,11 +36,12 @@ export function createKnob(id, colorClass) {
     wrap.className = `knob-wrap ${colorClass}`
     wrap.id = id
     const initDot = knobAngleXY(valueToAngle(100), DOT_RADIUS)
+    const fullArc = knobArcPath(100)
     wrap.innerHTML = `
       <svg class="knob-svg" viewBox="0 0 44 44">
         <circle class="knob-bg" cx="${KNOB_CENTER}" cy="${KNOB_CENTER}" r="20"/>
-        <path class="knob-track" d="${KNOB_TRACK}"/>
-        <path class="knob-fill" d="${KNOB_TRACK}"/>
+        <path class="knob-track" d="${fullArc}"/>
+        <path class="knob-fill" d="${fullArc}"/>
         <circle class="knob-dot" cx="${initDot.x}" cy="${initDot.y}" r="2.5"/>
       </svg>`
     return wrap

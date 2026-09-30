@@ -32,20 +32,14 @@ export function createSplitControl({
       }
     }
 
-    function applySplit(enabled, boundaryTime) {
-      const now = audioContext.currentTime
-      let when = boundaryTime
-      if (when == null || when < now)
-        when = now
-
-      const active = clock.setSplit(enabled, when)
-      if (clock.isRunning())
-        restartActiveSources(when)
-      return active
+    function applySplit(enabled, gridTime) {
+      const when = Math.max(gridTime, audioContext.currentTime)
+      clock.setSplit(enabled, when)
+      restartActiveSources(when)
     }
 
     function toggleSplit() {
-      // Pressed again before the boundary: cancel the pending switch.
+      // Pressed again before the switch lands: cancel it.
       if (pendingTimerId) {
         cancelPendingSplit()
         return clock.isSplit()
@@ -53,8 +47,10 @@ export function createSplitControl({
 
       const wantSplit = !clock.isSplit()
 
-      if (!clock.isRunning())
-        return applySplit(wantSplit, null)
+      if (!clock.isRunning()) {
+        clock.setSplit(wantSplit)
+        return wantSplit
+      }
 
       // ON: next half of the full bar (midpoint or end). OFF: next half-bar.
       const subdivision = wantSplit ? 2 : 1

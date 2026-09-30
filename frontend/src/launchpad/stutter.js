@@ -38,15 +38,14 @@ export function createStutterControl({
       lightChannel(channelId, { type: 'STUTTER_ON', depth })
     }
 
-    // Returns true if stutter was started.
     function startStutter(channelId, stutterDepth) {
       const ch = channels[channelId]
       const pad = ch.activePad
       if (!pad || ch.state !== 'playing')
-        return false
+        return
       const voice = padVoices[pad]
       if (!voice || !voice.buffer)
-        return false
+        return
 
       stopStutterSource(channelId)
 
@@ -57,7 +56,7 @@ export function createStutterControl({
       }
 
       playStutterLoop(channelId, voice, stutterDepth, startTime)
-      return true
+      refreshBtn(channelId)
     }
 
     // Stop immediately, without resuming the full loop.
@@ -86,8 +85,8 @@ export function createStutterControl({
       const ch = channels[channelId]
       if (ch.stutter.activeDepth !== 0)
         releaseStutter(channelId)
-      else if (startStutter(channelId, ch.stutter.depth))
-        refreshBtn(channelId)
+      else
+        startStutter(channelId, ch.stutter.depth)
     }
 
     function cycleDepth(channelId) {
@@ -100,7 +99,6 @@ export function createStutterControl({
       const voice = padVoices[ch.activePad]
       if (ch.stutter.activeDepth !== 0 && voice && voice.buffer && stutterSources[channelId]) {
         const startTime = clock.getNextGrid(audioContext.currentTime, depth)
-        stopStutterSource(channelId, startTime)
         playStutterLoop(channelId, voice, depth, startTime)
       }
       refreshBtn(channelId)

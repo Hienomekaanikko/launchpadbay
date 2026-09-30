@@ -49,13 +49,10 @@ export function createClock() {
     }
 
     function setSplit(enabled, gridTime) {
-      if (enabled === split)
-        return split
       split = enabled
       // Every loop restarts from offset 0 at the switch, so the grid restarts there too.
-      if (isRunning() && gridTime != null)
+      if (isRunning())
         loopOrigin = gridTime
-      return split
     }
 
     return {

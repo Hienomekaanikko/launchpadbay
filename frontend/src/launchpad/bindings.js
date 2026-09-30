@@ -46,7 +46,7 @@ function bindStutterControls(byId, uiTimers, handleUiAction) {
           if (tapCount === 1)
             handleUiAction({ type: 'STUTTER_CYCLE', channelId })
           else
-            handleUiAction({ type: 'STUTTER_TAP', channelId })
+            handleUiAction({ type: 'STUTTER_TOGGLE', channelId })
           tapCount = 0
         }, 280)
       }

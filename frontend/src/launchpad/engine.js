@@ -150,10 +150,13 @@ export function mountLaunchpad(container, themes) {
       const channelId = channelOfPad(pad)
       lightChannel(channelId, { type: 'STOP' })
 
-      if (!anyChannelActive(channels)) {
-        split.cancelPendingSplit()
-        clock.clear()
-      }
+      if (!anyChannelActive(channels))
+        resetTransport()
+    }
+
+    function resetTransport() {
+      split.cancelPendingSplit()
+      clock.clear()
     }
 
     function queueClip(channelId, pad, handoffTime) {
@@ -206,14 +209,11 @@ export function mountLaunchpad(container, themes) {
         stutter.stopStutter(channelId)
 
       if (channel.activePad === pad) {
-        // Hit the playing pad: stop it
         cancelHandoff(channelId)
         stopClip(pad)
       } else if (channel.state === 'queued' && channel.queuedPad === pad) {
-        // Hit the queued pad again: cancel the switch
         cancelHandoff(channelId)
       } else if (channel.state === 'idle') {
-        // Row silent: start at the next boundary
         launchClip(pad)
       } else {
         // Another pad in a playing row: queue a switch (reuse an existing queue time)
@@ -232,7 +232,7 @@ export function mountLaunchpad(container, themes) {
         case 'SPLIT_TOGGLE':
           updateSplitBtn(byId, split.toggleSplit())
           break
-        case 'STUTTER_TAP':
+        case 'STUTTER_TOGGLE':
           stutter.toggleStutter(action.channelId)
           break
         case 'STUTTER_CYCLE':
@@ -253,8 +253,7 @@ export function mountLaunchpad(container, themes) {
       stutter.stopAll()
       for (const key of Object.keys(padVoices))
         silencePad(Number(key))
-      split.cancelPendingSplit()
-      clock.clear()
+      resetTransport()
     }
 
     // --- themes ---
