@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Roboto:wght@400;500;700&display=swap");
-
 :root {
   --c1: #ff1f71;
   --c2: #2db2ff;
@@ -294,15 +292,7 @@ body {
   box-shadow: 0 0 10px rgba(255,213,0,0.25);
 }
 
-/* Covers the dot-grid/home-btn/body-gradient flash while the theme's
-   background image (and everything else) is still loading. */
-/* No background-image here on purpose — <body> is still showing the landing
-   page background at this point (App.jsx sets it, and nothing clears it
-   until engine.js applies the theme image), so this just dims/blurs what's
-   already painted rather than loading its own copy of the same image. */
-/* Fully opaque on purpose — engine.js can swap <body>'s background to the
-   theme image at any point while this is still up (its own timing, not tied
-   to `ready`), and this must never let that swap show through mid-load. */
+/* Covers the launchpad while themes and audio load. */
 .loading-overlay {
   position: fixed;
   inset: 0;
@@ -427,10 +417,6 @@ body[style*="background-image"] {
 }
 
 .knob-dot { fill: #fff; }
-
-.knob-input {
-  display: none;
-}
 
 .row-color-1 .knob-fill { stroke: var(--c1); filter: drop-shadow(0 0 3px var(--c1)); }
 .row-color-2 .knob-fill { stroke: var(--c2); filter: drop-shadow(0 0 3px var(--c2)); }
