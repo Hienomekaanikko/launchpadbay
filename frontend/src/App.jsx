@@ -51,6 +51,10 @@ function App() {
     setToken(null)
     setUsername(null)
     setProfileMode(false)
+    setLobbyMode(false)
+    setActiveChat(null)
+    setConversations({})
+    setSessionMessages([])
   }
 
   const handleSessionJoined = (sessionId) => {
