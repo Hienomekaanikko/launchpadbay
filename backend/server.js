@@ -48,6 +48,10 @@ await fastify.register(jwt, {
 
 await fastify.register(websocket)
 
+// a registry of active WebSocket connections, where the key is the user id
+// and the value is its WebSocket entry data
+const wsConnectionRegistry = new Map()
+
 fastify.decorate('authenticate', async function (request, reply) {
     try {
         await request.jwtVerify()
@@ -124,15 +128,41 @@ fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, r
     return { id: user.id, username: user.username, email: user.email }
 })
 
+// new WebSocket connections, runs at WebSocket handshake
 fastify.get('/ws', { websocket: true }, async (socket, request) => {
     const token = request.query.token
+    let jwtPayload
 
     try {
-        await fastify.jwt.verify(token)
+        jwtPayload = await fastify.jwt.verify(token)
     } catch (err) {
         socket.close(1008, 'Unauthorized')
         return
     }
+
+    // check whether the new connection originated from an already connected user;
+    // if it did, politely close the stale socket, as a new replacement will
+    // be created right afterwards
+    const previous = wsConnectionRegistry.get(jwtPayload.id)
+    if (previous) {
+        previous.socket.close(1008, 'Replaced by a new connection')
+    }
+
+    // create a new entry, and insert it into the registry.
+    // In case the user was already connected (i.e. with the 'previous' entry),
+    // the registry's set() member function updates that user's entry
+    const entry = { username: jwtPayload.username, socket }
+    wsConnectionRegistry.set(jwtPayload.id, entry)
+
+    // handler for WebSocket closure
+    socket.on('close', () => {
+        // delete the entry when the socket closes (but only if its entry is
+        // still on the registry. The guard avoids deletion when 'previous'
+        // closes, since its entry was updated)
+        if (wsConnectionRegistry.get(jwtPayload.id) === entry) {
+            wsConnectionRegistry.delete(jwtPayload.id)
+        }
+    })
 })
 
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {
