@@ -56,6 +56,95 @@ fastify.decorate('authenticate', async function (request, reply) {
     }
 })
 
+/* WebSocket */
+
+// registry of active WS connections, where: key = userId, value = ws entry data
+const wsConnectionRegistry = new Map()
+
+async function heartbeatRound() {
+    // checks status of all connected WebSockets, by looping through the registry.
+    // If a WebSocket's 'isAlive' field is set to false, it means that it has not
+    // 'ponged' the 'ping'.
+    for (const [userId, entry] of wsConnectionRegistry) {
+        if (entry.isAlive === false) {
+            entry.socket.terminate()
+            wsConnectionRegistry.delete(userId)
+            continue
+        }
+
+        // works in tandem with 'pong' handler, which sets 'isAlive' to true
+        entry.isAlive = false
+        try {
+            entry.socket.ping()
+        } catch { // ping() throws if socket is already closed or failed to connect
+            entry.socket.terminate()
+            wsConnectionRegistry.delete(userId)
+        }
+    }
+}
+
+// sets the heartbeat check to occur every 30 seconds.
+// setInterval() is a JavaScript mechanism that schedules events in the main loop
+const HEARTBEAT_INTERVAL_MS = 30_000
+const heartbeatTimer = setInterval(heartbeatRound, HEARTBEAT_INTERVAL_MS)
+
+// Makes sure that a server will not stay alive when it tries to shut down, just
+// because it still has a heartbeat check scheduled for every 30 seconds
+fastify.addHook('onClose', async () => {
+    clearInterval(heartbeatTimer)
+})
+
+// WebSocket route
+fastify.get('/ws', { websocket: true }, async (socket, request) => {
+    const token = request.query.token
+    let jwtPayload
+
+    try {
+        jwtPayload = await fastify.jwt.verify(token)
+    } catch (err) {
+        socket.close(1008, 'Unauthorized')
+        return
+    }
+
+    // check whether the new connection originated from an already connected user;
+    // if it did, politely close the stale socket, as a new replacement will
+    // be created right afterwards
+    const previous = wsConnectionRegistry.get(jwtPayload.id)
+    if (previous) {
+        previous.socket.close(1008, 'Replaced by a new connection')
+    }
+
+    // create a new entry, and insert it into the registry.
+    // In case the user was already connected (i.e. with the 'previous' entry),
+    // the registry's set() member function updates that user's entry
+    const entry = { username: jwtPayload.username, socket, isAlive: true }
+    wsConnectionRegistry.set(jwtPayload.id, entry)
+
+    // handler for WebSocket closure
+    socket.on('close', () => {
+        // delete the entry when the socket closes (but only if its entry is
+        // still on the registry. The guard avoids deletion when 'previous'
+        // closes, since its entry was updated)
+        if (wsConnectionRegistry.get(jwtPayload.id) === entry) {
+            wsConnectionRegistry.delete(jwtPayload.id)
+        }
+    })
+
+    // 'pong' handler: operates in tandem with 'ping' requests in 'heartbeatRound()'
+    socket.on('pong', () => {
+        entry.isAlive = true
+    })
+
+    // socket error handler, for extra safety
+    socket.on('error', () => {
+        if (wsConnectionRegistry.get(jwtPayload.id) === entry) {
+            wsConnectionRegistry.delete(jwtPayload.id)
+        }
+    })
+})
+
+/* Other Routes */
+
 fastify.get('/health/db', async () => {
     const [{ ok }] = await prisma.$queryRaw`SELECT 1 AS ok`
     return { ok: Number(ok) }
@@ -122,17 +211,6 @@ fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, r
       return reply.code(404).send({ error: 'User not found' })
     }
     return { id: user.id, username: user.username, email: user.email }
-})
-
-fastify.get('/ws', { websocket: true }, async (socket, request) => {
-    const token = request.query.token
-
-    try {
-        await fastify.jwt.verify(token)
-    } catch (err) {
-        socket.close(1008, 'Unauthorized')
-        return
-    }
 })
 
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {
