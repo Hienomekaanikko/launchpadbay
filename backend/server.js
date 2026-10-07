@@ -58,8 +58,36 @@ fastify.decorate('authenticate', async function (request, reply) {
 
 /* WebSocket */
 
-// registry of active WS connections, where: key = userId, value = ws entry data
+// registry of active WS connections, where:
+// key = 'userId',
+// value = ws 'entry' data, shape: { username, socket, isAlive }
 const wsConnectionRegistry = new Map()
+
+// used to push connection status update from server to client in real time (WebSocket)
+function broadcastPresenceUpdate(payload) {
+    const message = JSON.stringify(payload)
+    for (const entry of wsConnectionRegistry.values()) {
+        try {
+            entry.socket.send(message)
+        } catch {
+            // socket died mid-broadcast; its own 'close'/'error' handler cleans it up
+        }
+    }
+}
+
+// used to clean up an entry from the connection registry, when a client leaves
+function removeEntry(userId, entry) {
+    // Boil out whether this entry is no longer the registered one: either a newer
+    // connection replaced it (reconnect), or it was already removed (e.g. the
+    // heartbeat calls terminate(), which fires the 'close' handler again).
+    if (wsConnectionRegistry.get(userId) !== entry) {
+        return
+    }
+
+    // delete the client first, to avoid sending it a presence update notification
+    wsConnectionRegistry.delete(userId)
+    broadcastPresenceUpdate({ type: 'user_disconnected', username: entry.username })
+}
 
 async function heartbeatRound() {
     // checks status of all connected WebSockets, by looping through the registry.
@@ -68,7 +96,7 @@ async function heartbeatRound() {
     for (const [userId, entry] of wsConnectionRegistry) {
         if (entry.isAlive === false) {
             entry.socket.terminate()
-            wsConnectionRegistry.delete(userId)
+            removeEntry(userId, entry)
             continue
         }
 
@@ -78,7 +106,7 @@ async function heartbeatRound() {
             entry.socket.ping()
         } catch { // ping() throws if socket is already closed or failed to connect
             entry.socket.terminate()
-            wsConnectionRegistry.delete(userId)
+            removeEntry(userId, entry)
         }
     }
 }
@@ -118,28 +146,28 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     // In case the user was already connected (i.e. with the 'previous' entry),
     // the registry's set() member function updates that user's entry
     const entry = { username: jwtPayload.username, socket, isAlive: true }
-    wsConnectionRegistry.set(jwtPayload.id, entry)
 
-    // handler for WebSocket closure
-    socket.on('close', () => {
-        // delete the entry when the socket closes (but only if its entry is
-        // still on the registry. The guard avoids deletion when 'previous'
-        // closes, since its entry was updated)
-        if (wsConnectionRegistry.get(jwtPayload.id) === entry) {
-            wsConnectionRegistry.delete(jwtPayload.id)
-        }
-    })
+    // Announce new connection to everyone already connected (except the new client).
+    // Skip on reconnect: other clients already see this client as connected
+    if (!previous) {
+        broadcastPresenceUpdate({ type: 'user_connected', username: entry.username })
+    }
+
+    wsConnectionRegistry.set(jwtPayload.id, entry)
 
     // 'pong' handler: operates in tandem with 'ping' requests in 'heartbeatRound()'
     socket.on('pong', () => {
         entry.isAlive = true
     })
 
+    // handler for WebSocket closure
+    socket.on('close', () => {
+        removeEntry(jwtPayload.id, entry)
+    })
+
     // socket error handler, for extra safety
     socket.on('error', () => {
-        if (wsConnectionRegistry.get(jwtPayload.id) === entry) {
-            wsConnectionRegistry.delete(jwtPayload.id)
-        }
+        removeEntry(jwtPayload.id, entry)
     })
 })
 
