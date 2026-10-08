@@ -213,6 +213,16 @@ fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, r
     return { id: user.id, username: user.username, email: user.email }
 })
 
+// Returns a snapshot of all registered users, with their current online status.
+// Shape: { username, online }
+fastify.get('/online', { onRequest: [fastify.authenticate] }, async () => {
+    const users = await prisma.users.findMany({ select: { id: true, username: true } })
+    return users.map((user) => ({
+        username: user.username,
+        online: wsConnectionRegistry.has(user.id),
+    }))
+})
+
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {
     if (err) {
         fastify.log.error(err)
