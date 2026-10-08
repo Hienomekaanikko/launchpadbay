@@ -25,8 +25,8 @@ export default function ChatWindow({ recipient, messages, onSendMessage, onClose
           : messages.map((message) => <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}
       </div>
       <form onSubmit={handleSubmit} className="flex gap-2">
-        <Input className="flex-1" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Type a message..." />
-        <FormButton type="submit">Send</FormButton>
+        <Input className="flex-1 min-w-0" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Type a message..." />
+        <FormButton type="submit" className="shrink-0">Send</FormButton>
       </form>
     </GlassPanel>
   )

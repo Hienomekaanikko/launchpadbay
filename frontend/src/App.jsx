@@ -116,12 +116,13 @@ function App() {
         {!playMode && <div className="fixed top-12.5 left-12.5 font-display font-extrabold text-base tracking-[0.1px] uppercase text-white/30 pointer-events-none select-none">
           LaunchpadBay
         </div>}
-        {loggedIn && <Tag className="fixed top-12.5 right-12.5 z-20" onClick={() => setProfileMode(!profileMode)}>{username}</Tag>}
         {!playMode && <nav>
           <NavButton onClick={() => setPlayMode(true)}>Play</NavButton>
           <NavButton onClick={() => (loggedIn ? handleLogout() : setShowLogin(true))}>{loggedIn ? 'Logout' : 'Login'}</NavButton>
         </nav>}
       </header>
+      {/* Kept outside <header>: header's z-index: 1 would cap this button below the launchpad grid. */}
+      {loggedIn && <Tag className="fixed top-12.5 right-12.5 z-20" onClick={() => setProfileMode(!profileMode)}>{username}</Tag>}
       {!playMode && <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 font-display font-extrabold text-5xl leading-[1.1] text-center uppercase text-white/10 whitespace-pre-line pointer-events-none select-none"></div>}
       <main>
           {showLogin && !playMode &&
@@ -130,7 +131,7 @@ function App() {
             setShowLogin={setShowLogin}
             />}
           {loggedIn && <NavButton
-                        className="fixed bottom-6 right-7.5 w-28"
+                        className="fixed bottom-6 right-7.5 w-28 z-20"
                         onClick={() => setLobbyMode(!lobbyMode)}>{lobbyMode ? 'Hide' : 'Lobby'}</NavButton>}
           {(lobbyMode || (profileMode && loggedIn)) && (
             <div className="fixed top-25 bottom-25 right-4 sm:right-12.5 w-[clamp(16rem,22vw,24rem)] max-w-[calc(100vw-2rem)] z-20 flex flex-col gap-4 pointer-events-none">
