@@ -1,9 +1,9 @@
 import { twMerge } from 'tailwind-merge'
 
 const baseClasses = [
-  'fixed right-12.5 w-1/5 z-20',
+  'pointer-events-auto',
   'rounded-[20px]',
-  'px-10 pb-6',
+  'px-4 sm:px-10 pb-6',
   'bg-surface/40',
   'border-t border-t-white/18',
   'border-b border-b-white/8',

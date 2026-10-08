@@ -132,16 +132,20 @@ function App() {
           {loggedIn && <NavButton
                         className="fixed bottom-6 right-7.5 w-28"
                         onClick={() => setLobbyMode(!lobbyMode)}>{lobbyMode ? 'Hide' : 'Lobby'}</NavButton>}
-          {lobbyMode && <LobbyView
-                          activeSession={activeSession}
-                          sessions={sessions}
-                          onJoinClick={handleJoinClick}
-                          onCancelClick={handleCancelClick}
-                          onChatClick={handleChatClick}
-                          sessionMessages={sessionMessages}
-                          onSendSessionMessage={handleSendSessionMessage}
-                        />}
-          {profileMode && loggedIn && <ProfileView token={token} onChatClick={handleChatClick} />}
+          {(lobbyMode || (profileMode && loggedIn)) && (
+            <div className="fixed top-25 bottom-25 right-4 sm:right-12.5 w-[clamp(16rem,22vw,24rem)] max-w-[calc(100vw-2rem)] z-20 flex flex-col gap-4 pointer-events-none">
+              {profileMode && loggedIn && <ProfileView token={token} onChatClick={handleChatClick} />}
+              {lobbyMode && <LobbyView
+                              activeSession={activeSession}
+                              sessions={sessions}
+                              onJoinClick={handleJoinClick}
+                              onCancelClick={handleCancelClick}
+                              onChatClick={handleChatClick}
+                              sessionMessages={sessionMessages}
+                              onSendSessionMessage={handleSendSessionMessage}
+                            />}
+            </div>
+          )}
           {playMode && <LaunchpadView sessionId={activeSession} onBack={handleBackFromPlay} />}
           {activeChat && (
             <ChatWindow

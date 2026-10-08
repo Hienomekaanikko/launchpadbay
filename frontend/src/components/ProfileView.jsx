@@ -15,13 +15,13 @@ const MOCK_FRIENDS = [
 
 function Avatar() {
   return (
-    <div className="absolute top-5 left-10">AVATAR HERE</div>
+    <div>AVATAR HERE</div>
   )
 }
 
 function FriendsButton({ open, onClick }) {
   return (
-    <NavButton onClick={onClick} aria-label="Friends" aria-pressed={open} className="absolute top-5 right-5 p-2">
+    <NavButton onClick={onClick} aria-label="Friends" aria-pressed={open} className="p-2">
       <Icon name="friends" />
     </NavButton>
   )
@@ -52,7 +52,13 @@ export default function ProfileView({ token, onChatClick }) {
   }, [token])
 
   return (
-    <GlassPanel className="top-25 pt-20">
+    <GlassPanel className="min-h-0 overflow-y-auto pt-5">
+      {profile && (
+        <div className="flex items-center justify-between mb-4">
+          <Avatar />
+          <FriendsButton open={showFriends} onClick={() => setShowFriends((s) => !s)} />
+        </div>
+      )}
       {error && <div className="text-error text-xs text-center max-w-55">{error}</div>}
       {!error && !profile && <div>Loading...</div>}
       {profile && (
@@ -60,8 +66,6 @@ export default function ProfileView({ token, onChatClick }) {
           {showFriends ? <FriendsPanel friends={MOCK_FRIENDS} onChatClick={onChatClick} /> : 'Some additional information here?'}
         </div>
       )}
-      {profile && <Avatar />}
-      {profile && <FriendsButton open={showFriends} onClick={() => setShowFriends((s) => !s)} />}
     </GlassPanel>
   )
 }

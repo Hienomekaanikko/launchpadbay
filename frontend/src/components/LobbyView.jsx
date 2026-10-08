@@ -49,7 +49,7 @@ function SessionChat({ messages, onSendMessage }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="h-48 overflow-y-auto flex flex-col gap-2">
+      <div className="h-[30vh] min-h-24 max-h-48 overflow-y-auto flex flex-col gap-2">
         {messages.length === 0
           ? <div className="text-white/60 text-xs text-center py-2 font-sans">No messages yet</div>
           : messages.map((message) => <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}
@@ -66,7 +66,7 @@ export default function LobbyView({ activeSession, sessions, onJoinClick, onCanc
   const [tab, setTab] = useState('online')
 
   return (
-    <GlassPanel className="bottom-25 px-6 pt-6 bg-surface/30">
+    <GlassPanel className="mt-auto min-h-0 overflow-y-auto px-4 sm:px-6 pt-6 bg-surface/30">
       <div className="flex gap-2 mb-3 justify-center">
         <NavButton onClick={() => setTab('online')} className={tab === 'online' ? 'bg-white/30' : 'after:content-none'}>Online</NavButton>
         <NavButton onClick={() => setTab('sessions')} className={tab === 'sessions' ? 'bg-white/30' : 'after:content-none'}>{activeSession ? 'Session-chat' : 'Sessions'}</NavButton>
