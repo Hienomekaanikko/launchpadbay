@@ -3,7 +3,7 @@ import { twMerge } from 'tailwind-merge'
 const baseClasses = [
   'pointer-events-auto',
   'rounded-[20px]',
-  'px-4 sm:px-10 pb-6',
+  'px-10 pb-6',
   'bg-surface/40',
   'border-t border-t-white/18',
   'border-b border-b-white/8',

@@ -16,7 +16,7 @@ export default function ChatWindow({ recipient, messages, onSendMessage, onClose
   }
 
   return (
-    <GlassPanel className="fixed bottom-25 right-4 sm:right-12.5 w-[clamp(16rem,22vw,24rem)] max-w-[calc(100vw-2rem)] z-30 h-96 max-h-[calc(100vh-12rem)] flex flex-col gap-3 p-4">
+    <GlassPanel className="fixed bottom-25 right-12.5 w-[clamp(16rem,22vw,24rem)] max-w-[calc(100vw-4.125rem)] z-30 h-96 max-h-[calc(100vh-12rem)] flex flex-col gap-3 p-4">
       <CloseButton onClick={onClose}>x</CloseButton>
       <div className="text-white text-sm font-medium font-sans">{recipient}</div>
       <div className="flex-1 overflow-y-auto flex flex-col gap-2">

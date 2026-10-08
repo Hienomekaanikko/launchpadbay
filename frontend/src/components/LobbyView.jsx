@@ -66,7 +66,7 @@ export default function LobbyView({ activeSession, sessions, onJoinClick, onCanc
   const [tab, setTab] = useState('online')
 
   return (
-    <GlassPanel className="mt-auto min-h-0 overflow-y-auto px-4 sm:px-6 pt-6 bg-surface/30">
+    <GlassPanel className="mt-auto min-h-0 overflow-y-auto px-6 pt-6 bg-surface/30">
       <div className="flex gap-2 mb-3 justify-center">
         <NavButton onClick={() => setTab('online')} className={tab === 'online' ? 'bg-white/30' : 'after:content-none'}>Online</NavButton>
         <NavButton onClick={() => setTab('sessions')} className={tab === 'sessions' ? 'bg-white/30' : 'after:content-none'}>{activeSession ? 'Session-chat' : 'Sessions'}</NavButton>
