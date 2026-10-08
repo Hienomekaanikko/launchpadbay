@@ -104,7 +104,7 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
         entry.isAlive = true
     })
 
-    // handler for WebSocket closure
+    // closing socket handler
     socket.on('close', () => {
         removeEntry(jwtPayload.id, entry)
     })
