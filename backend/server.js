@@ -13,7 +13,8 @@ import {
     wsConnectionRegistry,
     broadcastPresenceUpdate,
     removeEntry,
-    stopHeartbeat
+    stopHeartbeat,
+    send
 } from './ws.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -52,7 +53,11 @@ await fastify.register(jwt, {
     secret: process.env.JWT_SECRET
   })
 
-await fastify.register(websocket)
+await fastify.register(websocket, {
+    // caps incoming WebSocket messages to ~4KB (join_request / chat_message)
+    // larger input receives 1009 and closes the WebSocket
+    options: { maxPayload: 4096 }
+})
 
 fastify.decorate('authenticate', async function (request, reply) {
     try {
@@ -65,6 +70,14 @@ fastify.decorate('authenticate', async function (request, reply) {
 fastify.addHook('onClose', () => {
     stopHeartbeat()
 })
+
+// dispatch table for client->server messages
+// NOTE: 'create(null)' ensures a pure dispatch table which does not inherit any
+// invisible default handlers from 'Object.prototype', not unlike a simple C dispatch
+const wsHandlers = Object.create(null)
+// TODO: this will be evolving soon, placeholder for now:
+// wsHandlers.join_request = handleJoinRequest
+// wsHandlers.chat_message = handleChatMessage
 
 // WebSocket route
 fastify.get('/ws', { websocket: true }, async (socket, request) => {
@@ -99,9 +112,48 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
 
     wsConnectionRegistry.set(jwtPayload.id, entry)
 
+    /* WebSocket Listeners (event handlers) */
+
     // 'pong' handler: operates in tandem with 'ping' requests in 'heartbeatRound()'
     socket.on('pong', () => {
         entry.isAlive = true
+    })
+
+    // received message handler:
+    // runs every time anything is sent from a client to the server
+    socket.on('message', async (raw) => {
+        let msg
+
+        try {
+            msg = JSON.parse(raw.toString())
+        } catch {
+            request.log.warn({ userId: jwtPayload.id }, 'ws: invalid JSON')
+            send(socket, { type: 'error', reason: 'bad_json' })
+            return
+        }
+        // the "?." syntax avoids errors if 'msg' is null / undefined
+        if (typeof msg?.type !== 'string') {
+            send(socket, { type: 'error', reason: 'bad_type' })
+            return
+        }
+
+        const handler = wsHandlers[msg.type]
+        if (!handler) {
+            send(socket, { type: 'error', reason: 'unknown_message' })
+            return
+        }
+
+        // catch handler failures so an eventual bug wouldn't crash the process
+        try {
+            await handler(msg, {
+                userId: jwtPayload.id,
+                username: jwtPayload.username,
+                socket
+            })
+        } catch (err) {
+            request.log.error(err, 'ws: handler exception')
+            send(socket, { type: 'error', reason: 'internal_error' })
+        }
     })
 
     // closing socket handler

@@ -61,3 +61,8 @@ const heartbeatTimer = setInterval(heartbeatRound, HEARTBEAT_INTERVAL_MS)
 export function stopHeartbeat() {
     clearInterval(heartbeatTimer)
 }
+
+// helper function serializing and sending a JSON payload to a socket
+export const send = (socket, payload) => {
+    socket.send(JSON.stringify(payload))
+}
