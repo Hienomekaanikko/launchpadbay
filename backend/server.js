@@ -15,6 +15,7 @@ import {
     removeEntry,
     stopHeartbeat
 } from './ws.js'
+import githubAuth from './authGithub.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -51,6 +52,8 @@ await fastify.register(fastifyStatic, {
 await fastify.register(jwt, {
     secret: process.env.JWT_SECRET
   })
+
+await fastify.register(githubAuth)
 
 await fastify.register(websocket)
 
@@ -162,7 +165,7 @@ fastify.post('/login', async (request, reply) => {
     const { username, password } = request.body
 
     const user = await prisma.users.findUnique({ where: { username } })
-    if (!user) {
+    if (!user || !user.password_hash) {
       return reply.code(401).send({ error: 'Invalid username or password' })
     }
 
