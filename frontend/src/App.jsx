@@ -45,6 +45,17 @@ function App() {
     setUsername(newUsername)
   }
 
+  // OAuth callback lands here with ?token=...&username=... from the backend redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const oauthToken = params.get('token')
+    const oauthUsername = params.get('username')
+    if (!oauthToken || !oauthUsername) return
+
+    handleLoggedIn(oauthToken, oauthUsername)
+    window.history.replaceState({}, '', window.location.pathname)
+  }, [])
+
   const handleLogout = () => {
     localStorage.removeItem('token')
     localStorage.removeItem('username')

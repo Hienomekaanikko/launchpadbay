@@ -33,6 +33,9 @@ export default function LoginView({ onLoggedIn, setShowLogin }) {
         <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         {error && <div className="text-error text-xs text-center max-w-55">{error}</div>}
         <FormButton type="submit">Login</FormButton>
+        <FormButton type="button" onClick={() => { window.location.href = '/api/auth/github' }}>
+          Login with GitHub
+        </FormButton>
         <FormButton type="button" onClick={() => setRegisterView(true)}>Not registered yet?</FormButton>
       </Modal>}
        {registerView && <RegisterView setRegisterView={setRegisterView} />}
