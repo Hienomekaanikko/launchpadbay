@@ -13,10 +13,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'https://localhost:8443',
         changeOrigin: true,
         ws: true, // forward WebSocket upgrades
-        rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },
   },

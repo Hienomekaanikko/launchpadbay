@@ -9,7 +9,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      test: [ "CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -p\"$$MYSQL_ROOT_PASSWORD\" --silent" ]
       interval: 3s
       timeout: 5s
       retries: 40
@@ -22,10 +22,12 @@ services:
       - ./backend/.env
     environment:
       DATABASE_URL: "mysql://dj:greatestdj@mysql:3306/launchpadbay"
-    ports:
-      - "3000:3000"
+    # ports:
+    #   - "3000:3000"
     volumes:
       - ./backend/uploads:/app/uploads
+      - ./certs/backend.pem:/run/tls/backend.pem:ro
+      - ./certs/backend-key.pem:/run/tls/backend-key.pem:ro
     depends_on:
       mysql:
         condition: service_healthy
@@ -34,7 +36,11 @@ services:
     build: ./frontend
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "8443:443"
+    volumes:
+      - ./certs/frontend.pem:/run/tls/frontend.pem:ro
+      - ./certs/frontend-key.pem:/run/tls/frontend-key.pem:ro
+      - ./certs/ca.pem:/run/tls/ca.pem:ro
     depends_on:
       - backend
 

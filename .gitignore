@@ -31,3 +31,7 @@ lerna-debug.log*
 *.sln
 *.sw?
 frontend/jsconfig.json
+
+
+# Certs
+/certs/
