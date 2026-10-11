@@ -16,11 +16,16 @@ import {
     stopHeartbeat,
     send
 } from './ws.js'
+import { readFileSync } from 'node:fs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const fastify = Fastify({
-    logger: true
+    logger: true,
+    https: {
+        key: readFileSync('/run/tls/backend-key.pem'),
+        cert: readFileSync('/run/tls/backend.pem')
+    }
 })
 
 const adapter = new PrismaMariaDb({
