@@ -199,3 +199,18 @@ fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {
         process.exit(1)
     }
 })
+
+// trigger Fastify's graceful shutdown on terminating signals.
+// node is PID 1, and the kernel ignores unhandled SIGTERM/SIGINT for PID 1
+const sigHandler = async (signal) => {
+    fastify.log.info(`received ${signal}, shutting down`)
+    try {
+        await fastify.close()
+    } catch (err) {
+        fastify.log.error(err)
+        process.exit(1)
+    }
+}
+
+process.on('SIGTERM', sigHandler)
+process.on('SIGINT', sigHandler)
