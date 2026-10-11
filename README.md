@@ -131,10 +131,11 @@ This plan will be revised as the team and scope firm up.
 
 ```
 cp backend/.env.example backend/.env
-make up
+make
 ```
+Import certs/ca.pem into browser to trust certificate.
 
-Open http://localhost:8080.
+Open https://localhost:8443.
 
 - `.env.example` has working local-dev credentials, safe to reuse as-is.
 - First run auto-applies migrations and seeds the default theme/sounds.
@@ -143,10 +144,11 @@ Open http://localhost:8080.
 
 | Command | What it does |
 |---|---|
-| `make up` | Build (if needed) and start everything, in the background |
+| `make` | Build (if needed) and start everything, in the background |
+| `make dev` | Build (if needed), start everything, and prepare for live reload during development |
 | `make down` | Stop and remove containers — data untouched (lives in the `mysql_data` volume) |
 | `make re` | `down` then `up` |
-| `make fclean` | `down` + delete volumes (wipes the DB) + delete built images — full reset |
+| `make fclean` | `down` + delete volumes (wipes the DB) + delete built images + remove certificates — full reset |
 
 - `docker compose logs -f backend` (or `frontend`/`mysql`) — tail logs
 - `docker compose ps` — see what's running
@@ -157,7 +159,7 @@ Open http://localhost:8080.
 - **`backend/`** — Fastify + Prisma. `server.js` is the entry point, routes added directly there for now. Sound/theme files live in `backend/uploads/` (bind-mounted, no rebuild needed to replace one), served via `@fastify/static`.
 - **`mysql`** — MySQL 8, data in the `mysql_data` volume.
 
-Ports: frontend `8080`, backend `3000` (also reachable directly), MySQL `3307` on host (avoids clashing with a native MySQL install; containers reach it at `mysql:3306`).
+Ports: frontend `8443`, MySQL `3307` on host (avoids clashing with a native MySQL install; containers reach it at `mysql:3306`).
 
 ### Auth
 
@@ -186,9 +188,7 @@ cd backend
 ### Working on the frontend with fast reload
 
 ```
-cd frontend
-npm install
-npm run dev
+make dev
 ```
 
 - Runs Vite's dev server on `http://localhost:5173`.
