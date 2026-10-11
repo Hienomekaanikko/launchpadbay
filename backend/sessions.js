@@ -6,13 +6,14 @@ const sessionRegistry = new Map()
 // used to give each session a short, unique id
 let sessionCounter = 0
 
-function createSession(creatorId) {
+export function createSession(creatorId) {
     const id = `session${++sessionCounter}`
     const session = { id, players: new Set([creatorId]), max: 2 }
     sessionRegistry.set(id, session)
     return session
 }
 
+// public session shape used by the frontend
 function toSessionView(session) {
     return {
         id: session.id,

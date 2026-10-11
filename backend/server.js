@@ -16,6 +16,7 @@ import {
     stopHeartbeat,
     send
 } from './ws.js'
+import { getSessionViews } from './sessions.js'
 import { readFileSync } from 'node:fs'
 import githubAuth from './authGithub.js'
 
@@ -251,6 +252,12 @@ fastify.get('/online', { onRequest: [fastify.authenticate] }, async () => {
         username: user.username,
         online: wsConnectionRegistry.has(user.id),
     }))
+})
+
+// Returns a snapshot of all active sessions (mirrors GET '/online')
+// Shape: { id, current, max, status }
+fastify.get('/sessions', { onRequest: [fastify.authenticate] }, () => {
+    return getSessionViews()
 })
 
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {
