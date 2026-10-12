@@ -18,12 +18,20 @@ export function register(username, email, password) {
 export function login(username, password) {
   return post('/login', { username, password })
 }
-
-export async function fetchProfile(token) {
-  const res = await fetch('/api/profile', {
+async function getWithToken(path, token) {
+  const res = await fetch(`/api${path}`, {
     headers: { Authorization: `Bearer ${token}` },
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(data.error || `Request failed: ${res.status}`)
   return data
+}
+
+export function fetchProfile(token) {
+  return getWithToken('/profile', token)
+}
+
+// snapshot of all registered users: [{ username, online }]
+export function fetchOnline(token) {
+  return getWithToken('/online', token)
 }

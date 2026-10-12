@@ -8,6 +8,7 @@ import ProfileView from './components/ProfileView.jsx'
 import NavButton from './components/NavButton.jsx'
 import Tag from './components/Tag.jsx'
 import ChatWindow from './components/ChatWindow.jsx'
+import usePresence from './usePresence.js'
 
 const INITIAL_SESSIONS = [
   { id: 'session1', current: 1, max: 2, status: 'open' },
@@ -28,6 +29,7 @@ function App() {
   const [conversations, setConversations] = useState({});
   const [sessionMessages, setSessionMessages] = useState([]);
   const loggedIn = Boolean(token)
+  const onlineUsers = usePresence(token).filter((user) => user.username !== username)
 
   useEffect(() => {
     if (!playMode) {
@@ -138,6 +140,7 @@ function App() {
               {profileMode && loggedIn && <ProfileView token={token} onChatClick={handleChatClick} />}
               {lobbyMode && <LobbyView
                               activeSession={activeSession}
+                              online={onlineUsers}
                               sessions={sessions}
                               onJoinClick={handleJoinClick}
                               onCancelClick={handleCancelClick}
