@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react'
 import { fetchOnline } from './auth.js'
 
 // Keeps a live list of registered users and their online status.
-// Order matters: open the WebSocket first (which marks us online on the
-// backend), then fetch the /online snapshot, then apply presence events on top.
 export default function usePresence(token) {
   const [users, setUsers] = useState([])
 
