@@ -16,7 +16,7 @@ export default async function githubAuth(fastify) {
 
 	await fastify.register(cookie)
 
-	const frontend = process.env.FRONTEND_URL || 'http://localhost:8080'
+	const frontend = process.env.FRONTEND_URL || 'https://localhost:8443'
 
 	// Results go in the URL fragment (#...), which the browser never sends to a server or logs
 	const redirectToFrontend = (reply, fields) =>
@@ -29,6 +29,7 @@ export default async function githubAuth(fastify) {
 		reply.setCookie(STATE_COOKIE, state, {
 			path: '/',
 			httpOnly: true,
+			secure: true,
 			sameSite: 'lax',
 			maxAge: 600,
 		})
