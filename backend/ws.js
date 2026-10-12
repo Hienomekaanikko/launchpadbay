@@ -3,10 +3,13 @@
 // value = ws 'entry' data, shape: { username, socket, isAlive }
 export const wsConnectionRegistry = new Map()
 
-// used to push connection status update from server to client in real time (WebSocket)
-export function broadcastPresenceUpdate(payload) {
+// used to push connection/session updates from server to client in real time
+export function broadcastEvent(payload, { except } = {}) {
     const message = JSON.stringify(payload)
-    for (const entry of wsConnectionRegistry.values()) {
+    for (const [userId, entry] of wsConnectionRegistry) {
+        if (userId === except) {
+            continue
+        }
         try {
             entry.socket.send(message)
         } catch {
@@ -26,7 +29,7 @@ export function removeEntry(userId, entry) {
 
     // delete the client first, to avoid sending it a presence update notification
     wsConnectionRegistry.delete(userId)
-    broadcastPresenceUpdate({ type: 'user_disconnected', username: entry.username })
+    broadcastEvent({ type: 'user_disconnected', username: entry.username })
 }
 
 async function heartbeatRound() {

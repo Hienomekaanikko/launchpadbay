@@ -11,12 +11,17 @@ import bcrypt from 'bcrypt'
 import websocket from '@fastify/websocket'
 import {
     wsConnectionRegistry,
-    broadcastPresenceUpdate,
+    broadcastEvent,
     removeEntry,
     stopHeartbeat,
     send
 } from './ws.js'
-import { getSessionViews } from './sessions.js'
+import {
+    getAllSessionViews,
+    handleSessionCreate,
+    handleSessionLeave,
+    leaveSessionAndBroadcastUpdate
+} from './sessions.js'
 import { readFileSync } from 'node:fs'
 import githubAuth from './authGithub.js'
 
@@ -84,9 +89,8 @@ fastify.addHook('onClose', () => {
 // NOTE: 'create(null)' ensures a pure dispatch table which does not inherit any
 // invisible default handlers from 'Object.prototype', not unlike a simple C dispatch
 const wsHandlers = Object.create(null)
-// TODO: this will be evolving soon, placeholder for now:
-// wsHandlers.join_request = handleJoinRequest
-// wsHandlers.chat_message = handleChatMessage
+wsHandlers.session_create = handleSessionCreate
+wsHandlers.session_leave = handleSessionLeave
 
 // WebSocket route
 fastify.get('/ws', { websocket: true }, async (socket, request) => {
@@ -116,7 +120,7 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     // Announce new connection to everyone already connected (except the new client).
     // Skip on reconnect: other clients already see this client as connected
     if (!previous) {
-        broadcastPresenceUpdate({ type: 'user_connected', username: entry.username })
+        broadcastEvent({ type: 'user_connected', username: entry.username })
     }
 
     wsConnectionRegistry.set(jwtPayload.id, entry)
@@ -165,15 +169,19 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
         }
     })
 
-    // closing socket handler
-    socket.on('close', () => {
+    const handleDisconnect = () => {
         removeEntry(jwtPayload.id, entry)
-    })
+        if (wsConnectionRegistry.has(jwtPayload.id)) {
+            return
+        }
+        leaveSessionAndBroadcastUpdate(jwtPayload.id)
+    }
+
+    // closing socket handler
+    socket.on('close', handleDisconnect)
 
     // socket error handler, for extra safety
-    socket.on('error', () => {
-        removeEntry(jwtPayload.id, entry)
-    })
+    socket.on('error', handleDisconnect)
 })
 
 fastify.get('/health/db', async () => {
@@ -257,7 +265,7 @@ fastify.get('/online', { onRequest: [fastify.authenticate] }, async () => {
 // Returns a snapshot of all active sessions (mirrors GET '/online')
 // Shape: { id, current, max, status }
 fastify.get('/sessions', { onRequest: [fastify.authenticate] }, () => {
-    return getSessionViews()
+    return getAllSessionViews()
 })
 
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {
