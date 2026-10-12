@@ -1,21 +1,63 @@
+import crypto from 'node:crypto'
+import cookie from '@fastify/cookie'
+
+const REQUIRED_ENV = ['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET', 'GITHUB_CALLBACK_URL']
+const STATE_COOKIE = 'gh_oauth_state'
+
 export default async function githubAuth(fastify) {
 	const { prisma } = fastify
 
+	// Fail at startup instead of sending GitHub a client_id of "undefined"
+	for (const name of REQUIRED_ENV) {
+		if (!process.env[name]) {
+			throw new Error(`Missing env var: ${name}`)
+		}
+	}
+
+	await fastify.register(cookie)
+
+	const frontend = process.env.FRONTEND_URL || 'http://localhost:8080'
+
+	// Results go in the URL fragment (#...), which the browser never sends to a server or logs
+	const redirectToFrontend = (reply, fields) =>
+		reply.redirect(`${frontend}/#${new URLSearchParams(fields)}`)
+
 	// Send the browser to GitHub's consent screen
 	fastify.get('/auth/github', async (request, reply) => {
+		// Random state, remembered in this browser, proves the callback is for a login we started
+		const state = crypto.randomBytes(16).toString('hex')
+		reply.setCookie(STATE_COOKIE, state, {
+			path: '/',
+			httpOnly: true,
+			sameSite: 'lax',
+			maxAge: 600,
+		})
+
+		// No scope: public profile (id, login) is all we need
 		const params = new URLSearchParams({
 			client_id: process.env.GITHUB_CLIENT_ID,
 			redirect_uri: process.env.GITHUB_CALLBACK_URL,
-			scope: 'read:user',
+			state,
 		})
 		return reply.redirect(`https://github.com/login/oauth/authorize?${params}`)
 	})
 
-	// GitHub sends the user back here with a one-time code
+	// GitHub sends the user back here with a one-time code and our state
 	fastify.get('/auth/github/callback', async (request, reply) => {
-		const { code: githubAuthCode } = request.query
+		const { code: githubAuthCode, state, error } = request.query
+
+		const expectedState = request.cookies[STATE_COOKIE]
+		reply.clearCookie(STATE_COOKIE, { path: '/' })
+
+		// e.g. user clicked "Cancel" on GitHub (error=access_denied)
+		if (error) {
+			return redirectToFrontend(reply, { error: 'GitHub login cancelled' })
+		}
+		if (!state || state !== expectedState) {
+			return redirectToFrontend(reply, { error: 'GitHub login expired, please try again' })
+		}
 		if (!githubAuthCode) {
-			return reply.code(400).send({ error: 'Missing code' })
+			return redirectToFrontend(reply, { error: 'GitHub login failed' })
 		}
 
 		// Exchange that code for a GitHub access token
@@ -35,7 +77,7 @@ export default async function githubAuth(fastify) {
 		const githubTokenPayload = await githubTokenResponse.json()
 		const githubAccessToken = githubTokenPayload.access_token
 		if (!githubAccessToken) {
-			return reply.code(401).send({ error: 'GitHub auth failed' })
+			return redirectToFrontend(reply, { error: 'GitHub login failed' })
 		}
 
 		// Load the GitHub profile with that token
@@ -48,7 +90,7 @@ export default async function githubAuth(fastify) {
 		})
 		const githubUser = await githubUserResponse.json()
 		if (!githubUser.id) {
-			return reply.code(401).send({ error: 'GitHub user fetch failed' })
+			return redirectToFrontend(reply, { error: 'GitHub login failed' })
 		}
 
 		const githubId = String(githubUser.id)
@@ -56,29 +98,28 @@ export default async function githubAuth(fastify) {
 		// Find existing local user, or create one linked to this GitHub id
 		let user = await prisma.users.findUnique({ where: { github_id: githubId } })
 		if (!user) {
+			const createUser = (username, email) => prisma.users.create({
+				data: {
+					username,
+					email,
+					password_hash: null,
+					github_id: githubId,
+				},
+			})
+
 			try {
-				user = await prisma.users.create({
-					data: {
-						username: githubUser.login,
-						email: githubUser.email ?? null,
-						password_hash: null,
-						github_id: githubId,
-					},
-				})
+				user = await createUser(githubUser.login, githubUser.email ?? null)
 			} catch (err) {
-				if (err.code === 'P2002') {
-					return reply.code(409).send({ error: 'Username or email already taken' })
+				if (err.code !== 'P2002') {
+					throw err
 				}
-				throw err
+				// Name or email already used by a local account: suffix the name, skip the email
+				user = await createUser(`${githubUser.login}-${githubId}`, null)
 			}
 		}
 
-		// Mint our app JWT (same as password login)
+		// Mint our app JWT (same as password login) and hand it to the frontend
 		const jwt = fastify.jwt.sign({ id: user.id, username: user.username })
-
-		// Hand the token to the frontend
-		const frontend = process.env.FRONTEND_URL || 'http://localhost:8080'
-		const q = new URLSearchParams({ token: jwt, username: user.username })
-		return reply.redirect(`${frontend}/?${q}`)
+		return redirectToFrontend(reply, { token: jwt, username: user.username })
 	})
 }

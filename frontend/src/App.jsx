@@ -19,6 +19,7 @@ function App() {
   const [playMode, setPlayMode] = useState(false);
   const [activeSession, setActiveSession] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [username, setUsername] = useState(() => localStorage.getItem('username'));
   const [lobbyMode, setLobbyMode] = useState(false);
@@ -45,16 +46,28 @@ function App() {
     setUsername(newUsername)
   }
 
-  // OAuth callback lands here with ?token=...&username=... from the backend redirect
+  // OAuth callback lands here with #token=...&username=... (or #error=...) from the backend redirect
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
+    const params = new URLSearchParams(window.location.hash.slice(1))
     const oauthToken = params.get('token')
     const oauthUsername = params.get('username')
-    if (!oauthToken || !oauthUsername) return
+    const oauthError = params.get('error')
 
-    handleLoggedIn(oauthToken, oauthUsername)
+    if (oauthToken && oauthUsername) {
+      handleLoggedIn(oauthToken, oauthUsername)
+    } else if (oauthError) {
+      setLoginError(oauthError)
+      setShowLogin(true)
+    } else {
+      return
+    }
     window.history.replaceState({}, '', window.location.pathname)
   }, [])
+
+  const handleOpenLogin = () => {
+    setLoginError('')
+    setShowLogin(true)
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -129,7 +142,7 @@ function App() {
         </div>}
         {!playMode && <nav>
           <NavButton onClick={() => setPlayMode(true)}>Play</NavButton>
-          <NavButton onClick={() => (loggedIn ? handleLogout() : setShowLogin(true))}>{loggedIn ? 'Logout' : 'Login'}</NavButton>
+          <NavButton onClick={() => (loggedIn ? handleLogout() : handleOpenLogin())}>{loggedIn ? 'Logout' : 'Login'}</NavButton>
         </nav>}
       </header>
       {/* Kept outside <header>: header's z-index: 1 would cap this button below the launchpad grid. */}
@@ -140,6 +153,7 @@ function App() {
           <LoginView
             onLoggedIn={handleLoggedIn}
             setShowLogin={setShowLogin}
+            initialError={loginError}
             />}
           {loggedIn && <NavButton
                         className="fixed bottom-6 right-7.5 w-28 z-20"
