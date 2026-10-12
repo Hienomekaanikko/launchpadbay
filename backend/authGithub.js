@@ -34,7 +34,6 @@ export default async function githubAuth(fastify) {
 			maxAge: 600,
 		})
 
-		// No scope: public profile (id, login) is all we need
 		const params = new URLSearchParams({
 			client_id: process.env.GITHUB_CLIENT_ID,
 			redirect_uri: process.env.GITHUB_CALLBACK_URL,
@@ -50,7 +49,7 @@ export default async function githubAuth(fastify) {
 		const expectedState = request.cookies[STATE_COOKIE]
 		reply.clearCookie(STATE_COOKIE, { path: '/' })
 
-		// e.g. user clicked "Cancel" on GitHub (error=access_denied)
+		// error could be user clicked "Cancel" on GitHub or similar
 		if (error) {
 			return redirectToFrontend(reply, { error: 'GitHub login cancelled' })
 		}
