@@ -60,7 +60,8 @@ function App() {
       setShowLogin(true)
     } else {
       return
-    }
+		}
+    // Drop #token from the URL bar and Back history
     window.history.replaceState({}, '', window.location.pathname)
   }, [])
 

@@ -47,7 +47,7 @@ export default async function githubAuth(fastify) {
 		const { code: githubAuthCode, state, error } = request.query
 
 		const expectedState = request.cookies[STATE_COOKIE]
-		reply.clearCookie(STATE_COOKIE, { path: '/' })
+		reply.clearCookie(STATE_COOKIE, { path: '/' })	// one-time use, cleared even on failure
 
 		// error could be user clicked "Cancel" on GitHub or similar
 		if (error) {
@@ -85,7 +85,7 @@ export default async function githubAuth(fastify) {
 			headers: {
 				Authorization: `Bearer ${githubAccessToken}`,
 				Accept: 'application/json',
-				'User-Agent': 'launchpadbay',
+				'User-Agent': 'launchpadbay',	// GitHub API rejects requests without one
 			},
 		})
 		const githubUser = await githubUserResponse.json()
@@ -108,7 +108,7 @@ export default async function githubAuth(fastify) {
 			})
 
 			try {
-				user = await createUser(githubUser.login, githubUser.email ?? null)
+				user = await createUser(githubUser.login, githubUser.email ?? null)	// null if private on GitHub
 			} catch (err) {
 				if (err.code !== 'P2002') {
 					throw err

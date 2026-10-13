@@ -33,6 +33,7 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
         <Input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
         {error && <div className="text-error text-xs text-center max-w-55">{error}</div>}
         <FormButton type="submit">Login</FormButton>
+        {/* Full page navigation, not fetch: OAuth needs the browser to follow redirects to GitHub and back */}
         <FormButton type="button" onClick={() => { window.location.href = '/api/auth/github' }}>
           Login with GitHub
         </FormButton>

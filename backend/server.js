@@ -222,7 +222,7 @@ fastify.post('/login', async (request, reply) => {
     const { username, password } = request.body
 
     const user = await prisma.users.findUnique({ where: { username } })
-    if (!user || !user.password_hash) {
+    if (!user || !user.password_hash) { // GitHub-only accounts have no password
       return reply.code(401).send({ error: 'Invalid username or password' })
     }
 
