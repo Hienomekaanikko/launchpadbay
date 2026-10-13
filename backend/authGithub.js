@@ -28,10 +28,10 @@ export default async function githubAuth(fastify) {
 		const state = crypto.randomBytes(16).toString('hex')
 		reply.setCookie(STATE_COOKIE, state, {
 			path: '/',
-			httpOnly: true,
-			secure: true,
-			sameSite: 'lax',
-			maxAge: 600,
+			httpOnly: true,		// not readable from JS
+			secure: true,		// HTTPS only
+			sameSite: 'lax',	// still sent on the top-level redirect back from GitHub
+			maxAge: 600,		// 10 min
 		})
 
 		const params = new URLSearchParams({
