@@ -64,9 +64,20 @@ export default function LaunchpadView({ sessionId, onBack }) {
   const pads = Array.from({ length: 25 }, (_, i) => i + 1)
 
   return (
-    <div ref={containerRef}>
-      <button type="button" className="home-btn" onClick={onBack}>&larr; Home</button>
-      {sessionId && <span className="ml-3 text-white text-xs font-sans align-middle">Session: {sessionId}</span>}
+    <div ref={containerRef} className="lpad-view">
+      {/* <button type="button" className="home-btn" onClick={onBack}>&larr; Home</button>
+      {sessionId && <span className="ml-3 text-white text-xs font-sans align-middle">Session: {sessionId}</span>} */}
+      <nav className="launchpad-nav">
+        <button type="button" className="home-btn" onClick={onBack}>
+          &larr; Home
+        </button>
+
+        {sessionId && (
+          <span className="launchpad-session">
+            Session: {sessionId}
+          </span>
+        )}
+      </nav>
 
       <div className="dot-grid" />
 

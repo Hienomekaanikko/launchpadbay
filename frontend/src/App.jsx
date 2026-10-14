@@ -168,12 +168,13 @@ function App() {
       {loggedIn && <Tag className="fixed top-12.5 right-12.5 z-20" onClick={() => setProfileMode(!profileMode)}>{username}</Tag>}
       {!playMode && <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 font-display font-extrabold text-5xl leading-[1.1] text-center uppercase text-white/10 whitespace-pre-line pointer-events-none select-none"></div>}
       <main>
-          {showLogin && !playMode &&
+        {showLogin && !playMode &&
           <LoginView
             onLoggedIn={handleLoggedIn}
             setShowLogin={setShowLogin}
             initialError={loginError}
-            />}
+          />}
+
           {loggedIn && <NavButton
                         className="fixed bottom-6 right-7.5 w-28 z-20"
                         onClick={() => setLobbyMode(!lobbyMode)}>{lobbyMode ? 'Hide' : 'Lobby'}</NavButton>}
@@ -213,9 +214,16 @@ function App() {
             />
           )}
       </main>
-      <footer>
+      {/* <footer>
         {!playMode && <button className="bg-transparent text-white/40 text-xs tracking-nav font-sans cursor-pointer no-underline transition-colors hover:text-white/80 hover:underline"> Terms & Conditions </button>}
-      </footer>
+      </footer> */}
+      {!playMode && (
+        <footer>
+          <button className="bg-transparent text-white/40 text-xs tracking-nav font-sans cursor-pointer no-underline transition-colors hover:text-white/80 hover:underline">
+            Terms & Conditions
+          </button>
+        </footer>
+      )}
     </>
   )
 }
