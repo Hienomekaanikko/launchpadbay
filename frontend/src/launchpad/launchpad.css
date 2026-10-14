@@ -63,17 +63,22 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
   background-size: 38px 38px;
   animation: grid-shift 22s linear infinite;
 }
 
 @keyframes grid-shift {
-  from { background-position: 0 0; }
-  to   { background-position: 38px 38px; }
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: 38px 38px;
+  }
 }
 
-.container {
+.lpad {
   position: relative;
   width: max-content;
   display: grid;
@@ -84,8 +89,8 @@ body {
   align-items: center;
 }
 
-/* Button container */
-.container .btn {
+/* Button lpad*/
+.lpad.btn {
   position: relative;
   width: 100%;
   height: 100%;
@@ -95,7 +100,7 @@ body {
 }
 
 /* Inner button */
-.container .btn a {
+.lpad.btn a {
   position: absolute;
   top: 0;
   left: 0;
@@ -105,7 +110,7 @@ body {
   justify-content: center;
   align-items: center;
   background: rgba(255, 255, 255, 0.09);
-  box-shadow: 0 15px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255,255,255,0.12);
+  box-shadow: 0 15px 15px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12);
   border-radius: 20px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   border-top: 1px solid rgba(255, 255, 255, 0.18);
@@ -121,36 +126,34 @@ body {
 }
 
 /* Hover effect */
-.container .btn:hover a {
+.lpad.btn:hover a {
   letter-spacing: 2px;
 }
 
 /* Shimmer effect */
-.container .btn a::before {
+.lpad.btn a::before {
   content: "";
   position: absolute;
   top: -30%;
   left: -80%;
   width: 120%;
   height: 160%;
-  background: linear-gradient(
-    120deg,
-    rgba(255, 255, 255, 0.4) 0%,
-    rgba(255, 255, 255, 0.15) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(120deg,
+      rgba(255, 255, 255, 0.4) 0%,
+      rgba(255, 255, 255, 0.15) 50%,
+      transparent 100%);
   transform: translateX(0);
   transition: transform 0.6s ease;
   pointer-events: none;
 }
 
-.container .btn:hover a::before {
+.lpad.btn:hover a::before {
   transform: translateX(200%);
 }
 
 /* Top & bottom bars */
-.container .btn::before,
-.container .btn::after {
+.lpad.btn::before,
+.lpad.btn::after {
   content: "";
   position: absolute;
   left: 50%;
@@ -161,71 +164,81 @@ body {
   transition: 0.5s;
 }
 
-.container .btn::before { bottom: -5px; }
-.container .btn::after { top: -5px; }
+.lpad.btn::before {
+  bottom: -5px;
+}
 
-.container .btn:hover::before,
-.container .btn:hover::after {
+.lpad.btn::after {
+  top: -5px;
+}
+
+.lpad.btn:hover::before,
+.lpad.btn:hover::after {
   width: 80%;
   height: 50%;
   border-radius: 20px;
 }
 
 /* Row-based coloring and glow */
-.container .btn:nth-child(-n+5)::before,
-.container .btn:nth-child(-n+5)::after {
+.lpad.btn:nth-child(-n+5)::before,
+.lpad.btn:nth-child(-n+5)::after {
   background: var(--c1);
-  box-shadow: 0 0 5px var(--c1),0 0 15px var(--c1),0 0 30px var(--c1),0 0 60px var(--c1);
+  box-shadow: 0 0 5px var(--c1), 0 0 15px var(--c1), 0 0 30px var(--c1), 0 0 60px var(--c1);
   transition: background 0.6s ease, box-shadow 0.6s ease;
 }
 
-.container .btn:nth-child(n+6):nth-child(-n+10)::before,
-.container .btn:nth-child(n+6):nth-child(-n+10)::after {
+.lpad.btn:nth-child(n+6):nth-child(-n+10)::before,
+.lpad.btn:nth-child(n+6):nth-child(-n+10)::after {
   background: var(--c2);
-  box-shadow: 0 0 5px var(--c2),0 0 15px var(--c2),0 0 30px var(--c2),0 0 60px var(--c2);
+  box-shadow: 0 0 5px var(--c2), 0 0 15px var(--c2), 0 0 30px var(--c2), 0 0 60px var(--c2);
   transition: background 0.6s ease, box-shadow 0.6s ease;
 }
 
-.container .btn:nth-child(n+11):nth-child(-n+15)::before,
-.container .btn:nth-child(n+11):nth-child(-n+15)::after {
+.lpad.btn:nth-child(n+11):nth-child(-n+15)::before,
+.lpad.btn:nth-child(n+11):nth-child(-n+15)::after {
   background: var(--c3);
-  box-shadow: 0 0 5px var(--c3),0 0 15px var(--c3),0 0 30px var(--c3),0 0 60px var(--c3);
+  box-shadow: 0 0 5px var(--c3), 0 0 15px var(--c3), 0 0 30px var(--c3), 0 0 60px var(--c3);
   transition: background 0.6s ease, box-shadow 0.6s ease;
 }
 
-.container .btn:nth-child(n+16):nth-child(-n+20)::before,
-.container .btn:nth-child(n+16):nth-child(-n+20)::after {
+.lpad.btn:nth-child(n+16):nth-child(-n+20)::before,
+.lpad.btn:nth-child(n+16):nth-child(-n+20)::after {
   background: var(--c4);
-  box-shadow: 0 0 5px var(--c4),0 0 15px var(--c4),0 0 30px var(--c4),0 0 60px var(--c4);
+  box-shadow: 0 0 5px var(--c4), 0 0 15px var(--c4), 0 0 30px var(--c4), 0 0 60px var(--c4);
   transition: background 0.6s ease, box-shadow 0.6s ease;
 }
 
-.container .btn:nth-child(n+21):nth-child(-n+25)::before,
-.container .btn:nth-child(n+21):nth-child(-n+25)::after {
+.lpad.btn:nth-child(n+21):nth-child(-n+25)::before,
+.lpad.btn:nth-child(n+21):nth-child(-n+25)::after {
   background: var(--c5);
-  box-shadow: 0 0 5px var(--c5),0 0 15px var(--c5),0 0 30px var(--c5),0 0 60px var(--c5);
+  box-shadow: 0 0 5px var(--c5), 0 0 15px var(--c5), 0 0 30px var(--c5), 0 0 60px var(--c5);
   transition: background 0.6s ease, box-shadow 0.6s ease;
 }
 
 /* Loading state — sound not yet ready */
-.container .btn.btn-loading a {
+.lpad.btn.btn-loading a {
   opacity: 0.35;
   pointer-events: none;
 }
 
 /* Active glow */
-.container .btn.active a {
+.lpad.btn.active a {
   box-shadow: 0 0 20px #fff, 0 0 40px #fff, 0 0 60px #fff;
 }
 
 /* Queued blink effect */
-.container .btn.blink a {
+.lpad.btn.blink a {
   animation: blink 0.5s infinite alternate;
 }
 
 @keyframes blink {
-  from { box-shadow: 0 0 5px #fff,0 0 15px #fff,0 0 30px #fff; }
-  to   { box-shadow: 0 0 10px #ff0,0 0 25px #ff0,0 0 50px #ff0; }
+  from {
+    box-shadow: 0 0 5px #fff, 0 0 15px #fff, 0 0 30px #fff;
+  }
+
+  to {
+    box-shadow: 0 0 10px #ff0, 0 0 25px #ff0, 0 0 50px #ff0;
+  }
 }
 
 #transport-controls {
@@ -239,10 +252,10 @@ body {
 }
 
 .transport-btn {
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255, 255, 255, 0.5);
   font-size: 11px;
   letter-spacing: 2px;
   padding: 6px 18px;
@@ -253,15 +266,15 @@ body {
 }
 
 .transport-btn:hover {
-  background: rgba(255,255,255,0.14);
+  background: rgba(255, 255, 255, 0.14);
   color: #fff;
 }
 
 .transport-btn.active {
-  background: rgba(255,255,255,0.16);
+  background: rgba(255, 255, 255, 0.16);
   color: #fff;
-  border-color: rgba(255,255,255,0.45);
-  box-shadow: 0 0 12px rgba(255,255,255,0.18);
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.18);
 }
 
 /* Stutter buttons */
@@ -269,9 +282,9 @@ body {
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.35);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.35);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1px;
@@ -282,15 +295,17 @@ body {
   align-items: center;
   justify-content: center;
 }
+
 .stutter-btn:hover {
-  background: rgba(255,255,255,0.12);
-  color: rgba(255,255,255,0.7);
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.7);
 }
+
 .stutter-btn.stutter-active {
-  background: rgba(255,213,0,0.2);
-  border-color: rgba(255,213,0,0.55);
+  background: rgba(255, 213, 0, 0.2);
+  border-color: rgba(255, 213, 0, 0.55);
   color: #ffd500;
-  box-shadow: 0 0 10px rgba(255,213,0,0.25);
+  box-shadow: 0 0 10px rgba(255, 213, 0, 0.25);
 }
 
 /* Covers the launchpad while themes and audio load. */
@@ -334,7 +349,7 @@ body {
 #master-bar {
   width: 640px;
   height: 4px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   border-radius: 2px;
 }
 
@@ -343,7 +358,7 @@ body {
   width: 0%;
   border-radius: 2px;
   background: #fff;
-  box-shadow: 0 0 8px #fff, 0 0 16px rgba(255,255,255,0.5);
+  box-shadow: 0 0 8px #fff, 0 0 16px rgba(255, 255, 255, 0.5);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -368,7 +383,7 @@ body[style*="background-image"] {
 .knob-col-label {
   font-size: 10px;
   letter-spacing: 2.5px;
-  color: rgba(255,255,255,0.35);
+  color: rgba(255, 255, 255, 0.35);
   text-transform: uppercase;
 }
 
@@ -396,17 +411,21 @@ body[style*="background-image"] {
   user-select: none;
 }
 
-.knob-svg { width: 44px; height: 44px; overflow: visible; }
+.knob-svg {
+  width: 44px;
+  height: 44px;
+  overflow: visible;
+}
 
 .knob-bg {
-  fill: rgba(255,255,255,0.06);
-  stroke: rgba(255,255,255,0.1);
+  fill: rgba(255, 255, 255, 0.06);
+  stroke: rgba(255, 255, 255, 0.1);
   stroke-width: 1;
 }
 
 .knob-track {
   fill: none;
-  stroke: rgba(255,255,255,0.1);
+  stroke: rgba(255, 255, 255, 0.1);
   stroke-width: 3;
   stroke-linecap: round;
 }
@@ -417,13 +436,34 @@ body[style*="background-image"] {
   stroke-linecap: round;
 }
 
-.knob-dot { fill: #fff; }
+.knob-dot {
+  fill: #fff;
+}
 
-.row-color-1 .knob-fill { stroke: var(--c1); filter: drop-shadow(0 0 3px var(--c1)); }
-.row-color-2 .knob-fill { stroke: var(--c2); filter: drop-shadow(0 0 3px var(--c2)); }
-.row-color-3 .knob-fill { stroke: var(--c3); filter: drop-shadow(0 0 3px var(--c3)); }
-.row-color-4 .knob-fill { stroke: var(--c4); filter: drop-shadow(0 0 3px var(--c4)); }
-.row-color-5 .knob-fill { stroke: var(--c5); filter: drop-shadow(0 0 3px var(--c5)); }
+.row-color-1 .knob-fill {
+  stroke: var(--c1);
+  filter: drop-shadow(0 0 3px var(--c1));
+}
+
+.row-color-2 .knob-fill {
+  stroke: var(--c2);
+  filter: drop-shadow(0 0 3px var(--c2));
+}
+
+.row-color-3 .knob-fill {
+  stroke: var(--c3);
+  filter: drop-shadow(0 0 3px var(--c3));
+}
+
+.row-color-4 .knob-fill {
+  stroke: var(--c4);
+  filter: drop-shadow(0 0 3px var(--c4));
+}
+
+.row-color-5 .knob-fill {
+  stroke: var(--c5);
+  filter: drop-shadow(0 0 3px var(--c5));
+}
 
 .home-btn::after {
   content: "";

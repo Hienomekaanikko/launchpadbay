@@ -36,7 +36,7 @@ export default function LaunchpadView({ sessionId, onBack }) {
     // a themeless, silently-broken launchpad on the first failed request.
     fetchThemes(() => cancelled).then((themes) => {
       if (cancelled) return
-      ;({ destroy } = mountLaunchpad(containerRef.current, themes))
+        ; ({ destroy } = mountLaunchpad(containerRef.current, themes))
 
       const bgImage = themes[0]?.bgImage
       if (bgImage) {
@@ -93,7 +93,7 @@ export default function LaunchpadView({ sessionId, onBack }) {
             <div className="knob-col" id="vol-knobs" />
           </div>
 
-          <div className="container">
+          <div className="lpad">
             {pads.map((n) => (
               <div className="btn" id={`btn${n}`} key={n}><a /></div>
             ))}
