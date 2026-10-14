@@ -7,15 +7,6 @@ import MessageBubble from './MessageBubble.jsx'
 import UserRow from './UserRow.jsx'
 import SessionRow from './SessionRow.jsx'
 
-const MOCK_ONLINE = [
-  { username: 'superdj', online: true },
-  { username: 'woopwoop', online: false },
-  { username: 'duck', online: true },
-  { username: 'dude', online: true},
-  { username: 'chap', online: true},
-  { username: 'goodplayer', online: true}
-]
-
 function PlayersOnline({ online, onChatClick }) {
   const onlineOnly = online.filter((user) => user.online)
   return (
@@ -62,7 +53,7 @@ function SessionChat({ messages, onSendMessage }) {
   )
 }
 
-export default function LobbyView({ activeSession, sessions, onJoinClick, onCancelClick, onChatClick, sessionMessages, onSendSessionMessage }) {
+export default function LobbyView({ online, activeSession, sessions, onJoinClick, onCancelClick, onChatClick, sessionMessages, onSendSessionMessage }) {
   const [tab, setTab] = useState('online')
 
   return (
@@ -72,7 +63,7 @@ export default function LobbyView({ activeSession, sessions, onJoinClick, onCanc
         <NavButton onClick={() => setTab('sessions')} className={tab === 'sessions' ? 'bg-white/30' : 'after:content-none'}>{activeSession ? 'Session-chat' : 'Sessions'}</NavButton>
       </div>
       {tab === 'online'
-        ? <PlayersOnline online={MOCK_ONLINE} onChatClick={onChatClick} />
+        ? <PlayersOnline online={online} onChatClick={onChatClick} />
         : activeSession
           ? <SessionChat messages={sessionMessages} onSendMessage={onSendSessionMessage} />
           : <SessionsList sessions={sessions} onJoinClick={onJoinClick} onCancelClick={onCancelClick} />}
