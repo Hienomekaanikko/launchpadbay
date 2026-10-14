@@ -29,4 +29,23 @@ model users {
   email         String          @unique @db.VarChar(255)
   password_hash String          @db.VarChar(255)
   created_at    DateTime        @default(now())
+  sent_friendships     friendships[] @relation("sent_friendships")
+  received_friendships friendships[] @relation("received_friendships")
+}
+
+enum friendship_status {
+  pending
+  accepted
+}
+
+// One row per pair of users. While pending, requester -> addressee is the request direction.
+model friendships {
+  requester_id String            @db.VarChar(50)
+  addressee_id String            @db.VarChar(50)
+  status       friendship_status @default(pending)
+  created_at   DateTime          @default(now())
+  requester    users             @relation("sent_friendships", fields: [requester_id], references: [id], onDelete: Cascade)
+  addressee    users             @relation("received_friendships", fields: [addressee_id], references: [id], onDelete: Cascade)
+
+  @@id([requester_id, addressee_id])
 }
