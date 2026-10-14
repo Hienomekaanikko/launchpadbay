@@ -152,43 +152,50 @@ function App() {
       {loggedIn && <Tag className="fixed top-12.5 right-12.5 z-20" onClick={() => setProfileMode(!profileMode)}>{username}</Tag>}
       {!playMode && <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0 font-display font-extrabold text-5xl leading-[1.1] text-center uppercase text-white/10 whitespace-pre-line pointer-events-none select-none"></div>}
       <main>
-          {showLogin && !playMode &&
+        {showLogin && !playMode &&
           <LoginView
             onLoggedIn={handleLoggedIn}
             setShowLogin={setShowLogin}
             initialError={loginError}
+          />}
+        {loggedIn && <NavButton
+          className="fixed bottom-6 right-7.5 w-28 z-20"
+          onClick={() => setLobbyMode(!lobbyMode)}>{lobbyMode ? 'Hide' : 'Lobby'}</NavButton>}
+        {(lobbyMode || (profileMode && loggedIn)) && (
+          <div className="fixed top-25 bottom-25 right-12.5 w-[clamp(16rem,22vw,24rem)] max-w-[calc(100vw-4.125rem)] z-20 flex flex-col gap-4 pointer-events-none">
+            {profileMode && loggedIn && <ProfileView token={token} onChatClick={handleChatClick} />}
+            {lobbyMode && <LobbyView
+              activeSession={activeSession}
+              online={onlineUsers}
+              sessions={sessions}
+              onJoinClick={handleJoinClick}
+              onCancelClick={handleCancelClick}
+              onChatClick={handleChatClick}
+              sessionMessages={sessionMessages}
+              onSendSessionMessage={handleSendSessionMessage}
             />}
-          {loggedIn && <NavButton
-                        className="fixed bottom-6 right-7.5 w-28 z-20"
-                        onClick={() => setLobbyMode(!lobbyMode)}>{lobbyMode ? 'Hide' : 'Lobby'}</NavButton>}
-          {(lobbyMode || (profileMode && loggedIn)) && (
-            <div className="fixed top-25 bottom-25 right-12.5 w-[clamp(16rem,22vw,24rem)] max-w-[calc(100vw-4.125rem)] z-20 flex flex-col gap-4 pointer-events-none">
-              {profileMode && loggedIn && <ProfileView token={token} onChatClick={handleChatClick} />}
-              {lobbyMode && <LobbyView
-                              activeSession={activeSession}
-                              online={onlineUsers}
-                              sessions={sessions}
-                              onJoinClick={handleJoinClick}
-                              onCancelClick={handleCancelClick}
-                              onChatClick={handleChatClick}
-                              sessionMessages={sessionMessages}
-                              onSendSessionMessage={handleSendSessionMessage}
-                            />}
-            </div>
-          )}
-          {playMode && <LaunchpadView sessionId={activeSession} onBack={handleBackFromPlay} />}
-          {activeChat && (
-            <ChatWindow
-              recipient={activeChat}
-              messages={conversations[activeChat] || []}
-              onSendMessage={(text) => handleSendMessage(activeChat, text)}
-              onClose={() => setActiveChat(null)}
-            />
-          )}
+          </div>
+        )}
+        {playMode && <LaunchpadView sessionId={activeSession} onBack={handleBackFromPlay} />}
+        {activeChat && (
+          <ChatWindow
+            recipient={activeChat}
+            messages={conversations[activeChat] || []}
+            onSendMessage={(text) => handleSendMessage(activeChat, text)}
+            onClose={() => setActiveChat(null)}
+          />
+        )}
       </main>
-      <footer>
+      {/* <footer>
         {!playMode && <button className="bg-transparent text-white/40 text-xs tracking-nav font-sans cursor-pointer no-underline transition-colors hover:text-white/80 hover:underline"> Terms & Conditions </button>}
-      </footer>
+      </footer> */}
+      {!playMode && (
+        <footer>
+          <button className="bg-transparent text-white/40 text-xs tracking-nav font-sans cursor-pointer no-underline transition-colors hover:text-white/80 hover:underline">
+            Terms & Conditions
+          </button>
+        </footer>
+      )}
     </>
   )
 }
