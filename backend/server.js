@@ -106,10 +106,11 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
 
     // check whether the new connection originated from an already connected user;
     // if it did, politely close the stale socket, as a new replacement will
-    // be created right afterwards
+    // be created right afterwards. This also removes the client from their session.
     const previous = wsConnectionRegistry.get(jwtPayload.id)
     if (previous) {
         previous.socket.close(1008, 'Replaced by a new connection')
+        leaveSessionAndBroadcastUpdate(jwtPayload.id)
     }
 
     // create a new entry, and insert it into the registry.

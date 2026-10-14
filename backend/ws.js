@@ -4,12 +4,9 @@
 export const wsConnectionRegistry = new Map()
 
 // used to push connection/session updates from server to client in real time
-export function broadcastEvent(payload, { except } = {}) {
+export function broadcastEvent(payload) {
     const message = JSON.stringify(payload)
-    for (const [userId, entry] of wsConnectionRegistry) {
-        if (userId === except) {
-            continue
-        }
+    for (const entry of wsConnectionRegistry.values()) {
         try {
             entry.socket.send(message)
         } catch {

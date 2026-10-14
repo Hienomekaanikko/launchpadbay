@@ -19,7 +19,7 @@ function createSession(creatorId) {
 // Only creates a new session if the user does not already have a running session
 // (this could occur if they open a new tab and press 'play', for instance. In
 // that case that user is notified of their active session).
-// Broadcasts to all users (except the creator) of the new session, so that their
+// Broadcasts to all users a notification for the new session, so that their
 // session lobbyview could get updated
 export function handleSessionCreate(_msg, { userId, socket }) {
     const existingSession = getSessionByUserId(userId)
@@ -29,10 +29,7 @@ export function handleSessionCreate(_msg, { userId, socket }) {
     }
 
     const session = createSession(userId)
-    broadcastEvent(
-        { type: 'session_created', session: toSessionView(session) },
-        { except: userId }
-    )
+    broadcastEvent({ type: 'session_created', session: toSessionView(session) })
 }
 
 function leaveSession(userId) {
