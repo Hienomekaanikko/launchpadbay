@@ -183,6 +183,25 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
 
     // socket error handler, for extra safety
     socket.on('error', handleDisconnect)
+
+    // send the initial snapshots (online presence + active sessions) over this same
+    // socket. This way, the snapshot and the live events travel on a single ordered
+    // channel. Reading the online flags after the 'await' prisma query guarantees
+    // the snapshot is never older than an event already sent on this socket
+    try {
+        const users = await prisma.users.findMany({ select: { id: true, username: true } })
+        send(socket, {
+            type: 'presence_snapshot',
+            users: users.map((user) => ({
+                username: user.username,
+                online: wsConnectionRegistry.has(user.id)
+            }))
+        })
+        send(socket, { type: 'sessions_snapshot', sessions: getAllSessionViews() })
+    } catch (err) {
+        request.log.error(err, `ws: failed to send initial snapshots ` +
+            `(userId=${jwtPayload.id}, username=${jwtPayload.username})`)
+    }
 })
 
 fastify.get('/health/db', async () => {
@@ -251,22 +270,6 @@ fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, r
       return reply.code(404).send({ error: 'User not found' })
     }
     return { id: user.id, username: user.username, email: user.email }
-})
-
-// Returns a snapshot of all registered users, with their current online status.
-// Shape: { username, online }
-fastify.get('/online', { onRequest: [fastify.authenticate] }, async () => {
-    const users = await prisma.users.findMany({ select: { id: true, username: true } })
-    return users.map((user) => ({
-        username: user.username,
-        online: wsConnectionRegistry.has(user.id),
-    }))
-})
-
-// Returns a snapshot of all active sessions (mirrors GET '/online')
-// Shape: { id, current, max, status }
-fastify.get('/sessions', { onRequest: [fastify.authenticate] }, () => {
-    return getAllSessionViews()
 })
 
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {
