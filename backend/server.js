@@ -207,7 +207,11 @@ fastify.post('/register', async (request, reply) => {
 
     try {
       const user = await prisma.users.create({
-        data: { username, email, password_hash }
+				data: {
+					username,
+					email,
+					password_hash,
+				}
       })
       return { id: user.id, username: user.username }
     } catch (err) {
@@ -240,7 +244,14 @@ fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, r
     if (!user) {
       return reply.code(404).send({ error: 'User not found' })
     }
-    return { id: user.id, username: user.username, email: user.email }
+	return {
+		id: user.id,
+		username: user.username,
+		email: user.email,
+		avatar: user.avatar
+			? `/api/uploads/images/avatars/${user.avatar}`
+    	: '/api/uploads/images/avatars/DefaultAvatar.png',
+	}
 })
 
 // Returns a snapshot of all registered users, with their current online status.
