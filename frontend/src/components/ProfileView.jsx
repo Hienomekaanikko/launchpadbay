@@ -4,6 +4,7 @@ import NavButton from './NavButton.jsx'
 import Icon from './Icon.jsx'
 import UserRow from './UserRow.jsx'
 import GlassPanel from './GlassPanel.jsx'
+import AvatarEditor from './AvatarEditor.jsx'
 
 /* This is just a placeholder list of friends that will be pulled from db when it has been designed, should be a rather
 simple addition */
