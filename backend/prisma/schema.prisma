@@ -29,6 +29,7 @@ model users {
   email         String?  @unique @db.VarChar(255)
   password_hash String?  @db.VarChar(255) // null for OAuth-only users
   github_id     String?  @unique @db.VarChar(50)
+  avatar        String?  @db.VarChar(255)
   created_at    DateTime @default(now())
   sent_friendships     friendships[] @relation("sent_friendships")
   received_friendships friendships[] @relation("received_friendships")
