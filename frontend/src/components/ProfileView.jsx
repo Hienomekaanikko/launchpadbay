@@ -5,6 +5,7 @@ import Icon from './Icon.jsx'
 import UserRow from './UserRow.jsx'
 import GlassPanel from './GlassPanel.jsx'
 import FriendRequestRow from './FriendRequestRow.jsx'
+import AvatarEditor from './AvatarEditor.jsx'
 
 function Avatar({ src }) {
 		return (
