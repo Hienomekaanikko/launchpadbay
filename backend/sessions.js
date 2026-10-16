@@ -1,8 +1,9 @@
-import { send, broadcastEvent } from './ws.js'
+import { send, sendToUser, broadcastEvent } from './ws.js'
 
 // registry of live sessions, where:
 // key = 'sessionId',
-// value = session data, shape: { id, players, max }
+// value = session data, shape: { id, hostId, players, max, pending }
+// 'pending' holds: { id, name } of the requesting user, or otherwise it is null
 const sessionRegistry = new Map()
 
 // used to give each session a short, unique id
@@ -10,7 +11,13 @@ let sessionCounter = 0
 
 function createSession(creatorId) {
     const id = `session${++sessionCounter}`
-    const session = { id, players: new Set([creatorId]), max: 2 }
+    const session = {
+        id,
+        hostId: creatorId,
+        players: new Set([creatorId]),
+        max: 2,
+        pending: null
+    }
     sessionRegistry.set(id, session)
     return session
 }
@@ -22,6 +29,9 @@ function createSession(creatorId) {
 // Broadcasts to all users a notification for the new session, so that their
 // session lobbyview could get updated
 export function handleSessionCreate(_msg, { userId, socket }) {
+    // clean up user's pending request if there is one, before creating a new session
+    giveUpPendingRequest(userId)
+
     const existingSession = getSessionByUserId(userId)
     if (existingSession) {
         send(socket, { type: 'session_created', session: toSessionView(existingSession) })
@@ -32,7 +42,101 @@ export function handleSessionCreate(_msg, { userId, socket }) {
     broadcastEvent({ type: 'session_created', session: toSessionView(session) })
 }
 
+// Join request handler, that expects the shape: { 'join_request', sessionId }
+// The request lands in the session's single 'pending' slot, and is forwarded to
+// the host, who can decide whether to accept or reject it.
+export function handleJoinRequest(msg, { userId, username, socket }) {
+    const session = sessionRegistry.get(msg.sessionId)
+
+    // the session has been closed since the request was received
+    if (!session) {
+        send(socket, { type: 'session_rejected', sessionId: msg.sessionId, reason: 'gone' })
+        return
+    }
+
+    if (getSessionByUserId(userId) || getPendingSessionByUserId(userId)) {
+        send(socket, { type: 'session_rejected', sessionId: session.id, reason: 'already_in_session' })
+        return
+    }
+
+    // only one join request may be pending per session at a time
+    if (session.pending) {
+        send(socket, { type: 'session_rejected', sessionId: session.id, reason: 'busy' })
+        return
+    }
+
+    if (session.players.size >= session.max) {
+        send(socket, { type: 'session_rejected', sessionId: session.id, reason: 'full' })
+        return
+    }
+
+    session.pending = { id: userId, name: username }
+    sendToUser(session.hostId, {
+        type: 'join_requested',
+        sessionId: session.id,
+        from: { id: userId, name: username }
+    })
+}
+
+// function handling a user who withdraws their join request
+export function handleJoinCancel(_msg, { userId }) {
+    giveUpPendingRequest(userId)
+}
+
+// Host has accepted a user's join request. Integrates the user into the session,
+// notifies the requester, and updates the session for all connected users
+export function handleSessionAccept(msg, { userId, socket }) {
+    // find the session the request concerns
+    const session = getSessionHostedBy(userId)
+    if (!session || msg.from !== session.pending?.id) {
+        send(socket, { type: 'error', reason: 'no_such_pending_request' })
+        return
+    }
+
+    // integrate accepted player to the session
+    const acceptedId = session.pending.id
+    session.players.add(acceptedId)
+    session.pending = null
+
+    // notify the requester
+    sendToUser(acceptedId, { type: 'session_accepted', sessionId: session.id })
+
+    // update the whole lobby
+    broadcastEvent({ type: 'session_updated', session: toSessionView(session) })
+}
+
+// host rejects pending join request
+export function handleSessionReject(msg, { userId, socket }) {
+    // find the relevant session
+    const session = getSessionHostedBy(userId)
+    if (!session || msg.from !== session.pending?.id) {
+        send(socket, { type: 'error', reason: 'no_such_pending_request' })
+        return
+    }
+
+    // find the rejected client, and liberate the session's 'pending' seat
+    const rejectedId = session.pending.id
+    session.pending = null
+
+    // notify requester of their rejection
+    sendToUser(rejectedId, {
+        type: 'session_rejected',
+        sessionId: session.id,
+        reason: 'rejected'
+    })
+
+    // no need to broadcast an update, since a rejected request is internal only
+}
+
+export function handleSessionLeave(_msg, { userId }) {
+    leaveSessionAndBroadcastUpdate(userId)
+}
+
+// A user leaves (explicitly or by disconnecting); adjusts the session state accordingly
 function leaveSession(userId) {
+    // if the user is was waiting in some session's pending slot, let the host know
+    giveUpPendingRequest(userId)
+
     const session = getSessionByUserId(userId)
     if (!session) {
         return null
@@ -40,9 +144,23 @@ function leaveSession(userId) {
 
     session.players.delete(userId)
 
+    // last player out closes the session
     if (session.players.size == 0) {
+        if (session.pending) {
+            sendToUser(session.pending.id, {
+                type: 'session_rejected',
+                sessionId: session.id,
+                reason: 'gone'
+            })
+        }
         sessionRegistry.delete(session.id)
         return { status: 'closed', sessionId: session.id }
+    }
+
+    // the host is leaving, but somebody else is still playing; promote them to
+    // host, so the session keeps a valid host for future join requests
+    if (session.hostId === userId) {
+        session.hostId = [...session.players][0]
     }
     return { status: 'updated', session: toSessionView(session) }
 }
@@ -59,14 +177,46 @@ export function leaveSessionAndBroadcastUpdate(userId) {
     }
 }
 
-export function handleSessionLeave(_msg, { userId }) {
-    leaveSessionAndBroadcastUpdate(userId)
+// finds the session on which a user has a pending join request ->
+// frees that pending seat -> notifies the session's host
+function giveUpPendingRequest(userId) {
+    const session = getPendingSessionByUserId(userId)
+    if (!session) {
+        return
+    }
+
+    const from = session.pending
+    session.pending = null
+    sendToUser(session.hostId, {
+        type: 'join_cancelled',
+        sessionId: session.id,
+        from: { id: from.id, name: from.name }
+    })
 }
 
 // find the session a user is currently in (if any)
 function getSessionByUserId(userId) {
     for (const session of sessionRegistry.values()) {
         if (session.players.has(userId)) {
+            return session
+        }
+    }
+    return undefined
+}
+
+// find the session whose pending slot is occupied by the user parameter
+function getPendingSessionByUserId(userId) {
+    for (const session of sessionRegistry.values()) {
+        if (session.pending?.id === userId)
+            return session
+    }
+    return undefined
+}
+
+// find the session a user is currently hosting
+function getSessionHostedBy(userId) {
+    for (const session of sessionRegistry.values()) {
+        if (session.hostId === userId) {
             return session
         }
     }
