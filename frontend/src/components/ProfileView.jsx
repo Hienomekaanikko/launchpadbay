@@ -8,14 +8,34 @@ import FriendRequestRow from './FriendRequestRow.jsx'
 import AvatarEditor from './AvatarEditor.jsx'
 
 function Avatar({ src }) {
-		return (
-			<img src={src} alt=""/>
-	)
-}
+	const [isEditing, setIsEditing] = useState(false);
+	return (
+      <>
+        <button
+          type="button"
+          aria-label="Change avatar"
+          onClick={() => setIsEditing(true)}
+          className="cursor-pointer rounded-full p-0 border-0 bg-transparent
+  transition duration-200 hover:opacity-80 active:scale-[0.96]"
+        >
+				<img
+					src={src}
+					alt=""
+					className="block w-16 h-16 rounded-full object-cover"
+				/>
+        </button>
+        {isEditing && <AvatarEditor onClose={() => setIsEditing(false)} />}
+      </>
+    )
+  }
 
 function FriendsButton({ open, onClick }) {
   return (
-    <NavButton onClick={onClick} aria-label="Friends" aria-pressed={open} className="p-2">
+		<NavButton
+			onClick={onClick}
+			aria-label="Friends"
+			aria-pressed={open}
+			className="p-2">
       <Icon name="friends" />
     </NavButton>
   )
