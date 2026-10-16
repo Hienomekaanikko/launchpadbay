@@ -30,8 +30,3 @@ async function getWithToken(path, token) {
 export function fetchProfile(token) {
   return getWithToken('/profile', token)
 }
-
-// snapshot of all registered users: [{ username, online }]
-export function fetchOnline(token) {
-  return getWithToken('/online', token)
-}
