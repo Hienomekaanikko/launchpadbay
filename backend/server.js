@@ -19,6 +19,10 @@ import {
 import {
     getAllSessionViews,
     handleSessionCreate,
+    handleJoinRequest,
+    handleJoinCancel,
+    handleSessionAccept,
+    handleSessionReject,
     handleSessionLeave,
     leaveSessionAndBroadcastUpdate
 } from './sessions.js'
@@ -90,7 +94,11 @@ fastify.addHook('onClose', () => {
 // invisible default handlers from 'Object.prototype', not unlike a simple C dispatch
 const wsHandlers = Object.create(null)
 wsHandlers.session_create = handleSessionCreate
-wsHandlers.session_leave = handleSessionLeave
+wsHandlers.join_request   = handleJoinRequest
+wsHandlers.join_cancel    = handleJoinCancel
+wsHandlers.session_accept = handleSessionAccept
+wsHandlers.session_reject = handleSessionReject
+wsHandlers.session_leave  = handleSessionLeave
 
 // WebSocket route
 fastify.get('/ws', { websocket: true }, async (socket, request) => {

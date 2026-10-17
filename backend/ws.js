@@ -66,3 +66,12 @@ export function stopHeartbeat() {
 export const send = (socket, payload) => {
     socket.send(JSON.stringify(payload))
 }
+
+// Send a message to a specific user.
+// If that user is not connected, do nothing
+export function sendToUser(userId, payload) {
+    const entry = wsConnectionRegistry.get(userId)
+    if (entry) {
+        send(entry.socket, payload)
+    }
+}
