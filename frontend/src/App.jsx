@@ -68,7 +68,7 @@ function App() {
       setShowLogin(true)
     } else {
       return
-		}
+    }
     // Drop #token from the URL bar and Back history
     window.history.replaceState({}, '', window.location.pathname)
   }, [])
@@ -214,9 +214,6 @@ function App() {
             />
           )}
       </main>
-      {/* <footer>
-        {!playMode && <button className="bg-transparent text-white/40 text-xs tracking-nav font-sans cursor-pointer no-underline transition-colors hover:text-white/80 hover:underline"> Terms & Conditions </button>}
-      </footer> */}
       {!playMode && (
         <footer>
           <button className="bg-transparent text-white/40 text-xs tracking-nav font-sans cursor-pointer no-underline transition-colors hover:text-white/80 hover:underline">

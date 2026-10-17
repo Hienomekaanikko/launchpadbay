@@ -65,8 +65,6 @@ export default function LaunchpadView({ sessionId, onBack }) {
 
   return (
     <div ref={containerRef} className="lpad-view">
-      {/* <button type="button" className="home-btn" onClick={onBack}>&larr; Home</button>
-      {sessionId && <span className="ml-3 text-white text-xs font-sans align-middle">Session: {sessionId}</span>} */}
       <nav className="launchpad-nav">
         <button type="button" className="home-btn" onClick={onBack}>
           &larr; Home
