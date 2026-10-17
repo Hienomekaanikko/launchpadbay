@@ -13,10 +13,10 @@ const MOCK_FRIENDS = [
   { username: 'duck', online: true },
 ]
 
-function Avatar() {
-  return (
-    <div>AVATAR HERE</div>
-  )
+function Avatar({ src }) {
+		return (
+			<img src={src} alt=""/>
+	)
 }
 
 function FriendsButton({ open, onClick }) {
@@ -55,7 +55,7 @@ export default function ProfileView({ token, onChatClick }) {
     <GlassPanel className="min-h-0 overflow-y-auto pt-5">
       {profile && (
         <div className="flex items-center justify-between mb-4">
-          <Avatar />
+					<Avatar src={ profile.avatar } />
           <FriendsButton open={showFriends} onClick={() => setShowFriends((s) => !s)} />
         </div>
       )}
