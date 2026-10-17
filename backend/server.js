@@ -28,6 +28,7 @@ import {
 } from './sessions.js'
 import { readFileSync } from 'node:fs'
 import githubAuth from './authGithub.js'
+import friends from './friends.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -84,6 +85,9 @@ fastify.decorate('authenticate', async function (request, reply) {
         reply.code(401).send({ error: 'Unauthorized' })
     }
 })
+
+// registered after 'authenticate' so the friends routes can use it
+await fastify.register(friends)
 
 fastify.addHook('onClose', () => {
     stopHeartbeat()
