@@ -33,6 +33,8 @@ model users {
   created_at    DateTime @default(now())
   sent_friendships     friendships[] @relation("sent_friendships")
   received_friendships friendships[] @relation("received_friendships")
+  sent_messages        messages[]    @relation("sent_messages")
+  received_messages    messages[]    @relation("received_messages")
 }
 
 enum friendship_status {
@@ -50,4 +52,18 @@ model friendships {
   addressee    users             @relation("received_friendships", fields: [addressee_id], references: [id], onDelete: Cascade)
 
   @@id([requester_id, addressee_id])
+}
+
+// One row per message. sender -> receiver
+model messages {
+  id            String    @id @default(uuid()) @db.VarChar(50)
+  sender_id     String    @db.VarChar(50)
+  receiver_id   String    @db.VarChar(50)
+  content       String    @db.Text
+  created_at    DateTime  @default(now())
+  sender        users     @relation("sent_messages", fields: [sender_id], references: [id], onDelete: Cascade)
+  receiver      users     @relation("received_messages", fields: [receiver_id], references: [id], onDelete: Cascade)
+
+  @@index([sender_id, receiver_id, created_at])
+  @@index([receiver_id, sender_id, created_at])
 }
