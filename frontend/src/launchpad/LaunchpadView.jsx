@@ -6,7 +6,7 @@ import landing from '../assets/landing.jpg'
 
 const MIN_LOADING_MS = 1000
 
-export default function LaunchpadView({ sessionId, onBack }) {
+export default function LaunchpadView() {
   const containerRef = useRef(null)
   const [ready, setReady] = useState(false)
 
@@ -65,18 +65,6 @@ export default function LaunchpadView({ sessionId, onBack }) {
 
   return (
     <div ref={containerRef} className="lpad-view">
-      <nav className="launchpad-nav">
-        <button type="button" className="home-btn" onClick={onBack}>
-          &larr; Home
-        </button>
-
-        {sessionId && (
-          <span className="launchpad-session">
-            Session: {sessionId}
-          </span>
-        )}
-      </nav>
-
       <div className="dot-grid" />
 
       <div
@@ -91,7 +79,7 @@ export default function LaunchpadView({ sessionId, onBack }) {
       </div>
 
       <div className={`grid-wrapper${ready ? ' ready' : ''}`}>
-        <div id="master-bar"><div id="master-bar-fill" /></div>
+        <div id="loop-bar"><div id="loop-bar-fill" /></div>
         <div id="transport-controls">
           <button type="button" id="split-btn" className="transport-btn">SPLIT ½</button>
         </div>
