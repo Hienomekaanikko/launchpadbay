@@ -1,0 +1,64 @@
+const buttonClasses = [
+  'app-nav-action',
+  'hover:bg-white/8 hover:text-white',
+  'aria-expanded:hover:bg-white/10 aria-[current=page]:hover:bg-white/10',
+].join(' ')
+
+function NavbarButton({ className = '', ...props }) {
+  return <button type="button" className={`${buttonClasses} ${className}`} {...props} />
+}
+
+export default function AppNavbar({
+  playMode,
+  loggedIn,
+  username,
+  sessionId,
+  lobbyOpen,
+  profileOpen,
+  onHome,
+  onLobby,
+  onProfile,
+}) {
+  return (
+    <header className="app-header border-t border-t-white/18 border-b border-b-white/8 bg-surface/30 backdrop-blur-[15px]">
+      <nav className="app-navbar" aria-label="Main navigation">
+        <div className="app-navbar-brand">
+          <NavbarButton
+            aria-current={!playMode && !lobbyOpen && !profileOpen ? 'page' : undefined}
+            onClick={onHome}
+          >
+            Home
+          </NavbarButton>
+          {sessionId && (
+            <span className="app-navbar-session" title={`Session: ${sessionId}`}>
+              Session: {sessionId}
+            </span>
+          )}
+        </div>
+
+        {loggedIn && (
+          <div className="app-nav">
+            <NavbarButton
+              aria-expanded={lobbyOpen}
+              onClick={onLobby}
+            >
+              Lobby
+            </NavbarButton>
+            <NavbarButton
+              className="app-nav-user"
+              aria-label={`Profile for ${username}`}
+              aria-expanded={profileOpen}
+              title={username}
+              onClick={onProfile}
+            >
+              <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand text-[11px] font-bold" aria-hidden="true">
+                {username?.slice(0, 1).toUpperCase() || '?'}
+              </span>
+              <span className="truncate">{username}</span>
+            </NavbarButton>
+          </div>
+        )}
+      </nav>
+    </header>
+  )
+}
