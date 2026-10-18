@@ -4,14 +4,7 @@ import NavButton from './NavButton.jsx'
 import Icon from './Icon.jsx'
 import UserRow from './UserRow.jsx'
 import GlassPanel from './GlassPanel.jsx'
-
-/* This is just a placeholder list of friends that will be pulled from db when it has been designed, should be a rather
-simple addition */
-const MOCK_FRIENDS = [
-  { username: 'superdj', online: true },
-  { username: 'woopwoop', online: false },
-  { username: 'duck', online: true },
-]
+import FriendRequestRow from './FriendRequestRow.jsx'
 
 function Avatar({ src }) {
 		return (
@@ -27,18 +20,27 @@ function FriendsButton({ open, onClick }) {
   )
 }
 
-function FriendsPanel({ friends, onChatClick }) {
+function FriendsPanel({ friends, incoming, onChatClick, onAcceptClick, onRejectClick, onRemoveClick }) {
   return (
     <div className="flex flex-col gap-1">
+      {incoming.length > 0 && (
+        <>
+          <div>Requests</div>
+          {incoming.map((username) => (
+            <FriendRequestRow key={username} username={username} onAcceptClick={onAcceptClick} onRejectClick={onRejectClick} />
+          ))}
+        </>
+      )}
       <div>Friends: maybe their avatars to left side too?</div>
       {friends.length === 0
         ? <div className="text-white/60 text-xs text-center py-2 font-sans">No friends yet</div>
-        : friends.map((friend) => <UserRow key={friend.username} {...friend} onChatClick={onChatClick} />)}
+        : friends.map((friend) => <UserRow key={friend.username} {...friend} onChatClick={onChatClick} onRemoveClick={onRemoveClick} />)}
     </div>
   )
 }
 
-export default function ProfileView({ token, onChatClick }) {
+// friends: [{ username, online }], incoming: [username]
+export default function ProfileView({ token, friends, incoming, onChatClick, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen }) {
   const [profile, setProfile] = useState(null)
   const [error, setError] = useState('')
   const [showFriends, setShowFriends] = useState(false)
@@ -55,15 +57,30 @@ export default function ProfileView({ token, onChatClick }) {
     <GlassPanel className="min-h-0 overflow-y-auto pt-5">
       {profile && (
         <div className="flex items-center justify-between mb-4">
+<<<<<<< Updated upstream
 					<Avatar src={ profile.avatar } />
           <FriendsButton open={showFriends} onClick={() => setShowFriends((s) => !s)} />
+=======
+          <Avatar />
+          <FriendsButton open={showFriends} onClick={() => {
+            if (!showFriends) onFriendsOpen()
+            setShowFriends((s) => !s)
+          }} />
+>>>>>>> Stashed changes
         </div>
       )}
       {error && <div className="text-error text-xs text-center max-w-55">{error}</div>}
       {!error && !profile && <div>Loading...</div>}
       {profile && (
         <div>
-          {showFriends ? <FriendsPanel friends={MOCK_FRIENDS} onChatClick={onChatClick} /> : 'Some additional information here?'}
+          {showFriends ? <FriendsPanel
+                            friends={friends}
+                            incoming={incoming}
+                            onChatClick={onChatClick}
+                            onAcceptClick={onAcceptClick}
+                            onRejectClick={onRejectClick}
+                            onRemoveClick={onRemoveClick}
+                          /> : 'Some additional information here?'}
         </div>
       )}
     </GlassPanel>

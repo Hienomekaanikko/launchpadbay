@@ -18,9 +18,13 @@ export function register(username, email, password) {
 export function login(username, password) {
   return post('/login', { username, password })
 }
-async function getWithToken(path, token) {
+async function requestWithToken(method, path, token, body) {
+  const headers = { Authorization: `Bearer ${token}` }
+  if (body !== undefined) headers['Content-Type'] = 'application/json'
   const res = await fetch(`/api${path}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
   })
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(data.error || `Request failed: ${res.status}`)
@@ -28,5 +32,34 @@ async function getWithToken(path, token) {
 }
 
 export function fetchProfile(token) {
-  return getWithToken('/profile', token)
+  return requestWithToken('GET', '/profile', token)
 }
+<<<<<<< Updated upstream
+=======
+
+// snapshot of all registered users: [{ username, online }]
+export function fetchOnline(token) {
+  return requestWithToken('GET', '/online', token)
+}
+
+// { friends: [username], incoming: [username], outgoing: [username] }
+export function fetchFriends(token) {
+  return requestWithToken('GET', '/friends', token)
+}
+
+export function sendFriendRequest(token, username) {
+  return requestWithToken('POST', '/friends/requests', token, { username })
+}
+
+export function acceptFriendRequest(token, username) {
+  return requestWithToken('POST', `/friends/requests/${encodeURIComponent(username)}/accept`, token)
+}
+
+export function rejectFriendRequest(token, username) {
+  return requestWithToken('DELETE', `/friends/requests/${encodeURIComponent(username)}`, token)
+}
+
+export function removeFriend(token, username) {
+  return requestWithToken('DELETE', `/friends/${encodeURIComponent(username)}`, token)
+}
+>>>>>>> Stashed changes
