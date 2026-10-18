@@ -174,7 +174,7 @@ Schema changes go through Prisma, not manual SQL:
 
 ```
 cd backend
-./node_modules/.bin/prisma migrate dev --name describe_your_change
+DOTENV_CONFIG_PATH=../.env ./node_modules/.bin/prisma migrate dev --name describe_your_change
 ```
 
 - Use the local binary path, not bare `npx prisma` — `npx` has unpredictably resolved to an unstable prerelease instead of the pinned version.
