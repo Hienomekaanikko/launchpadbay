@@ -20,9 +20,9 @@ MKCERT_PLATFORM ?= $(MKCERT_OS)/$(MKCERT_ARCH)
 
 up: certs
 	@docker compose up -d --build
-	@printf '\nLaunchpadbay:\t https://$(LAN_IP):8443\n'
-	@printf 'Grafana:\t https://$(LAN_IP):3001\n'
-	@printf 'Prometheus:\t https://$(LAN_IP):9090\n'
+	@printf '\nLaunchpadbay:\t https://$(LAN_IP):8443 and https://localhost:8443\n'
+	@printf 'Grafana:\t http://localhost:3001\n'
+	@printf 'Prometheus:\t http://localhost:9090\n'
 
 certs: $(MKCERT)
 	@mkdir -p certs
