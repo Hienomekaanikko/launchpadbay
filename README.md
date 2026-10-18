@@ -130,7 +130,7 @@ This plan will be revised as the team and scope firm up.
 ### Run it
 
 ```
-cp backend/.env.example backend/.env
+cp .env.example .env
 make
 ```
 Import certs/ca.pem into browser to trust certificate.
