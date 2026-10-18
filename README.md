@@ -38,7 +38,8 @@ Key features so far:
 - **ORM:** Prisma 7, via the `@prisma/adapter-mariadb` driver adapter (Prisma 7 requires an explicit adapter rather than connecting straight off `DATABASE_URL`).
 - **Database:** MySQL 8. Chosen as a well-understood, widely-supported relational store that's a good fit for the project's structured data (users, themes, per-slot sounds) — no need for anything more specialized at this stage.
 - **Auth:** `bcrypt` for password hashing, `@fastify/jwt` for signing/verifying session tokens.
-- **Containerization:** Docker + Docker Compose for the full stack (frontend, backend, MySQL); a `Makefile` wraps the common Compose commands.
+- **Containerization:** Docker Compose runs the frontend, backend, MySQL, Prometheus, and Grafana. A `Makefile` wraps the startup and shutdown commands.
+- **Monitoring:** Prometheus used to collect backend process data and HTTP request metrics. Grafana displays data in dashboard.
 
 ## Database Schema (for now)
 
@@ -75,6 +76,7 @@ What's actually functional today:
 - **Backend auth API** — `POST /register` (bcrypt hash, 409 on duplicate username/email) and `POST /login` (bcrypt compare, returns a JWT), fully working against the database.
 - **Login/Register, end-to-end** (`frontend/src/App.jsx`, `frontend/src/auth.js`) — the forms call the real backend endpoints; a successful login stores the JWT in `localStorage` (session survives a reload) and flips the nav button to "Logout"; duplicate-username, password-mismatch, and bad-login errors all surface inline in the form.
 - **Fully containerized startup** — `make up` builds and starts everything, auto-runs Prisma migrations and seeding, and retries against MySQL until it's actually ready instead of failing on a slow first boot.
+- **Monitoring the Backend** — Prometheus collects data from Node.js (process metrics, HTTP requests and reponse durations). Grafana automatically loads these into a dashboard graphing the statistics.
 
 Still a UI mock, not yet wired up:
 - **Lobby view** ("who's playing", chat, join/observe) — static placeholder text only, no real data or backend support. Assigned to `ykadosh`, see [Modules](#modules).
@@ -119,6 +121,7 @@ This plan will be revised as the team and scope firm up.
 - **msuokas:** Project bootstrap; landing page and launchpad UI/design; Dockerized the full stack (frontend, backend, MySQL) with a `Makefile`; `users` table and Prisma migration; backend auth (`bcrypt` + JWT) in `server.js`; hardened container startup against slow/unready MySQL (Compose healthcheck, backend entrypoint retry loop, frontend fetch retry) after hitting that exact failure on a school computer.
 - **mbonsdor:** sound engine and pad grid (`launchpad/engine.js`);
 - **ykadosh:** Assigned the lobby experience (not started yet) — real-time presence and session join/observe (Real-time/WebSockets module), plus chat, profile view, and friends list (User interaction module).
+- **timurray:** Certificate creation, DevOps implementation, mobile frontend.
 
 ## Instructions
 
@@ -129,13 +132,14 @@ This plan will be revised as the team and scope firm up.
 
 ### Run it
 
-```
+```bash
 cp .env.example .env
 make
 ```
 Import certs/ca.pem into browser to trust certificate.
 
 Open https://localhost:8443.
+Startup also prints localhost monitoring URLs.
 
 - `.env.example` has working local-dev credentials, safe to reuse as-is.
 - First run auto-applies migrations and seeds the default theme/sounds.
@@ -144,13 +148,13 @@ Open https://localhost:8443.
 
 | Command | What it does |
 |---|---|
-| `make` | Build (if needed) and start everything, in the background |
-| `make dev` | Build (if needed), start everything, and prepare for live reload during development |
-| `make down` | Stop and remove containers — data untouched (lives in the `mysql_data` volume) |
+| `make` or `make up`| Build (if needed) and start application and monitoring services in the background |
+| `make dev` | Build (if needed), start services, install frontend dependencies, and run Vite for live reload during development |
+| `make down` | Stop and remove containers, leaving database data (lives in the `mysql_data` volume), metric history, and Grafana state untouched  |
 | `make re` | `down` then `up` |
-| `make fclean` | `down` + delete volumes (wipes the DB) + delete built images + remove certificates — full reset |
+| `make fclean` | `down` + delete volumes (wipes DB, Prometheus and Grafana volumes) + delete built images + remove certificates — full reset |
 
-- `docker compose logs -f backend` (or `frontend`/`mysql`) — tail logs
+- `docker compose logs -f backend` (or `frontend`,`mysql`,`prometheus`,`grafana`) — tail logs
 - `docker compose ps` — see what's running
 
 ### Architecture
@@ -158,8 +162,24 @@ Open https://localhost:8443.
 - **`frontend/`** — Vite/React SPA. Built and served by nginx in production (`frontend/Dockerfile`, `frontend/nginx.conf`), which also proxies `/api/*` to the backend — one origin, no CORS.
 - **`backend/`** — Fastify + Prisma. `server.js` is the entry point, routes added directly there for now. Sound/theme files live in `backend/uploads/` (bind-mounted, no rebuild needed to replace one), served via `@fastify/static`.
 - **`mysql`** — MySQL 8, data in the `mysql_data` volume.
+- **`prometheus`** — Scrapes backend metrics over HTTPS using `certs/ca.pem`. Stores metric history in `prometheus_data`.
+- **`grafana`** — Queries Prometheus and loads its connection and dashboard from `monitoring/grafana/`. Stores accounts and local settings in `grafana_data`.
 
-Ports: frontend `8443`, MySQL `3307` on host (avoids clashing with a native MySQL install; containers reach it at `mysql:3306`).
+Ports: frontend HTTPS `8443`, MySQL `3307`, Grafana `3001`, and Prometheus `9090` on host (avoids clashing with a native MySQL install; containers reach it at `mysql:3306`).
+Grafana and Prometheus are bound to `127.0.0.1`
+
+### Monitoring
+
+Start monitoring with the application using `make up`.
+
+| Interface | URL |
+|---|---|
+| Grafana | http://localhost:3001 |
+| Prometheus queries | http://localhost:9090/query |
+| Prometheus targets | http://localhost:9090/targets |
+
+To keep Grafana dashboard edits in Git, save the dashboard and export it as Resource JSON with instance sharing disabled. Save it as `monitoring/grafana/dashboards/launchpadbay.json` replacing the existing file. Commit the file.
+Saving in Grafana alone does not update the repository but will update local setup unless setup is completely reset with `make fclean`.
 
 ### Auth
 
@@ -203,6 +223,8 @@ make dev
 - [bcrypt (node)](https://www.npmjs.com/package/bcrypt) / [@fastify/jwt](https://github.com/fastify/fastify-jwt)
 - [Docker Compose documentation](https://docs.docker.com/compose/)
 - [React documentation](https://react.dev/)
+- [Prometheus documentation](https://prometheus.io/docs/introduction/overview/)
+- [Grafana documentation](https://grafana.com/docs/grafana/latest/)
 
 **AI usage:** AI (Claude) was used as a learning and research tool throughout the project — to understand unfamiliar concepts (e.g. Prisma 7's driver-adapter requirement, Docker Compose healthcheck/`depends_on` semantics) and to explore current best practices before implementing them, rather than to generate unreviewed code wholesale. It was also used directly to diagnose and fix a real startup-ordering bug between the backend and MySQL containers, and to help draft this README from the project's actual code and Git history.
 
