@@ -57,16 +57,11 @@ export default function ProfileView({ token, friends, incoming, onChatClick, onA
     <GlassPanel className="min-h-0 overflow-y-auto pt-5">
       {profile && (
         <div className="flex items-center justify-between mb-4">
-<<<<<<< Updated upstream
-					<Avatar src={ profile.avatar } />
-          <FriendsButton open={showFriends} onClick={() => setShowFriends((s) => !s)} />
-=======
-          <Avatar />
+          <Avatar src={ profile.avatar } />
           <FriendsButton open={showFriends} onClick={() => {
             if (!showFriends) onFriendsOpen()
             setShowFriends((s) => !s)
           }} />
->>>>>>> Stashed changes
         </div>
       )}
       {error && <div className="text-error text-xs text-center max-w-55">{error}</div>}

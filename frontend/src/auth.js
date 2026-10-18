@@ -34,8 +34,6 @@ async function requestWithToken(method, path, token, body) {
 export function fetchProfile(token) {
   return requestWithToken('GET', '/profile', token)
 }
-<<<<<<< Updated upstream
-=======
 
 // snapshot of all registered users: [{ username, online }]
 export function fetchOnline(token) {
@@ -62,4 +60,3 @@ export function rejectFriendRequest(token, username) {
 export function removeFriend(token, username) {
   return requestWithToken('DELETE', `/friends/${encodeURIComponent(username)}`, token)
 }
->>>>>>> Stashed changes
