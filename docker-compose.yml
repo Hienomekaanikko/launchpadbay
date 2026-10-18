@@ -3,7 +3,7 @@ services:
     image: mysql:8
     restart: unless-stopped
     env_file:
-      - ./backend/.env
+      - ./.env
     ports:
       - "3307:3306"
     volumes:
@@ -19,11 +19,9 @@ services:
     build: ./backend
     restart: unless-stopped
     env_file:
-      - ./backend/.env
+      - ./.env
     environment:
       DATABASE_URL: "mysql://dj:greatestdj@mysql:3306/launchpadbay"
-    # ports:
-    #   - "3000:3000"
     volumes:
       - ./backend/uploads:/app/uploads
       - ./certs/backend.pem:/run/tls/backend.pem:ro
@@ -65,10 +63,14 @@ services:
     restart: unless-stopped
     environment:
       GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SECURITY_ADMIN_USER: "${GRAFANA_ADMIN_USER:-admin}"
+      GF_SECURITY_ADMIN_PASSWORD: "${GRAFANA_ADMIN_PASSWORD:?Set GRAFANA_ADMIN_PASSWORD in .env}"
     ports:
       - "127.0.0.1:3001:3000"
     volumes:
       - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
       - prometheus
 
