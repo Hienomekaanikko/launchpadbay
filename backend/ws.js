@@ -3,6 +3,11 @@
 // value = ws 'entry' data, shape: { username, socket, isAlive }
 export const wsConnectionRegistry = new Map()
 
+// Caps incoming WebSocket messages to ~4KB
+// Other WebSocket caps are derived from this value, so changes propagate.
+// Larger input receives 1009 and closes the WebSocket
+export const MAX_WS_BYTES_PER_FRAME = 4096
+
 // used to push connection/session updates from server to client in real time
 export function broadcastEvent(payload) {
     const message = JSON.stringify(payload)
