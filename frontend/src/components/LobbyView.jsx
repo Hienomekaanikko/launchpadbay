@@ -7,13 +7,21 @@ import MessageBubble from './MessageBubble.jsx'
 import UserRow from './UserRow.jsx'
 import SessionRow from './SessionRow.jsx'
 
-function PlayersOnline({ online, onChatClick }) {
+// canAddFriend(username) decides whether a row gets the add-friend button
+function PlayersOnline({ online, onChatClick, canAddFriend, onAddFriendClick }) {
   const onlineOnly = online.filter((user) => user.online)
   return (
     <div className="flex flex-col gap-1">
       {onlineOnly.length === 0
         ? <div className="text-white/60 text-xs text-center py-2 font-sans">No one is online...</div>
-        : onlineOnly.map((user) => <UserRow key={user.username} {...user} onChatClick={onChatClick} />)}
+        : onlineOnly.map((user) => (
+            <UserRow
+              key={user.username}
+              {...user}
+              onChatClick={onChatClick}
+              onAddFriendClick={canAddFriend(user.username) ? onAddFriendClick : undefined}
+            />
+          ))}
     </div>
   )
 }
@@ -53,7 +61,7 @@ function SessionChat({ messages, onSendMessage }) {
   )
 }
 
-export default function LobbyView({ online, activeSession, sessions, onJoinClick, onCancelClick, onChatClick, sessionMessages, onSendSessionMessage }) {
+export default function LobbyView({ online, canAddFriend, onAddFriendClick, activeSession, sessions, onJoinClick, onCancelClick, onChatClick, sessionMessages, onSendSessionMessage }) {
   const [tab, setTab] = useState('online')
 
   return (
@@ -63,7 +71,7 @@ export default function LobbyView({ online, activeSession, sessions, onJoinClick
         <NavButton onClick={() => setTab('sessions')} className={tab === 'sessions' ? 'bg-white/30' : 'after:content-none'}>{activeSession ? 'Session-chat' : 'Sessions'}</NavButton>
       </div>
       {tab === 'online'
-        ? <PlayersOnline online={online} onChatClick={onChatClick} />
+        ? <PlayersOnline online={online} onChatClick={onChatClick} canAddFriend={canAddFriend} onAddFriendClick={onAddFriendClick} />
         : activeSession
           ? <SessionChat messages={sessionMessages} onSendMessage={onSendSessionMessage} />
           : <SessionsList sessions={sessions} onJoinClick={onJoinClick} onCancelClick={onCancelClick} />}

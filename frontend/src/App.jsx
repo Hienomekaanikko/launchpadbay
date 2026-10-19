@@ -9,6 +9,7 @@ import NavButton from './components/NavButton.jsx'
 import Tag from './components/Tag.jsx'
 import ChatWindow from './components/ChatWindow.jsx'
 import usePresence from './usePresence.js'
+import useFriends from './useFriends.js'
 
 const INITIAL_SESSIONS = [
   { id: 'session1', current: 1, max: 2, status: 'open' },
@@ -31,6 +32,11 @@ function App() {
   const [sessionMessages, setSessionMessages] = useState([]);
   const loggedIn = Boolean(token)
   const onlineUsers = usePresence(token).filter((user) => user.username !== username)
+  const friendsState = useFriends(token)
+  const friendsWithStatus = friendsState.friends.map((friend) => ({
+    username: friend,
+    online: onlineUsers.some((user) => user.username === friend && user.online),
+  }))
 
   useEffect(() => {
     if (!playMode) {
@@ -119,6 +125,16 @@ function App() {
     setActiveChat(username)
   }
 
+  // hide the add button for existing friends and requests we've already sent
+  const canAddFriend = (other) =>
+    !friendsState.friends.includes(other) && !friendsState.outgoing.includes(other)
+
+  // if they already sent us a request, adding them just accepts it
+  const handleAddFriendClick = (other) => {
+    if (friendsState.incoming.includes(other)) friendsState.accept(other)
+    else friendsState.add(other)
+  }
+
   // local-only for now: appends the message straight to state. Once the
   // webSocket exists, this becomes "send over the socket" instead, and a
   // socket message handler calls setConversations the same way incoming
@@ -163,10 +179,21 @@ function App() {
                         onClick={() => setLobbyMode(!lobbyMode)}>{lobbyMode ? 'Hide' : 'Lobby'}</NavButton>}
           {(lobbyMode || (profileMode && loggedIn)) && (
             <div className="fixed top-25 bottom-25 right-12.5 w-[clamp(16rem,22vw,24rem)] max-w-[calc(100vw-4.125rem)] z-20 flex flex-col gap-4 pointer-events-none">
-              {profileMode && loggedIn && <ProfileView token={token} onChatClick={handleChatClick} />}
+              {profileMode && loggedIn && <ProfileView
+                                            token={token}
+                                            friends={friendsWithStatus}
+                                            incoming={friendsState.incoming}
+                                            onChatClick={handleChatClick}
+                                            onAcceptClick={friendsState.accept}
+                                            onRejectClick={friendsState.reject}
+                                            onRemoveClick={friendsState.remove}
+                                            onFriendsOpen={friendsState.refresh}
+                                          />}
               {lobbyMode && <LobbyView
                               activeSession={activeSession}
                               online={onlineUsers}
+                              canAddFriend={canAddFriend}
+                              onAddFriendClick={handleAddFriendClick}
                               sessions={sessions}
                               onJoinClick={handleJoinClick}
                               onCancelClick={handleCancelClick}
