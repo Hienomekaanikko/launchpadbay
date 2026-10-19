@@ -1,9 +1,7 @@
 import 'dotenv/config'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createWriteStream, readFileSync } from 'node:fs'
-import { pipeline } from 'node:stream/promises'
-import { randomUUID } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import Fastify from 'fastify'
 import { PrismaClient } from '@prisma/client'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
@@ -12,7 +10,6 @@ import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
 import bcrypt from 'bcrypt'
 import websocket from '@fastify/websocket'
-import multipart from '@fastify/multipart'
 import {
     MAX_WS_BYTES_PER_FRAME,
     wsConnectionRegistry,
@@ -36,6 +33,7 @@ import { readFileSync } from 'node:fs'
 import githubAuth from './authGithub.js'
 import friends from './friends.js'
 import { registerMetrics } from './metrics.js'
+import profileRoutes from './profile.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -85,10 +83,6 @@ await fastify.register(websocket, {
     options: { maxPayload: MAX_WS_BYTES_PER_FRAME }
 })
 
-await fastify.register(multipart, {
-  limits: { fileSize: 2 * 1024 * 1024 },
-})
-
 fastify.decorate('authenticate', async function (request, reply) {
     try {
         await request.jwtVerify()
@@ -97,8 +91,9 @@ fastify.decorate('authenticate', async function (request, reply) {
     }
 })
 
-// registered after 'authenticate' so the friends routes can use it
+// Registered after the 'authenticate' decorator above: their routes reference it at definition time
 await fastify.register(friends)
+await fastify.register(profileRoutes)
 
 fastify.addHook('onClose', () => {
     stopHeartbeat()
@@ -293,46 +288,20 @@ fastify.post('/login', async (request, reply) => {
     return { token }
 })
 
-fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, reply) => {
-    const user = await prisma.users.findUnique({ where: { id: request.user.id } })
-    if (!user) {
-      return reply.code(404).send({ error: 'User not found' })
-    }
-	return {
-		id: user.id,
-		username: user.username,
-		email: user.email,
-		avatar: user.avatar
-			? `/api/uploads/images/avatars/${user.avatar}`
-    	: '/api/uploads/images/avatars/DefaultAvatar.png',
-	}
+// Returns a snapshot of all registered users, with their current online status.
+// Shape: { username, online }
+fastify.get('/online', { onRequest: [fastify.authenticate] }, async () => {
+    const users = await prisma.users.findMany({ select: { id: true, username: true } })
+    return users.map((user) => ({
+        username: user.username,
+        online: wsConnectionRegistry.has(user.id),
+    }))
 })
 
-fastify.post('/profile/avatar', { onRequest: [fastify.authenticate] }, async (request, reply) => {
-	const data = await request.file()
-	if (!data) {
-		return reply.code(400).send({ error: 'No file uploaded' })
-	}
-
-	const allowed = ['image/jpeg', 'image/png', 'image/webp']
-	if (!allowed.includes(data.mimetype)) {
-		return reply.code(400).send({ error: 'Only JPEG, PNG, or WebP allowed' })
-	}
-
-	const ext = data.mimetype === 'image/png' ? 'png'
-		: data.mimetype === 'image/webp' ? 'webp'
-		: 'jpg'
-	const filename = `${request.user.id}-${randomUUID()}.${ext}`
-	const dest = path.join(__dirname, 'uploads', 'images', 'avatars', filename)
-
-	await pipeline(data.file, createWriteStream(dest))
-
-	await prisma.users.update({
-		where: { id: request.user.id },
-		data: { avatar: filename },
-	})
-
-	return { avatar: `/api/uploads/images/avatars/${filename}` }
+// Returns a snapshot of all active sessions (mirrors GET '/online')
+// Shape: { id, current, max, status }
+fastify.get('/sessions', { onRequest: [fastify.authenticate] }, () => {
+    return getAllSessionViews()
 })
 
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {

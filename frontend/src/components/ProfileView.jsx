@@ -28,7 +28,7 @@ function Avatar({ src, token, onAvatarChange }) {
           <AvatarEditor
             token={token}
             onClose={() => setIsEditing(false)}
-            onSaved={onAvatarChange}
+            onAvatarChange={onAvatarChange}
           />
         )}
       </>
