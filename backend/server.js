@@ -1,6 +1,9 @@
 import 'dotenv/config'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createWriteStream, readFileSync } from 'node:fs'
+import { pipeline } from 'node:stream/promises'
+import { randomUUID } from 'node:crypto'
 import Fastify from 'fastify'
 import { PrismaClient } from '@prisma/client'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
@@ -9,6 +12,7 @@ import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
 import bcrypt from 'bcrypt'
 import websocket from '@fastify/websocket'
+import multipart from '@fastify/multipart'
 import {
     MAX_WS_BYTES_PER_FRAME,
     wsConnectionRegistry,
@@ -79,6 +83,10 @@ await fastify.register(githubAuth)
 
 await fastify.register(websocket, {
     options: { maxPayload: MAX_WS_BYTES_PER_FRAME }
+})
+
+await fastify.register(multipart, {
+  limits: { fileSize: 2 * 1024 * 1024 },
 })
 
 fastify.decorate('authenticate', async function (request, reply) {
@@ -298,6 +306,33 @@ fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, r
 			? `/api/uploads/images/avatars/${user.avatar}`
     	: '/api/uploads/images/avatars/DefaultAvatar.png',
 	}
+})
+
+fastify.post('/profile/avatar', { onRequest: [fastify.authenticate] }, async (request, reply) => {
+	const data = await request.file()
+	if (!data) {
+		return reply.code(400).send({ error: 'No file uploaded' })
+	}
+
+	const allowed = ['image/jpeg', 'image/png', 'image/webp']
+	if (!allowed.includes(data.mimetype)) {
+		return reply.code(400).send({ error: 'Only JPEG, PNG, or WebP allowed' })
+	}
+
+	const ext = data.mimetype === 'image/png' ? 'png'
+		: data.mimetype === 'image/webp' ? 'webp'
+		: 'jpg'
+	const filename = `${request.user.id}-${randomUUID()}.${ext}`
+	const dest = path.join(__dirname, 'uploads', 'images', 'avatars', filename)
+
+	await pipeline(data.file, createWriteStream(dest))
+
+	await prisma.users.update({
+		where: { id: request.user.id },
+		data: { avatar: filename },
+	})
+
+	return { avatar: `/api/uploads/images/avatars/${filename}` }
 })
 
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {

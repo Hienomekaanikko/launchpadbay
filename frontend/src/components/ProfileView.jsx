@@ -7,7 +7,7 @@ import GlassPanel from './GlassPanel.jsx'
 import FriendRequestRow from './FriendRequestRow.jsx'
 import AvatarEditor from './AvatarEditor.jsx'
 
-function Avatar({ src }) {
+function Avatar({ src, token, onAvatarChange }) {
 	const [isEditing, setIsEditing] = useState(false);
 	return (
       <>
@@ -24,7 +24,13 @@ function Avatar({ src }) {
 					className="block w-16 h-16 rounded-full object-cover"
 				/>
         </button>
-        {isEditing && <AvatarEditor onClose={() => setIsEditing(false)} />}
+        {isEditing && (
+          <AvatarEditor
+            token={token}
+            onClose={() => setIsEditing(false)}
+            onSaved={onAvatarChange}
+          />
+        )}
       </>
     )
   }
@@ -78,7 +84,13 @@ export default function ProfileView({ token, friends, incoming, onChatClick, onA
     <GlassPanel className="min-h-0 overflow-y-auto pt-5">
       {profile && (
         <div className="flex items-center justify-between mb-4">
-          <Avatar src={ profile.avatar } />
+					<Avatar
+						src={profile.avatar}
+						token={token}
+						onAvatarChange={(avatarUrl) =>
+							setProfile((p) => ({ ...p, avatar: avatarUrl }))
+						}
+					/>
           <FriendsButton open={showFriends} onClick={() => {
             if (!showFriends) onFriendsOpen()
             setShowFriends((s) => !s)
