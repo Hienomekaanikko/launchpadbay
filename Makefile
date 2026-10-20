@@ -19,24 +19,28 @@ endif
 MKCERT_PLATFORM ?= $(MKCERT_OS)/$(MKCERT_ARCH)
 
 up: certs
-	docker compose up -d --build
-	printf '\nLaunchpadbay: https://$(LAN_IP):8443\n'
+	@docker compose up -d --build
+	@printf '\nLaunchpadbay:\t https://$(LAN_IP):8443 and https://localhost:8443\n'
+	@printf 'Grafana:\t http://localhost:3001\n'
+	@printf 'Prometheus:\t http://localhost:9090\n'
 
 certs: $(MKCERT)
-	mkdir -p certs
-	if [ ! -f certs/backend.pem ] || [ ! -f certs/backend-key.pem ]; then \
+	@mkdir -p certs
+	@if [ ! -f certs/backend.pem ] || [ ! -f certs/backend-key.pem ]; then \
+		printf '\nSigning backend certificates...';\
 		"$(MKCERT)" \
 			-cert-file certs/backend.pem \
 			-key-file certs/backend-key.pem \
-			backend localhost 127.0.0.1 ::1; \
+			backend localhost 127.0.0.1 ::1 && \
+		printf '\nBackend certificates signed.\n';\
 	fi
-	if [ ! -f certs/frontend.pem ] || [ ! -f certs/frontend-key.pem ]; then \
+	@if [ ! -f certs/frontend.pem ] || [ ! -f certs/frontend-key.pem ]; then \
 		"$(MKCERT)" \
 			-cert-file certs/frontend.pem \
 			-key-file certs/frontend-key.pem \
 			localhost 127.0.0.1 ::1 $(LAN_IP); \
 	fi
-	cp "$$("$(MKCERT)" -CAROOT)/rootCA.pem" certs/ca.pem
+	@cp "$$("$(MKCERT)" -CAROOT)/rootCA.pem" certs/ca.pem
 
 $(MKCERT):
 	mkdir -p "$(dir $(MKCERT))"

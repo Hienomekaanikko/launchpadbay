@@ -29,6 +29,7 @@ import {
 import { readFileSync } from 'node:fs'
 import githubAuth from './authGithub.js'
 import friends from './friends.js'
+import { registerMetrics } from './metrics.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -39,6 +40,8 @@ const fastify = Fastify({
         cert: readFileSync('/run/tls/backend.pem')
     }
 })
+
+registerMetrics(fastify)
 
 const adapter = new PrismaMariaDb({
     host: process.env.MYSQL_HOST,
