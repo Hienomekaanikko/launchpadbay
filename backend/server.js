@@ -29,7 +29,6 @@ import {
     leaveSessionAndBroadcastUpdate
 } from './sessions.js'
 import { handleChatMessage } from './chat.js'
-import { readFileSync } from 'node:fs'
 import githubAuth from './authGithub.js'
 import friends from './friends.js'
 import { registerMetrics } from './metrics.js'
