@@ -9,8 +9,9 @@ export default function JoinRequestPopup({ username, onAcceptClick, onRejectClic
         <span className="font-medium">{username}</span> wants to join your session
       </div>
       <div className="flex gap-2">
-        <FormButton type="button" onClick={onAcceptClick}>Accept</FormButton>
-        <FormButton type="button" onClick={onRejectClick}>Reject</FormButton>
+        {/* darker than the default FormButton so the white text reads on the light popup */}
+        <FormButton type="button" className="bg-black/35 hover:bg-black/45" onClick={onAcceptClick}>Accept</FormButton>
+        <FormButton type="button" className="bg-black/35 hover:bg-black/45" onClick={onRejectClick}>Reject</FormButton>
       </div>
     </Modal>
   )
