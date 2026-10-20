@@ -8,14 +8,10 @@ import ProfileView from './components/ProfileView.jsx'
 import NavButton from './components/NavButton.jsx'
 import AppNavbar from './components/AppNavbar.jsx'
 import ChatWindow from './components/ChatWindow.jsx'
+import useSocket, { sendMessage } from './useSocket.js'
 import usePresence from './usePresence.js'
 import useFriends from './useFriends.js'
-
-const INITIAL_SESSIONS = [
-  { id: 'session1', current: 1, max: 2, status: 'open' },
-  { id: 'session2', current: 2, max: 2, status: 'open' },
-  { id: 'session3', current: 1, max: 2, status: 'open' },
-]
+import useSessions from './useSessions.js'
 
 function App() {
   const [playMode, setPlayMode] = useState(false);
@@ -26,12 +22,17 @@ function App() {
   const [username, setUsername] = useState(() => localStorage.getItem('username'));
   const [lobbyMode, setLobbyMode] = useState(false);
   const [profileMode, setProfileMode] = useState(false);
-  const [sessions, setSessions] = useState(INITIAL_SESSIONS);
+  const [pendingSessionId, setPendingSessionId] = useState(null);
   const [activeChat, setActiveChat] = useState(null);
   const [conversations, setConversations] = useState({});
   const [sessionMessages, setSessionMessages] = useState([]);
   const loggedIn = Boolean(token)
-  const onlineUsers = usePresence(token).filter((user) => user.username !== username)
+  const socket = useSocket(token)
+  const onlineUsers = usePresence(socket).filter((user) => user.username !== username)
+  // our join request is local state, so server updates to the list can't overwrite it
+  const sessions = useSessions(socket).map((session) =>
+    session.id === pendingSessionId ? { ...session, status: 'pending' } : session
+  )
   const friendsState = useFriends(token)
   const friendsWithStatus = friendsState.friends.map((friend) => ({
     username: friend,
@@ -88,6 +89,7 @@ function App() {
     setActiveChat(null)
     setConversations({})
     setSessionMessages([])
+    setPendingSessionId(null)
   }
 
   const handleSessionJoined = (sessionId) => {
@@ -95,7 +97,14 @@ function App() {
     setPlayMode(true)
   }
 
+  // logged in, Play also hosts a new session that shows up in everyone's lobby
+  const handlePlayClick = () => {
+    if (loggedIn) sendMessage(socket, { type: 'session_create' })
+    setPlayMode(true)
+  }
+
   const handleHome = () => {
+    sendMessage(socket, { type: 'session_leave' })
     setPlayMode(false)
     setActiveSession(null)
     setLobbyMode(false)
@@ -105,24 +114,18 @@ function App() {
   }
 
   const handleJoinClick = (sessionId) => {
-    setSessions((prev) => prev.map((session) =>
-      session.id === sessionId ? { ...session, status: 'pending' } : session
-    ))
+    setPendingSessionId(sessionId)
 
     // stand-in for a real "session accepted" event arriving over the
     // websocket and then this setTimeout goes away entirely
     setTimeout(() => {
-      setSessions((prev) => prev.map((session) =>
-        session.id === sessionId ? { ...session, status: 'open' } : session
-      ))
+      setPendingSessionId(null)
       handleSessionJoined(sessionId)
     }, 3000)
   }
 
-  const handleCancelClick = (sessionId) => {
-    setSessions((prev) => prev.map((session) =>
-      session.id === sessionId ? { ...session, status: 'open' } : session
-    ))
+  const handleCancelClick = () => {
+    setPendingSessionId(null)
   }
 
   const handleChatClick = (username) => {
@@ -173,7 +176,7 @@ function App() {
       <main className={`app-main${playMode ? ' app-main-play' : ''}`}>
         {!playMode && (
           <div className="flex flex-wrap justify-center gap-4 px-4 py-8">
-            <NavButton onClick={() => setPlayMode(true)}>Play</NavButton>
+            <NavButton onClick={handlePlayClick}>Play</NavButton>
             <NavButton onClick={loggedIn ? handleLogout : handleOpenLogin}>
               {loggedIn ? 'Logout' : 'Login'}
             </NavButton>
