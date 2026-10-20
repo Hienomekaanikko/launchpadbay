@@ -10,6 +10,7 @@ import jwt from '@fastify/jwt'
 import bcrypt from 'bcrypt'
 import websocket from '@fastify/websocket'
 import {
+    MAX_WS_BYTES_PER_FRAME,
     wsConnectionRegistry,
     broadcastEvent,
     removeEntry,
@@ -26,6 +27,7 @@ import {
     handleSessionLeave,
     leaveSessionAndBroadcastUpdate
 } from './sessions.js'
+import { handleChatMessage } from './chat.js'
 import { readFileSync } from 'node:fs'
 import githubAuth from './authGithub.js'
 import friends from './friends.js'
@@ -76,9 +78,7 @@ await fastify.register(jwt, {
 await fastify.register(githubAuth)
 
 await fastify.register(websocket, {
-    // caps incoming WebSocket messages to ~4KB (join_request / chat_message)
-    // larger input receives 1009 and closes the WebSocket
-    options: { maxPayload: 4096 }
+    options: { maxPayload: MAX_WS_BYTES_PER_FRAME }
 })
 
 fastify.decorate('authenticate', async function (request, reply) {
@@ -106,6 +106,7 @@ wsHandlers.join_cancel    = handleJoinCancel
 wsHandlers.session_accept = handleSessionAccept
 wsHandlers.session_reject = handleSessionReject
 wsHandlers.session_leave  = handleSessionLeave
+wsHandlers.chat_message   = handleChatMessage
 
 // WebSocket route
 fastify.get('/ws', { websocket: true }, async (socket, request) => {
@@ -177,7 +178,8 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
             await handler(msg, {
                 userId: jwtPayload.id,
                 username: jwtPayload.username,
-                socket
+                socket,
+                prisma
             })
         } catch (err) {
             request.log.error(err, 'ws: handler exception')
