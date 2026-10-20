@@ -296,7 +296,7 @@ export function mountLaunchpad(container, themes) {
       uiTimers,
       handleUiAction,
     })
-    const stopProgress = startProgressLoop(byId('master-bar-fill'), () =>
+    const stopProgress = startProgressLoop(byId('loop-bar-fill'), () =>
       clock.getPhase(audioContext.currentTime)
     )
     loadThemeSounds(themes[0]).catch((err) => {

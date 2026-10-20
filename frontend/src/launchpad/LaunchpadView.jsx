@@ -6,7 +6,7 @@ import landing from '../assets/landing.jpg'
 
 const MIN_LOADING_MS = 1000
 
-export default function LaunchpadView({ sessionId, onBack }) {
+export default function LaunchpadView() {
   const containerRef = useRef(null)
   const [ready, setReady] = useState(false)
 
@@ -36,7 +36,7 @@ export default function LaunchpadView({ sessionId, onBack }) {
     // a themeless, silently-broken launchpad on the first failed request.
     fetchThemes(() => cancelled).then((themes) => {
       if (cancelled) return
-      ;({ destroy } = mountLaunchpad(containerRef.current, themes))
+        ; ({ destroy } = mountLaunchpad(containerRef.current, themes))
 
       const bgImage = themes[0]?.bgImage
       if (bgImage) {
@@ -64,10 +64,7 @@ export default function LaunchpadView({ sessionId, onBack }) {
   const pads = Array.from({ length: 25 }, (_, i) => i + 1)
 
   return (
-    <div ref={containerRef}>
-      <button type="button" className="home-btn" onClick={onBack}>&larr; Home</button>
-      {sessionId && <span className="ml-3 text-white text-xs font-sans align-middle">Session: {sessionId}</span>}
-
+    <div ref={containerRef} className="lpad-view">
       <div className="dot-grid" />
 
       <div
@@ -82,7 +79,7 @@ export default function LaunchpadView({ sessionId, onBack }) {
       </div>
 
       <div className={`grid-wrapper${ready ? ' ready' : ''}`}>
-        <div id="master-bar"><div id="master-bar-fill" /></div>
+        <div id="loop-bar"><div id="loop-bar-fill" /></div>
         <div id="transport-controls">
           <button type="button" id="split-btn" className="transport-btn">SPLIT ½</button>
         </div>
@@ -93,7 +90,7 @@ export default function LaunchpadView({ sessionId, onBack }) {
             <div className="knob-col" id="vol-knobs" />
           </div>
 
-          <div className="container">
+          <div className="lpad">
             {pads.map((n) => (
               <div className="btn" id={`btn${n}`} key={n}><a /></div>
             ))}

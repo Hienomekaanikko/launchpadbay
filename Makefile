@@ -20,7 +20,7 @@ MKCERT_PLATFORM ?= $(MKCERT_OS)/$(MKCERT_ARCH)
 
 up: certs
 	docker compose up -d --build
-	printf '\nLaunchpadbay: https://localhost:8443\n'
+	printf '\nLaunchpadbay: https://$(LAN_IP):8443\n'
 
 certs: $(MKCERT)
 	mkdir -p certs
