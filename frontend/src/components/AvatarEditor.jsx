@@ -8,7 +8,7 @@ export default function AvatarEditor({ token, onClose, onAvatarChange }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
-  // Selecting a file uploads it right away — there is no separate confirm step
+  // Selecting a file uploads it. There is no separate confirm step for now
   async function handleFileSelected(event) {
     const file = event.target.files?.[0]
     if (!file) return
@@ -27,7 +27,7 @@ export default function AvatarEditor({ token, onClose, onAvatarChange }) {
   return createPortal(
     <Modal className="z-30 w-[min(90vw,20rem)] gap-3">
       <div className="flex w-full items-center justify-between">
-        <h2 className="text-white text-sm font-medium tracking-nav font-sans">
+        <h2 className="text-black text-sm font-medium tracking-nav font-sans">
           Change avatar
         </h2>
         <CloseButton onClick={onClose}>x</CloseButton>
@@ -37,9 +37,9 @@ export default function AvatarEditor({ token, onClose, onAvatarChange }) {
         accept="image/png,image/jpeg,image/webp"
         onChange={handleFileSelected}
         disabled={uploading}
-        className="w-full text-xs text-white/80 font-sans file:mr-2"
+        className="w-full text-xs text-black/80 font-sans file:mr-2"
       />
-      {uploading && <p className="text-white/60 text-xs font-sans">Uploading…</p>}
+      {uploading && <p className="text-black/60 text-xs font-sans">Uploading…</p>}
       {error && <p className="text-error text-xs font-sans">{error}</p>}
     </Modal>,
     document.body,
