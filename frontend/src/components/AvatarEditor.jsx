@@ -46,5 +46,4 @@ export default function AvatarEditor({ token, onClose, onAvatarChange }) {
   )
 }
 
-
 //TODO: crop bofore upload
