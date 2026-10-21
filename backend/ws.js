@@ -37,6 +37,15 @@ export function cancelPendingLeave(userId) {
     }
 }
 
+// List of callback functions to be run when a user's grace period expires and they
+// did not come back
+const graceExpiredHandlers = new Set()
+
+// adds a callback to the above list
+export function onGraceExpired(handler) {
+    graceExpiredHandlers.add(handler)
+}
+
 // used to clean up an entry from the connection registry, when a client leaves
 export function removeEntry(userId, entry) {
     // Boil out whether this entry is no longer the registered one: either a newer
@@ -66,6 +75,11 @@ export function removeEntry(userId, entry) {
         }
         // They did not return, and are definitely gone now. Alert the others
         broadcastEvent({ type: 'user_disconnected', username: entry.username })
+
+        // and let go of whatever they were doing (e.g. their running session)
+        for (const handler of graceExpiredHandlers) {
+            handler(userId)
+        }
 
     }, RECONNECT_GRACE_MS))
 }
