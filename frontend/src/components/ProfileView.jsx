@@ -5,16 +5,43 @@ import Icon from './Icon.jsx'
 import UserRow from './UserRow.jsx'
 import GlassPanel from './GlassPanel.jsx'
 import FriendRequestRow from './FriendRequestRow.jsx'
+import AvatarEditor from './AvatarEditor.jsx'
 
-function Avatar({ src }) {
-		return (
-			<img src={src} alt=""/>
-	)
-}
+function Avatar({ src, token, onAvatarChange }) {
+	const [isEditing, setIsEditing] = useState(false);
+	return (
+      <>
+        <button
+          type="button"
+          aria-label="Change avatar"
+          onClick={() => setIsEditing(true)}
+          className="cursor-pointer rounded-full p-0 border-0 bg-transparent
+  transition duration-200 hover:opacity-80 active:scale-[0.96]"
+        >
+				<img
+					src={src}
+					alt=""
+					className="block w-16 h-16 rounded-full object-cover"
+				/>
+        </button>
+        {isEditing && (
+          <AvatarEditor
+            token={token}
+            onClose={() => setIsEditing(false)}
+            onAvatarChange={onAvatarChange}
+          />
+        )}
+      </>
+    )
+  }
 
 function FriendsButton({ open, onClick }) {
   return (
-    <NavButton onClick={onClick} aria-label="Friends" aria-pressed={open} className="p-2">
+		<NavButton
+			onClick={onClick}
+			aria-label="Friends"
+			aria-pressed={open}
+			className="p-2">
       <Icon name="friends" />
     </NavButton>
   )
@@ -57,7 +84,13 @@ export default function ProfileView({ token, friends, incoming, onChatClick, onA
     <GlassPanel className="min-h-0 overflow-y-auto pt-5">
       {profile && (
         <div className="flex items-center justify-between mb-4">
-          <Avatar src={ profile.avatar } />
+					<Avatar
+						src={profile.avatar}
+						token={token}
+						onAvatarChange={(avatarUrl) =>
+							setProfile((p) => ({ ...p, avatar: avatarUrl }))
+						}
+					/>
           <FriendsButton open={showFriends} onClick={() => {
             if (!showFriends) onFriendsOpen()
             setShowFriends((s) => !s)

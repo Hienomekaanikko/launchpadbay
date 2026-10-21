@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { readFileSync } from 'node:fs'
 import Fastify from 'fastify'
 import { PrismaClient } from '@prisma/client'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
@@ -28,10 +29,10 @@ import {
     leaveSessionAndBroadcastUpdate
 } from './sessions.js'
 import { handleChatMessage } from './chat.js'
-import { readFileSync } from 'node:fs'
 import githubAuth from './authGithub.js'
 import friends from './friends.js'
 import { registerMetrics } from './metrics.js'
+import profileRoutes from './profile.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -89,8 +90,9 @@ fastify.decorate('authenticate', async function (request, reply) {
     }
 })
 
-// registered after 'authenticate' so the friends routes can use it
+// Registered after the 'authenticate' decorator above: their routes reference it at definition time
 await fastify.register(friends)
+await fastify.register(profileRoutes)
 
 fastify.addHook('onClose', () => {
     stopHeartbeat()
@@ -283,21 +285,6 @@ fastify.post('/login', async (request, reply) => {
 
     const token = fastify.jwt.sign({ id: user.id, username: user.username })
     return { token }
-})
-
-fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, reply) => {
-    const user = await prisma.users.findUnique({ where: { id: request.user.id } })
-    if (!user) {
-      return reply.code(404).send({ error: 'User not found' })
-    }
-	return {
-		id: user.id,
-		username: user.username,
-		email: user.email,
-		avatar: user.avatar
-			? `/api/uploads/images/avatars/${user.avatar}`
-    	: '/api/uploads/images/avatars/DefaultAvatar.png',
-	}
 })
 
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {

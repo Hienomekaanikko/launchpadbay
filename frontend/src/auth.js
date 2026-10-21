@@ -35,9 +35,18 @@ export function fetchProfile(token) {
   return requestWithToken('GET', '/profile', token)
 }
 
-// snapshot of all registered users: [{ username, online }]
-export function fetchOnline(token) {
-  return requestWithToken('GET', '/online', token)
+export async function uploadAvatar(token, file) {
+  const body = new FormData()
+  body.append('avatar', file)
+
+  const res = await fetch('/api/profile/avatar', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body,
+  })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || `Upload failed: ${res.status}`)
+  return data
 }
 
 // { friends: [username], incoming: [username], outgoing: [username] }
