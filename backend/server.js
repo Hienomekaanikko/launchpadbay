@@ -72,6 +72,12 @@ await fastify.register(fastifyStatic, {
     prefix: '/uploads/'
 })
 
+await fastify.register(fastifyStatic, {
+    root: path.join(__dirname, 'defaultImages'),
+    prefix: '/defaultImages/',
+    decorateReply: false,
+})
+
 await fastify.register(jwt, {
     secret: process.env.JWT_SECRET
   })

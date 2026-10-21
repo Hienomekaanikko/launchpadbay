@@ -5,16 +5,16 @@ import Icon from './Icon.jsx'
 import UserRow from './UserRow.jsx'
 import GlassPanel from './GlassPanel.jsx'
 import FriendRequestRow from './FriendRequestRow.jsx'
-import AvatarEditor from './AvatarEditor.jsx'
+import AvatarUploadPopup from './AvatarUploadPopup.jsx'
 
 function Avatar({ src, token, onAvatarChange }) {
-	const [isEditing, setIsEditing] = useState(false);
+	const [showUpload, setShowUpload] = useState(false)
 	return (
       <>
         <button
           type="button"
           aria-label="Change avatar"
-          onClick={() => setIsEditing(true)}
+          onClick={() => setShowUpload(true)}
           className="cursor-pointer rounded-full p-0 border-0 bg-transparent
   transition duration-200 hover:opacity-80 active:scale-[0.96]"
         >
@@ -24,10 +24,10 @@ function Avatar({ src, token, onAvatarChange }) {
 					className="block w-16 h-16 rounded-full object-cover"
 				/>
         </button>
-        {isEditing && (
-          <AvatarEditor
+        {showUpload && (
+          <AvatarUploadPopup
             token={token}
-            onClose={() => setIsEditing(false)}
+            onClose={() => setShowUpload(false)}
             onAvatarChange={onAvatarChange}
           />
         )}
