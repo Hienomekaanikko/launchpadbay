@@ -4,7 +4,7 @@ import Modal from './Modal.jsx'
 import CloseButton from './CloseButton.jsx'
 import { uploadAvatar } from '../auth.js'
 
-export default function AvatarEditor({ token, onClose, onAvatarChange }) {
+export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
@@ -45,5 +45,3 @@ export default function AvatarEditor({ token, onClose, onAvatarChange }) {
     document.body,
   )
 }
-
-//TODO: crop bofore upload

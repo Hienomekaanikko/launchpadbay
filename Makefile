@@ -60,6 +60,7 @@ re: down
 fclean:
 	docker compose down -v --rmi all
 	rm -rf certs
+	rm -rf backend/uploads/images/avatars/*.*
 
 
 .PHONY: up certs dev down re fclean

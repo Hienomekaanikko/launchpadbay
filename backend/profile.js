@@ -9,9 +9,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const AVATAR_DIR = path.join(__dirname, 'uploads', 'images', 'avatars')
 const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-const DEFAULT_AVATAR = 'DefaultAvatar.png'
 
-// Must stay in sync with the @fastify/static prefix in server.js, and with nginx's /api/ proxy
+// Must stay in sync with the @fastify/static prefixes in server.js, and with nginx's /api/ proxy
+const DEFAULT_AVATAR_URL = '/api/defaultImages/DefaultAvatar.png'
 const avatarUrl = (filename) => `/api/uploads/images/avatars/${filename}`
 
 const extensionFor = (mimetype) => mimetype === 'image/png' ? 'png'
@@ -34,7 +34,7 @@ export default async function profileRoutes(fastify) {
 			id: user.id,
 			username: user.username,
 			email: user.email,
-			avatar: avatarUrl(user.avatar || DEFAULT_AVATAR),
+			avatar: user.avatar ? avatarUrl(user.avatar) : DEFAULT_AVATAR_URL,
 		}
 	})
 
