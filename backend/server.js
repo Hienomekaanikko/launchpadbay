@@ -15,6 +15,7 @@ import {
     wsConnectionRegistry,
     broadcastEvent,
     cancelPendingLeave,
+    onGraceExpired,
     removeEntry,
     stopHeartbeat,
     send
@@ -120,6 +121,10 @@ wsHandlers.session_action = handleSessionAction
 wsHandlers.chat_message   = handleChatMessage
 wsHandlers.session_chat   = handleChatMessage
 
+// When a user's grace period ended after a disconnect, they are really gone:
+// drop them from their session
+onGraceExpired(leaveSessionAndBroadcastUpdate)
+
 // WebSocket route
 fastify.get('/ws', { websocket: true }, async (socket, request) => {
     const token = request.query.token
@@ -215,10 +220,6 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
 
     const handleDisconnect = () => {
         removeEntry(jwtPayload.id, entry)
-        if (wsConnectionRegistry.has(jwtPayload.id)) {
-            return
-        }
-        leaveSessionAndBroadcastUpdate(jwtPayload.id)
     }
 
     // closing socket handler
