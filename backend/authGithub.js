@@ -1,6 +1,11 @@
 import crypto from 'node:crypto'
 import cookie from '@fastify/cookie'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { writeFile } from 'node:fs/promises'
 
+const BACKEND_DIR = path.dirname(fileURLToPath(import.meta.url))
+const AVATAR_DIR = path.join(BACKEND_DIR, 'uploads', 'images', 'avatars')
 const REQUIRED_ENV = ['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET', 'GITHUB_CALLBACK_URL']
 const STATE_COOKIE = 'gh_oauth_state'
 
@@ -115,6 +120,25 @@ export default async function githubAuth(fastify) {
 				}
 				// Name or email already used by a local account: suffix the name, skip the email
 				user = await createUser(`${githubUser.login}-${githubId}`, null)
+			}
+
+			if (githubUser.avatar_url) {
+				try {
+					const githubAvatarResponse = await fetch(githubUser.avatar_url, {
+						headers: { 'User-Agent': 'launchpadbay' },
+					})
+					if (githubAvatarResponse.ok) {
+						const buf = Buffer.from(await githubAvatarResponse.arrayBuffer())
+						const filename = `${user.id}.jpg`
+						await writeFile(path.join(AVATAR_DIR, filename), buf)
+						user = await prisma.users.update({
+							where: { id: user.id },
+							data: { avatar: filename },
+						})
+					}
+				} catch {
+					// if no github avatar -> keeps DefaultAvatar
+				}
 			}
 		}
 
