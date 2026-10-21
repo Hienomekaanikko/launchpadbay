@@ -12,27 +12,31 @@ import useSocket, { sendMessage } from './useSocket.js'
 import usePresence from './usePresence.js'
 import useFriends from './useFriends.js'
 import useSessions from './useSessions.js'
+import useSessionJoin from './useSessionJoin.js'
+import JoinRequestPopup from './components/JoinRequestPopup.jsx'
 
 function App() {
   const [playMode, setPlayMode] = useState(false);
-  const [activeSession, setActiveSession] = useState(null);
   const [showLogin, setShowLogin] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [username, setUsername] = useState(() => localStorage.getItem('username'));
   const [lobbyMode, setLobbyMode] = useState(false);
   const [profileMode, setProfileMode] = useState(false);
-  const [pendingSessionId, setPendingSessionId] = useState(null);
   const [activeChat, setActiveChat] = useState(null);
   const [conversations, setConversations] = useState({});
   const [sessionMessages, setSessionMessages] = useState([]);
   const loggedIn = Boolean(token)
   const socket = useSocket(token)
   const onlineUsers = usePresence(socket).filter((user) => user.username !== username)
-  // our join request is local state, so server updates to the list can't overwrite it
-  const sessions = useSessions(socket).map((session) =>
-    session.id === pendingSessionId ? { ...session, status: 'pending' } : session
-  )
+  const join = useSessionJoin(socket)
+  const { activeSession } = join
+  // our join request and its rejection are local state, so server updates to the list can't overwrite them
+  const sessions = useSessions(socket).map((session) => {
+    if (session.id === join.pendingSessionId) return { ...session, status: 'pending' }
+    if (session.id === join.rejection?.sessionId) return { ...session, rejectedReason: join.rejection.reason }
+    return session
+  })
   const friendsState = useFriends(token)
   const friendsWithStatus = friendsState.friends.map((friend) => ({
     username: friend,
@@ -47,6 +51,11 @@ function App() {
       document.body.style.backgroundRepeat = 'no-repeat'
     }
   }, [playMode])
+
+  // accepted into a session (guest) or hosting one: make sure the launchpad is open
+  useEffect(() => {
+    if (activeSession) setPlayMode(true)
+  }, [activeSession])
 
   const handleLoggedIn = (newToken, newUsername) => {
     localStorage.setItem('token', newToken)
@@ -89,43 +98,23 @@ function App() {
     setActiveChat(null)
     setConversations({})
     setSessionMessages([])
-    setPendingSessionId(null)
   }
 
-  const handleSessionJoined = (sessionId) => {
-    setActiveSession(sessionId)
-    setPlayMode(true)
-  }
-
-  // logged in, Play also hosts a new session that shows up in everyone's lobby
+  // logged in, Play also hosts a new session that shows up in everyone's lobby.
+  // The backend drops a pending join request on create, so we drop ours too
   const handlePlayClick = () => {
+    if (join.pendingSessionId) join.cancelJoin()
     if (loggedIn) sendMessage(socket, { type: 'session_create' })
     setPlayMode(true)
   }
 
   const handleHome = () => {
-    sendMessage(socket, { type: 'session_leave' })
+    join.leave()
     setPlayMode(false)
-    setActiveSession(null)
     setLobbyMode(false)
     setProfileMode(false)
     setActiveChat(null)
     setShowLogin(false)
-  }
-
-  const handleJoinClick = (sessionId) => {
-    setPendingSessionId(sessionId)
-
-    // stand-in for a real "session accepted" event arriving over the
-    // websocket and then this setTimeout goes away entirely
-    setTimeout(() => {
-      setPendingSessionId(null)
-      handleSessionJoined(sessionId)
-    }, 3000)
-  }
-
-  const handleCancelClick = () => {
-    setPendingSessionId(null)
   }
 
   const handleChatClick = (username) => {
@@ -206,8 +195,8 @@ function App() {
                               canAddFriend={canAddFriend}
                               onAddFriendClick={handleAddFriendClick}
                               sessions={sessions}
-                              onJoinClick={handleJoinClick}
-                              onCancelClick={handleCancelClick}
+                              onJoinClick={join.requestJoin}
+                              onCancelClick={join.cancelJoin}
                               onChatClick={handleChatClick}
                               sessionMessages={sessionMessages}
                               onSendSessionMessage={handleSendSessionMessage}
@@ -215,6 +204,13 @@ function App() {
           </div>
         )}
         {playMode && <LaunchpadView />}
+        {join.incomingRequest && (
+          <JoinRequestPopup
+            username={join.incomingRequest.from.name}
+            onAcceptClick={join.acceptRequest}
+            onRejectClick={join.rejectRequest}
+          />
+        )}
         {activeChat && (
           <ChatWindow
             recipient={activeChat}
