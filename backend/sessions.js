@@ -32,14 +32,15 @@ export function handleSessionCreate(_msg, { userId, socket }) {
     // clean up user's pending request if there is one, before creating a new session
     giveUpPendingRequest(userId)
 
-    const existingSession = getSessionByUserId(userId)
-    if (existingSession) {
-        send(socket, { type: 'session_created', session: toSessionView(existingSession) })
-        return
+    let session = getSessionByUserId(userId)
+    if (session) {
+        send(socket, { type: 'session_created', session: toSessionView(session) })
+    } else {
+        session = createSession(userId)
+        broadcastEvent({ type: 'session_created', session: toSessionView(session) })
     }
-
-    const session = createSession(userId)
-    broadcastEvent({ type: 'session_created', session: toSessionView(session) })
+    // tell this client which session is theirs, so its UI can mark it as active
+    send(socket, { type: 'session_active', sessionId: session.id })
 }
 
 // Join request handler, that expects the shape: { 'join_request', sessionId }

@@ -29,10 +29,9 @@ export default function useSessionJoin(socket) {
         setPendingSessionId((prev) => (prev === msg.sessionId ? null : prev))
         setRejection({ sessionId: msg.sessionId, reason: msg.reason })
       } else if (msg.type === 'join_requested') {
-        // requests only go to the host, so this also tells us which session is ours
-        // (stand-in until the backend sends a host field with each session)
-        setActiveSession(msg.sessionId)
         setIncomingRequest({ sessionId: msg.sessionId, from: msg.from })
+      } else if (msg.type === 'session_active') {
+        setActiveSession(msg.sessionId)
       } else if (msg.type === 'join_cancelled') {
         setIncomingRequest(null)
       }
