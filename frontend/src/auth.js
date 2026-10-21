@@ -49,11 +49,6 @@ export async function uploadAvatar(token, file) {
   return data
 }
 
-// snapshot of all registered users: [{ username, online }]
-export function fetchOnline(token) {
-  return requestWithToken('GET', '/online', token)
-}
-
 // { friends: [username], incoming: [username], outgoing: [username] }
 export function fetchFriends(token) {
   return requestWithToken('GET', '/friends', token)
