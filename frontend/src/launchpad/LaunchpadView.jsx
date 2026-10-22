@@ -2,15 +2,19 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { mountLaunchpad } from './engine.js'
 import { fetchThemes } from './themes.js'
+import useLaunchpadSync from './useLaunchpadSync.js'
 import launchpadCss from './launchpad.css?raw'
 import landing from '../assets/landing.jpg'
 
 const MIN_LOADING_MS = 1000
 
-export default function LaunchpadView() {
+export default function LaunchpadView({ socket, activeSession }) {
   const { t } = useTranslation()
   const containerRef = useRef(null)
   const [ready, setReady] = useState(false)
+  // set once the samples are loaded, so a session snapshot has something to play
+  const [engine, setEngine] = useState(null)
+  useLaunchpadSync(engine, socket, activeSession)
 
 
   useEffect(() => {
@@ -39,7 +43,11 @@ export default function LaunchpadView() {
     // a themeless, silently-broken launchpad on the first failed request.
     fetchThemes(() => cancelled).then((themes) => {
       if (cancelled) return
-        ; ({ destroy } = mountLaunchpad(containerRef.current, themes))
+      const launchpad = mountLaunchpad(containerRef.current, themes)
+      destroy = launchpad.destroy
+      launchpad.loaded.then(() => {
+        if (!cancelled) setEngine(launchpad)
+      })
 
       const bgImage = themes[0]?.bgImage
       if (bgImage) {
@@ -80,6 +88,9 @@ export default function LaunchpadView() {
       >
         {t('launchpad.loading')}
       </div>
+
+      {/* shown by the engine while a session joiner waits for the partner's loop */}
+      <div id="sync-msg" role="status" />
 
       <div className={`grid-wrapper${ready ? ' ready' : ''}`}>
         <div id="loop-bar"><div id="loop-bar-fill" /></div>

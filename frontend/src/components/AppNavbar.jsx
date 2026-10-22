@@ -16,6 +16,7 @@ export default function AppNavbar({
   loggedIn,
   username,
   sessionId,
+  partner,
   hasUnread,
   lobbyOpen,
   profileOpen,
@@ -37,8 +38,8 @@ export default function AppNavbar({
           </NavbarButton>
           <LanguageSwitcher />
           {sessionId && (
-            <span className="app-navbar-session" title={t('nav.session', { id: sessionId })}>
-              {t('nav.session', { id: sessionId })}
+            <span className="app-navbar-session" title={`${t('nav.session', { id: sessionId })}${partner ? ` with ${partner}` : ''}`}>
+              {t('nav.session', { id: sessionId })}{partner && <> · with <span className="text-white">{partner}</span></>}
             </span>
           )}
         </div>
