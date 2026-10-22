@@ -9,13 +9,14 @@ import ProfileView from './components/ProfileView.jsx'
 import NavButton from './components/NavButton.jsx'
 import AppNavbar from './components/AppNavbar.jsx'
 import ChatWindow from './components/ChatWindow.jsx'
-import useSocket, { sendMessage } from './useSocket.js'
+import useSocket, { sendMessage, useCloseCode } from './useSocket.js'
 import usePresence from './usePresence.js'
 import useFriends from './useFriends.js'
 import useSessions from './useSessions.js'
 import useSessionJoin from './useSessionJoin.js'
 import useChat from './useChat.js'
 import JoinRequestPopup from './components/JoinRequestPopup.jsx'
+import AlreadyOpenNotice from './components/AlreadyOpenNotice.jsx'
 
 function App() {
   const { t } = useTranslation()
@@ -29,6 +30,7 @@ function App() {
   const [profileMode, setProfileMode] = useState(false);
   const loggedIn = Boolean(token)
   const socket = useSocket(token)
+  const closeCode = useCloseCode(socket)
   const onlineUsers = usePresence(socket).filter((user) => user.username !== username)
   const join = useSessionJoin(socket)
   const { activeSession } = join
@@ -207,6 +209,7 @@ function App() {
             onClose={chat.closeChat}
           />
         )}
+        {closeCode === 1008 && <AlreadyOpenNotice />}
       </main>
       {!playMode && (
         <footer>

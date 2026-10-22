@@ -126,28 +126,33 @@ onGraceExpired(leaveSessionAndBroadcastUpdate)
 // WebSocket route
 fastify.get('/ws', { websocket: true }, async (socket, request) => {
     const token = request.query.token
+    const tabId = request.query.tabId
     let jwtPayload
 
     try {
         jwtPayload = await fastify.jwt.verify(token)
     } catch (err) {
-        socket.close(1008, 'Unauthorized')
+        socket.close(4001, 'Unauthorized')
         return
     }
 
-    // check whether the new connection originated from an already connected user;
-    // if it did, politely close the stale socket, as a new replacement will
-    // be created right afterwards.
+    // Check if the user already has an active socket connection
     const previous = wsConnectionRegistry.get(jwtPayload.id)
     if (previous) {
-        previous.socket.close(1008, 'Replaced by a new connection')
+        // case A: The incoming connection is from a different tab/window
+        if (previous.tabId !== tabId) {
+            socket.close(1008, 'Already open in another tab')
+            return
+        }
+        // case B: The new connection is a refresh of the same tab; close the old socket
+        previous.socket.close(1008, 'Replaced by a reload of this tab')
     }
     cancelPendingLeave(jwtPayload.id) // user may have refreshed or opened a new tab
 
     // create a new entry, and insert it into the registry.
     // In case the user was already connected (i.e. with the 'previous' entry),
     // the registry's set() member function updates that user's entry
-    const entry = { username: jwtPayload.username, socket, isAlive: true }
+    const entry = { username: jwtPayload.username, socket, isAlive: true, tabId }
 
     // Announce new connection to everyone already connected (except the new client).
     // Skip on reconnect: other clients already see this client as connected
