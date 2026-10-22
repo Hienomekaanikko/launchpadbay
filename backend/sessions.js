@@ -1,4 +1,4 @@
-import { send, sendToUser, broadcastEvent } from './ws.js'
+import { send, sendToUser, broadcastEvent, wsConnectionRegistry } from './ws.js'
 
 // registry of live sessions, where:
 // key = 'sessionId',
@@ -99,8 +99,12 @@ export function handleSessionAccept(msg, { userId, socket }) {
     session.players.add(acceptedId)
     session.pending = null
 
-    // notify the requester
-    sendToUser(acceptedId, { type: 'session_accepted', sessionId: session.id })
+    // notify the requester, with the host's name so they know who they're playing with
+    sendToUser(acceptedId, {
+        type: 'session_accepted',
+        sessionId: session.id,
+        host: wsConnectionRegistry.get(session.hostId)?.username
+    })
 
     // update the whole lobby
     broadcastEvent({ type: 'session_updated', session: toSessionView(session) })
@@ -131,6 +135,32 @@ export function handleSessionReject(msg, { userId, socket }) {
 
 export function handleSessionLeave(_msg, { userId }) {
     leaveSessionAndBroadcastUpdate(userId)
+}
+
+// Launchpad action relay, expects the shape: { 'session_action', action: { type, ... } }
+// The backend doesn't interpret the action; it forwards it to every player in the
+// sender's session, sender included, so that every launchpad applies the same
+// actions in the same order. 'mine' tells each recipient whether it sent it, and
+// 'sessionId' lets the client drop anything that is not for its current session.
+export function handleSessionAction(msg, { userId, socket }) {
+    const session = getSessionByUserId(userId)
+    if (!session) {
+        send(socket, { type: 'error', reason: 'not_in_session' })
+        return
+    }
+    if (typeof msg.action !== 'object' || msg.action === null || typeof msg.action.type !== 'string') {
+        send(socket, { type: 'error', reason: 'invalid_action' })
+        return
+    }
+
+    for (const playerId of session.players) {
+        sendToUser(playerId, {
+            type: 'session_action',
+            sessionId: session.id,
+            action: msg.action,
+            mine: playerId === userId
+        })
+    }
 }
 
 // A user leaves (explicitly or by disconnecting); adjusts the session state accordingly
