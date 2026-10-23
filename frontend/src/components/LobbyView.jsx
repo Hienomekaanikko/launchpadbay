@@ -6,10 +6,13 @@ import FormButton from './FormButton.jsx'
 import MessageBubble from './MessageBubble.jsx'
 import UserRow from './UserRow.jsx'
 import SessionRow from './SessionRow.jsx'
+import { MAX_MESSAGE_CHARS } from '../useChat.js'
+import useStickToBottom from '../useStickToBottom.js'
 
 // canAddFriend(username) decides whether a row gets the add-friend button
-function PlayersOnline({ online, onChatClick, canAddFriend, onAddFriendClick }) {
-  const onlineOnly = online.filter((user) => user.online)
+function PlayersOnline({ online, unread, onChatClick, canAddFriend, onAddFriendClick }) {
+  // someone who wrote to us and then left stays listed until we've read it
+  const onlineOnly = online.filter((user) => user.online || unread.includes(user.username))
   return (
     <div className="flex flex-col gap-1">
       {onlineOnly.length === 0
@@ -18,6 +21,7 @@ function PlayersOnline({ online, onChatClick, canAddFriend, onAddFriendClick }) 
             <UserRow
               key={user.username}
               {...user}
+              unread={unread.includes(user.username)}
               onChatClick={onChatClick}
               onAddFriendClick={canAddFriend(user.username) ? onAddFriendClick : undefined}
             />
@@ -38,6 +42,7 @@ function SessionsList({ sessions, onJoinClick, onCancelClick }) {
 
 function SessionChat({ messages, onSendMessage }) {
   const [draft, setDraft] = useState('')
+  const { listRef, onScroll } = useStickToBottom(messages)
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -48,20 +53,20 @@ function SessionChat({ messages, onSendMessage }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="h-[30vh] min-h-24 max-h-48 overflow-y-auto flex flex-col gap-2">
+      <div ref={listRef} onScroll={onScroll} className="h-[30vh] min-h-24 max-h-48 overflow-y-auto flex flex-col gap-2">
         {messages.length === 0
           ? <div className="text-white/60 text-xs text-center py-2 font-sans">No messages yet</div>
           : messages.map((message) => <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}
       </div>
       <form onSubmit={handleSubmit} className="flex gap-2">
-        <Input className="flex-1 min-w-0" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Type a message..." />
+        <Input className="flex-1 min-w-0" maxLength={MAX_MESSAGE_CHARS} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Type a message..." />
         <FormButton type="submit" className="shrink-0">Send</FormButton>
       </form>
     </div>
   )
 }
 
-export default function LobbyView({ online, canAddFriend, onAddFriendClick, activeSession, sessions, onJoinClick, onCancelClick, onChatClick, sessionMessages, onSendSessionMessage }) {
+export default function LobbyView({ online, unread, canAddFriend, onAddFriendClick, activeSession, sessions, onJoinClick, onCancelClick, onChatClick, sessionMessages, onSendSessionMessage }) {
   const [tab, setTab] = useState('online')
 
   return (
@@ -71,7 +76,7 @@ export default function LobbyView({ online, canAddFriend, onAddFriendClick, acti
         <NavButton onClick={() => setTab('sessions')} className={tab === 'sessions' ? 'bg-white/30' : 'after:content-none'}>{activeSession ? 'Session-chat' : 'Sessions'}</NavButton>
       </div>
       {tab === 'online'
-        ? <PlayersOnline online={online} onChatClick={onChatClick} canAddFriend={canAddFriend} onAddFriendClick={onAddFriendClick} />
+        ? <PlayersOnline online={online} unread={unread} onChatClick={onChatClick} canAddFriend={canAddFriend} onAddFriendClick={onAddFriendClick} />
         : activeSession
           ? <SessionChat messages={sessionMessages} onSendMessage={onSendSessionMessage} />
           : <SessionsList sessions={sessions} onJoinClick={onJoinClick} onCancelClick={onCancelClick} />}

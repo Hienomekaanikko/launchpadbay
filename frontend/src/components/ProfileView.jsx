@@ -47,7 +47,7 @@ function FriendsButton({ open, onClick }) {
   )
 }
 
-function FriendsPanel({ friends, incoming, onChatClick, onAcceptClick, onRejectClick, onRemoveClick }) {
+function FriendsPanel({ friends, incoming, unread, onChatClick, onAcceptClick, onRejectClick, onRemoveClick }) {
   return (
     <div className="flex flex-col gap-1">
       {incoming.length > 0 && (
@@ -61,13 +61,13 @@ function FriendsPanel({ friends, incoming, onChatClick, onAcceptClick, onRejectC
       <div>Friends: maybe their avatars to left side too?</div>
       {friends.length === 0
         ? <div className="text-white/60 text-xs text-center py-2 font-sans">No friends yet</div>
-        : friends.map((friend) => <UserRow key={friend.username} {...friend} onChatClick={onChatClick} onRemoveClick={onRemoveClick} />)}
+        : friends.map((friend) => <UserRow key={friend.username} {...friend} unread={unread.includes(friend.username)} onChatClick={onChatClick} onRemoveClick={onRemoveClick} />)}
     </div>
   )
 }
 
 // friends: [{ username, online }], incoming: [username]
-export default function ProfileView({ token, friends, incoming, onChatClick, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen }) {
+export default function ProfileView({ token, friends, incoming, unread, onChatClick, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen }) {
   const [profile, setProfile] = useState(null)
   const [error, setError] = useState('')
   const [showFriends, setShowFriends] = useState(false)
@@ -104,6 +104,7 @@ export default function ProfileView({ token, friends, incoming, onChatClick, onA
           {showFriends ? <FriendsPanel
                             friends={friends}
                             incoming={incoming}
+                            unread={unread}
                             onChatClick={onChatClick}
                             onAcceptClick={onAcceptClick}
                             onRejectClick={onRejectClick}

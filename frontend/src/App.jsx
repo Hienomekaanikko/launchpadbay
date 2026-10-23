@@ -13,6 +13,7 @@ import usePresence from './usePresence.js'
 import useFriends from './useFriends.js'
 import useSessions from './useSessions.js'
 import useSessionJoin from './useSessionJoin.js'
+import useChat from './useChat.js'
 import JoinRequestPopup from './components/JoinRequestPopup.jsx'
 
 function App() {
@@ -23,14 +24,12 @@ function App() {
   const [username, setUsername] = useState(() => localStorage.getItem('username'));
   const [lobbyMode, setLobbyMode] = useState(false);
   const [profileMode, setProfileMode] = useState(false);
-  const [activeChat, setActiveChat] = useState(null);
-  const [conversations, setConversations] = useState({});
-  const [sessionMessages, setSessionMessages] = useState([]);
   const loggedIn = Boolean(token)
   const socket = useSocket(token)
   const onlineUsers = usePresence(socket).filter((user) => user.username !== username)
   const join = useSessionJoin(socket)
   const { activeSession } = join
+  const chat = useChat(socket, username, activeSession)
   // our join request and its rejection are local state, so server updates to the list can't overwrite them
   const sessions = useSessions(socket).map((session) => {
     if (session.id === join.pendingSessionId) return { ...session, status: 'pending' }
@@ -95,9 +94,6 @@ function App() {
     setUsername(null)
     setProfileMode(false)
     setLobbyMode(false)
-    setActiveChat(null)
-    setConversations({})
-    setSessionMessages([])
   }
 
   // logged in, Play also hosts a new session that shows up in everyone's lobby.
@@ -113,12 +109,14 @@ function App() {
     setPlayMode(false)
     setLobbyMode(false)
     setProfileMode(false)
-    setActiveChat(null)
+    chat.closeChat()
     setShowLogin(false)
   }
 
-  const handleChatClick = (username) => {
-    setActiveChat(username)
+  // a new player joins our session: their session chat starts empty, so ours does too
+  const handleAcceptJoin = () => {
+    chat.clearSessionChat()
+    join.acceptRequest()
   }
 
   // hide the add button for existing friends and requests we've already sent
@@ -131,24 +129,6 @@ function App() {
     else friendsState.add(other)
   }
 
-  // local-only for now: appends the message straight to state. Once the
-  // webSocket exists, this becomes "send over the socket" instead, and a
-  // socket message handler calls setConversations the same way incoming
-  // messages do. ChatWindow itself won't need to change.
-  const handleSendMessage = (username, text) => {
-    setConversations((prev) => ({
-      ...prev,
-      [username]: [...(prev[username] || []), { id: crypto.randomUUID(), text, fromMe: true }],
-    }))
-  }
-
-  // local-only stand-in as handleSendMessage above — once the
-  // WebSocket exists, this sends to the session's room instead, and a
-  // socket handler appends incoming messages from the other participants.
-  const handleSendSessionMessage = (text) => {
-    setSessionMessages((prev) => [...prev, { id: crypto.randomUUID(), text, fromMe: true }])
-  }
-
   return (
     <>
       <AppNavbar
@@ -156,6 +136,7 @@ function App() {
         loggedIn={loggedIn}
         username={username}
         sessionId={activeSession}
+        hasUnread={chat.unread.length > 0}
         lobbyOpen={lobbyMode}
         profileOpen={profileMode}
         onHome={handleHome}
@@ -183,7 +164,8 @@ function App() {
                                             token={token}
                                             friends={friendsWithStatus}
                                             incoming={friendsState.incoming}
-                                            onChatClick={handleChatClick}
+                                            unread={chat.unread}
+                                            onChatClick={chat.openChat}
                                             onAcceptClick={friendsState.accept}
                                             onRejectClick={friendsState.reject}
                                             onRemoveClick={friendsState.remove}
@@ -192,14 +174,15 @@ function App() {
             {lobbyMode && <LobbyView
                               activeSession={activeSession}
                               online={onlineUsers}
+                              unread={chat.unread}
                               canAddFriend={canAddFriend}
                               onAddFriendClick={handleAddFriendClick}
                               sessions={sessions}
                               onJoinClick={join.requestJoin}
                               onCancelClick={join.cancelJoin}
-                              onChatClick={handleChatClick}
-                              sessionMessages={sessionMessages}
-                              onSendSessionMessage={handleSendSessionMessage}
+                              onChatClick={chat.openChat}
+                              sessionMessages={chat.sessionMessages}
+                              onSendSessionMessage={chat.sendSession}
             />}
           </div>
         )}
@@ -207,16 +190,17 @@ function App() {
         {join.incomingRequest && (
           <JoinRequestPopup
             username={join.incomingRequest.from.name}
-            onAcceptClick={join.acceptRequest}
+            onAcceptClick={handleAcceptJoin}
             onRejectClick={join.rejectRequest}
           />
         )}
-        {activeChat && (
+        {chat.activeChat && (
           <ChatWindow
-            recipient={activeChat}
-            messages={conversations[activeChat] || []}
-            onSendMessage={(text) => handleSendMessage(activeChat, text)}
-            onClose={() => setActiveChat(null)}
+            recipient={chat.activeChat}
+            messages={chat.conversations[chat.activeChat] || []}
+            error={chat.error}
+            onSendMessage={(text) => chat.sendPrivate(chat.activeChat, text)}
+            onClose={chat.closeChat}
           />
         )}
       </main>
