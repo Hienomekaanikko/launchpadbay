@@ -15,15 +15,15 @@ export async function handleChatMessage(msg, { userId, username, socket, prisma 
     // trimming leading and trailing spaces is standard in chat functionality
     const text = typeof msg.text === 'string' ? msg.text.trim() : ''
     if (!text) {
-        send(socket, { type: 'error', reason: 'empty_message' })
+        send(socket, { type: 'error', reason: 'empty_message', to: msg.to })
         return
     }
     if (Buffer.byteLength(text, 'utf8') > MAX_TEXT_BYTES) {
-        send(socket, { type: 'error', reason: 'message_too_long' })
+        send(socket, { type: 'error', reason: 'message_too_long', to: msg.to })
         return
     }
     if (typeof msg.to !== 'string' || msg.to === username) {
-        send(socket, { type: 'error', reason: 'no_such_user' })
+        send(socket, { type: 'error', reason: 'no_such_user', to: msg.to })
         return
     }
 
@@ -32,12 +32,12 @@ export async function handleChatMessage(msg, { userId, username, socket, prisma 
         select: { id: true, username: true }
     })
     if (!recipient) {
-        send(socket, { type: 'error', reason: 'no_such_user' })
+        send(socket, { type: 'error', reason: 'no_such_user', to: msg.to })
         return
     }
 
     if (!wsConnectionRegistry.has(recipient.id)) {
-        send(socket, { type: 'error', reason: 'user_offline' })
+        send(socket, { type: 'error', reason: 'user_offline', to: msg.to })
         return
     }
 
