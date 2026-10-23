@@ -1,9 +1,6 @@
-import {
-    send,
-    sendToUser,
-    wsConnectionRegistry,
-    MAX_WS_BYTES_PER_FRAME
-} from './ws.js'
+import { randomUUID } from 'node:crypto'
+import { getSessionByUserId } from './sessions.js'
+import { send, sendToUser, wsConnectionRegistry, MAX_WS_BYTES_PER_FRAME } from './ws.js'
 
 // Math.max() with 0 as first argument protects us from ever getting a negative
 // value, should the constant byte cap (per frame) ever change
@@ -22,6 +19,26 @@ export async function handleChatMessage(msg, { userId, username, socket, prisma 
         send(socket, { type: 'error', reason: 'message_too_long', to: msg.to })
         return
     }
+
+    if (msg.type === 'session_chat') {
+        const session = getSessionByUserId(userId)
+        if (!session) {
+            send(socket, { type: 'error', reason: 'not_in_session' })
+            return
+        }
+        const payload = {
+            type: 'session_chat',
+            sessionId: session.id,
+            from: username,
+            text,
+            id: randomUUID()
+        }
+        for (const playerId of session.players) {
+            sendToUser(playerId, payload)
+        }
+        return
+    }
+
     if (typeof msg.to !== 'string' || msg.to === username) {
         send(socket, { type: 'error', reason: 'no_such_user', to: msg.to })
         return

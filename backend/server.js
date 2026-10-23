@@ -115,6 +115,7 @@ wsHandlers.session_accept = handleSessionAccept
 wsHandlers.session_reject = handleSessionReject
 wsHandlers.session_leave  = handleSessionLeave
 wsHandlers.chat_message   = handleChatMessage
+wsHandlers.session_chat   = handleChatMessage
 
 // WebSocket route
 fastify.get('/ws', { websocket: true }, async (socket, request) => {
