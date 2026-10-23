@@ -196,7 +196,7 @@ function giveUpPendingRequest(userId) {
 }
 
 // find the session a user is currently in (if any)
-function getSessionByUserId(userId) {
+export function getSessionByUserId(userId) {
     for (const session of sessionRegistry.values()) {
         if (session.players.has(userId)) {
             return session
