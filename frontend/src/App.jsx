@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import './App.css'
 import LaunchpadView from './launchpad/LaunchpadView.jsx'
 import landing from './assets/landing.jpg'
@@ -17,6 +18,8 @@ import useChat from './useChat.js'
 import JoinRequestPopup from './components/JoinRequestPopup.jsx'
 
 function App() {
+  const { t } = useTranslation()
+
   const [playMode, setPlayMode] = useState(false);
   const [showLogin, setShowLogin] = useState(false);
   const [loginError, setLoginError] = useState('');
@@ -146,12 +149,13 @@ function App() {
       <main className={`app-main${playMode ? ' app-main-play' : ''}`}>
         {!playMode && (
           <div className="flex flex-wrap justify-center gap-4 px-4 py-8">
-            <NavButton onClick={handlePlayClick}>Play</NavButton>
+            <NavButton onClick={handlePlayClick}>{t('nav.play')}</NavButton>
             <NavButton onClick={loggedIn ? handleLogout : handleOpenLogin}>
-              {loggedIn ? 'Logout' : 'Login'}
+              {loggedIn ? t('nav.logout') : t('nav.login')}
             </NavButton>
           </div>
         )}
+
         {showLogin && !playMode &&
           <LoginView
             onLoggedIn={handleLoggedIn}
@@ -207,10 +211,11 @@ function App() {
       {!playMode && (
         <footer>
           <button className="bg-transparent text-white/40 text-xs tracking-nav font-sans cursor-pointer no-underline transition-colors hover:text-white/80 hover:underline">
-            Terms & Conditions
+            {t('common.terms')}
           </button>
         </footer>
       )}
+
     </>
   )
 }

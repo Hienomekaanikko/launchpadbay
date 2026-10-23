@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useTranslation } from 'react-i18next'
 import Modal from './Modal.jsx'
 import CloseButton from './CloseButton.jsx'
 import { uploadAvatar } from '../auth.js'
 
 export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
+  const { t } = useTranslation()
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
@@ -28,7 +30,7 @@ export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
     <Modal className="z-30 w-[min(90vw,20rem)] gap-3">
       <div className="flex w-full items-center justify-between">
         <h2 className="text-black text-sm font-medium tracking-nav font-sans">
-          Change avatar
+          {t('profile.changeAvatar')}
         </h2>
         <CloseButton onClick={onClose}>x</CloseButton>
       </div>
@@ -39,7 +41,7 @@ export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
         disabled={uploading}
         className="w-full text-xs text-black/80 font-sans file:mr-2"
       />
-      {uploading && <p className="text-black/60 text-xs font-sans">Uploading…</p>}
+      {uploading && <p className="text-black/60 text-xs font-sans">{t('profile.uploading')}</p>}
       {error && <p className="text-error text-xs font-sans">{error}</p>}
     </Modal>,
     document.body,

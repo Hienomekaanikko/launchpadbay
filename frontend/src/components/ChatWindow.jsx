@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import GlassPanel from './GlassPanel.jsx'
 import CloseButton from './CloseButton.jsx'
 import Input from './Input.jsx'
@@ -16,6 +17,7 @@ const ERROR_TEXT = {
 }
 
 export default function ChatWindow({ recipient, messages, error, onSendMessage, onClose }) {
+  const { t } = useTranslation()
   const [draft, setDraft] = useState('')
   const { listRef, onScroll } = useStickToBottom(messages)
   const errorText = error && (ERROR_TEXT[error]?.(recipient) ?? 'Message not sent')
@@ -33,13 +35,13 @@ export default function ChatWindow({ recipient, messages, error, onSendMessage, 
       <div className="text-white text-sm font-medium font-sans">{recipient}</div>
       <div ref={listRef} onScroll={onScroll} className="flex-1 overflow-y-auto flex flex-col gap-2">
         {messages.length === 0
-          ? <div className="text-white text-xs text-center py-2 font-sans">Say hi to {recipient}!</div>
+          ? <div className="text-white text-xs text-center py-2 font-sans">{t('chat.sayHi', { name: recipient })}</div>
           : messages.map((message) => <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}
         {errorText && <div className="text-white/60 text-xs text-center py-2 font-sans">{errorText}</div>}
       </div>
       <form onSubmit={handleSubmit} className="flex gap-2">
-        <Input className="flex-1 min-w-0" maxLength={MAX_MESSAGE_CHARS} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Type a message..." />
-        <FormButton type="submit" className="shrink-0">Send</FormButton>
+        <Input className="flex-1 min-w-0" maxLength={MAX_MESSAGE_CHARS} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('common.messagePlaceholder')} />
+        <FormButton type="submit" className="shrink-0">{t('common.send')}</FormButton>
       </form>
     </GlassPanel>
   )
