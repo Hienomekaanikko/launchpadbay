@@ -1,0 +1,9 @@
+{
+  "login": {
+    "username": "HebrewPlaceholderusername",
+    "password": "HebrewPlaceholderpassword",
+    "login": "HebrewPlaceholderLogin",
+    "loginWithGithub": "HebrewPlaceholderGitHub",
+    "notRegisteredYet": "HebrewPlaceholder Not Registered Yet?"
+  }
+}

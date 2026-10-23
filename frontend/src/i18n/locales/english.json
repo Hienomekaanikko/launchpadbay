@@ -1,0 +1,9 @@
+{
+  "login": {
+    "username": "Username",
+    "password": "Password",
+    "login": "Login",
+    "loginWithGithub": "Login With GitHub",
+    "notRegisteredYet": "Not Registered Yet?"
+  }
+}

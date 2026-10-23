@@ -1,0 +1,9 @@
+{
+  "login": {
+    "username": "Nimi",
+    "password": "Salasana",
+    "login": "Kirjaudu sisään",
+    "loginWithGithub": "GitHub-sisäänkirjautuminen",
+    "notRegisteredYet": "Luo käyttäjätunnus"
+  }
+}

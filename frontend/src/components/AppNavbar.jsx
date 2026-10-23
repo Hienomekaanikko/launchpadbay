@@ -1,3 +1,5 @@
+import LanguageSwitcher from './LanguageSwitcher.jsx'
+
 const buttonClasses = [
   'app-nav-action',
   'hover:bg-white/8 hover:text-white',
@@ -29,6 +31,7 @@ export default function AppNavbar({
           >
             Home
           </NavbarButton>
+          <LanguageSwitcher />
           {sessionId && (
             <span className="app-navbar-session" title={`Session: ${sessionId}`}>
               Session: {sessionId}

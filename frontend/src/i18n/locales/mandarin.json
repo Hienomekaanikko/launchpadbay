@@ -1,0 +1,9 @@
+{
+  "login": {
+    "username": "MandarinPlaceholderusername",
+    "password": "MandarinPlaceholderpassword",
+    "login": "MandarinPlaceholderLogin",
+    "loginWithGithub": "MandarinPlaceholderGitHub",
+    "notRegisteredYet": "MandarinPlaceholder Not Registered Yet?"
+  }
+}
