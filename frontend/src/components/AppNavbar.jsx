@@ -15,6 +15,7 @@ export default function AppNavbar({
   loggedIn,
   username,
   sessionId,
+  hasUnread,
   lobbyOpen,
   profileOpen,
   onHome,
@@ -42,10 +43,14 @@ export default function AppNavbar({
         {loggedIn && (
           <div className="app-nav">
             <NavbarButton
+              aria-label={hasUnread ? 'Lobby (unread messages)' : undefined}
               aria-expanded={lobbyOpen}
               onClick={onLobby}
             >
-              Lobby
+              <span className="relative">
+                Lobby
+                {hasUnread && <span className="absolute -top-1 -right-2.5 w-2 h-2 rounded-full bg-brand" aria-hidden="true" />}
+              </span>
             </NavbarButton>
             <NavbarButton
               className="app-nav-user"

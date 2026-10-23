@@ -4,9 +4,19 @@ import CloseButton from './CloseButton.jsx'
 import Input from './Input.jsx'
 import FormButton from './FormButton.jsx'
 import MessageBubble from './MessageBubble.jsx'
+import { MAX_MESSAGE_CHARS } from '../useChat.js'
 
-export default function ChatWindow({ recipient, messages, onSendMessage, onClose }) {
+// backend error reason → what to tell the user
+const ERROR_TEXT = {
+  user_offline: (recipient) => `${recipient} is offline, message not sent`,
+  no_such_user: (recipient) => `${recipient} doesn't exist anymore, message not sent`,
+  message_too_long: () => 'Message too long, not sent',
+  empty_message: () => 'Empty message, not sent',
+}
+
+export default function ChatWindow({ recipient, messages, error, onSendMessage, onClose }) {
   const [draft, setDraft] = useState('')
+  const errorText = error && (ERROR_TEXT[error]?.(recipient) ?? 'Message not sent')
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -23,9 +33,10 @@ export default function ChatWindow({ recipient, messages, onSendMessage, onClose
         {messages.length === 0
           ? <div className="text-white text-xs text-center py-2 font-sans">Say hi to {recipient}!</div>
           : messages.map((message) => <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}
+        {errorText && <div className="text-white/60 text-xs text-center py-2 font-sans">{errorText}</div>}
       </div>
       <form onSubmit={handleSubmit} className="flex gap-2">
-        <Input className="flex-1 min-w-0" value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Type a message..." />
+        <Input className="flex-1 min-w-0" maxLength={MAX_MESSAGE_CHARS} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder="Type a message..." />
         <FormButton type="submit" className="shrink-0">Send</FormButton>
       </form>
     </GlassPanel>
