@@ -7,6 +7,7 @@ import MessageBubble from './MessageBubble.jsx'
 import UserRow from './UserRow.jsx'
 import SessionRow from './SessionRow.jsx'
 import { MAX_MESSAGE_CHARS } from '../useChat.js'
+import useStickToBottom from '../useStickToBottom.js'
 
 // canAddFriend(username) decides whether a row gets the add-friend button
 function PlayersOnline({ online, unread, onChatClick, canAddFriend, onAddFriendClick }) {
@@ -41,6 +42,7 @@ function SessionsList({ sessions, onJoinClick, onCancelClick }) {
 
 function SessionChat({ messages, onSendMessage }) {
   const [draft, setDraft] = useState('')
+  const { listRef, onScroll } = useStickToBottom(messages)
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -51,7 +53,7 @@ function SessionChat({ messages, onSendMessage }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="h-[30vh] min-h-24 max-h-48 overflow-y-auto flex flex-col gap-2">
+      <div ref={listRef} onScroll={onScroll} className="h-[30vh] min-h-24 max-h-48 overflow-y-auto flex flex-col gap-2">
         {messages.length === 0
           ? <div className="text-white/60 text-xs text-center py-2 font-sans">No messages yet</div>
           : messages.map((message) => <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}

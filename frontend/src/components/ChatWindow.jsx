@@ -5,6 +5,7 @@ import Input from './Input.jsx'
 import FormButton from './FormButton.jsx'
 import MessageBubble from './MessageBubble.jsx'
 import { MAX_MESSAGE_CHARS } from '../useChat.js'
+import useStickToBottom from '../useStickToBottom.js'
 
 // backend error reason → what to tell the user
 const ERROR_TEXT = {
@@ -16,6 +17,7 @@ const ERROR_TEXT = {
 
 export default function ChatWindow({ recipient, messages, error, onSendMessage, onClose }) {
   const [draft, setDraft] = useState('')
+  const { listRef, onScroll } = useStickToBottom(messages)
   const errorText = error && (ERROR_TEXT[error]?.(recipient) ?? 'Message not sent')
 
   const handleSubmit = (e) => {
@@ -29,7 +31,7 @@ export default function ChatWindow({ recipient, messages, error, onSendMessage, 
     <GlassPanel className="fixed bottom-25 right-12.5 w-[clamp(16rem,22vw,24rem)] max-w-[calc(100vw-4.125rem)] z-30 h-96 max-h-[calc(100vh-12rem)] flex flex-col gap-3 p-4">
       <CloseButton onClick={onClose}>x</CloseButton>
       <div className="text-white text-sm font-medium font-sans">{recipient}</div>
-      <div className="flex-1 overflow-y-auto flex flex-col gap-2">
+      <div ref={listRef} onScroll={onScroll} className="flex-1 overflow-y-auto flex flex-col gap-2">
         {messages.length === 0
           ? <div className="text-white text-xs text-center py-2 font-sans">Say hi to {recipient}!</div>
           : messages.map((message) => <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}
