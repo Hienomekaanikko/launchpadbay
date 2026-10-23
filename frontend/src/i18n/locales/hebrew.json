@@ -1,9 +1,79 @@
 {
+  "common": {
+    "accept": "HebrewPlaceholder Accept",
+    "reject": "HebrewPlaceholder Reject",
+    "send": "HebrewPlaceholder Send",
+    "cancel": "HebrewPlaceholder Cancel",
+    "loading": "HebrewPlaceholder Loading...",
+    "language": "HebrewPlaceholder Language",
+    "terms": "HebrewPlaceholder Terms & Conditions",
+    "messagePlaceholder": "HebrewPlaceholder Type a message..."
+  },
+  "nav": {
+    "home": "HebrewPlaceholder Home",
+    "lobby": "HebrewPlaceholder Lobby",
+    "play": "HebrewPlaceholder Play",
+    "login": "HebrewPlaceholder Login",
+    "logout": "HebrewPlaceholder Logout",
+    "session": "HebrewPlaceholder Session: {{id}}",
+    "profileFor": "HebrewPlaceholder Profile for {{username}}",
+    "mainNavigation": "HebrewPlaceholder Main navigation"
+  },
   "login": {
-    "username": "HebrewPlaceholderusername",
-    "password": "HebrewPlaceholderpassword",
-    "login": "HebrewPlaceholderLogin",
-    "loginWithGithub": "HebrewPlaceholderGitHub",
+    "username": "HebrewPlaceholder Username",
+    "password": "HebrewPlaceholder Password",
+    "login": "HebrewPlaceholder Login",
+    "loginWithGithub": "HebrewPlaceholder Login With GitHub",
     "notRegisteredYet": "HebrewPlaceholder Not Registered Yet?"
+  },
+  "register": {
+    "username": "HebrewPlaceholder Set username",
+    "email": "HebrewPlaceholder Email",
+    "password": "HebrewPlaceholder Set password",
+    "confirmPassword": "HebrewPlaceholder Type password again",
+    "submit": "HebrewPlaceholder Submit",
+    "passwordMismatch": "HebrewPlaceholder Passwords do not match",
+    "success": "HebrewPlaceholder Registration successful!",
+    "continue": "HebrewPlaceholder Continue!"
+  },
+  "lobby": {
+    "online": "HebrewPlaceholder Online",
+    "sessions": "HebrewPlaceholder Sessions",
+    "sessionChat": "HebrewPlaceholder Session-chat",
+    "noOneOnline": "HebrewPlaceholder No one is online...",
+    "noSessions": "HebrewPlaceholder No sessions yet",
+    "noMessages": "HebrewPlaceholder No messages yet"
+  },
+  "profile": {
+    "friends": "HebrewPlaceholder Friends",
+    "changeAvatar": "HebrewPlaceholder Change avatar",
+    "requests": "HebrewPlaceholder Requests",
+    "noFriends": "HebrewPlaceholder No friends yet",
+    "uploading": "HebrewPlaceholder Uploading…"
+  },
+  "chat": {
+    "sayHi": "HebrewPlaceholder Say hi to {{name}}!"
+  },
+  "friends": {
+    "add": "HebrewPlaceholder Add {{username}} as a friend",
+    "chatWith": "HebrewPlaceholder Chat with {{username}}",
+    "remove": "HebrewPlaceholder Remove {{username}} from friends"
+  },
+  "session": {
+    "join": "HebrewPlaceholder JOIN",
+    "full": "HebrewPlaceholder FULL",
+    "pending": "HebrewPlaceholder Pending...",
+    "notJoined": "HebrewPlaceholder Not joined",
+    "requestJoin": "HebrewPlaceholder Request to join {{id}}",
+    "cancelJoin": "HebrewPlaceholder Cancel join request for {{id}}",
+    "wantsToJoin": "HebrewPlaceholder {{username}} wants to join your session",
+    "rejected": "HebrewPlaceholder Declined",
+    "rejectionFull": "HebrewPlaceholder Full",
+    "busy": "HebrewPlaceholder Busy, retry",
+    "gone": "HebrewPlaceholder Closed",
+    "alreadyInSession": "HebrewPlaceholder In a session"
+  },
+  "launchpad": {
+    "loading": "HebrewPlaceholder Loading…"
   }
 }

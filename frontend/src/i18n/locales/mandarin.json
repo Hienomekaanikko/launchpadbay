@@ -1,9 +1,79 @@
 {
+  "common": {
+    "accept": "接受",
+    "reject": "拒绝",
+    "send": "发送",
+    "cancel": "取消",
+    "loading": "加载中...",
+    "language": "语言",
+    "terms": "条款与条件",
+    "messagePlaceholder": "输入消息..."
+  },
+  "nav": {
+    "home": "首页",
+    "lobby": "大厅",
+    "play": "开始",
+    "login": "登录",
+    "logout": "退出",
+    "session": "会话：{{id}}",
+    "profileFor": "{{username}} 的个人资料",
+    "mainNavigation": "主导航"
+  },
   "login": {
-    "username": "MandarinPlaceholderusername",
-    "password": "MandarinPlaceholderpassword",
-    "login": "MandarinPlaceholderLogin",
-    "loginWithGithub": "MandarinPlaceholderGitHub",
-    "notRegisteredYet": "MandarinPlaceholder Not Registered Yet?"
+    "username": "用户名",
+    "password": "密码",
+    "login": "登录",
+    "loginWithGithub": "使用 GitHub 登录",
+    "notRegisteredYet": "还没有账号？"
+  },
+  "register": {
+    "username": "设置用户名",
+    "email": "邮箱",
+    "password": "设置密码",
+    "confirmPassword": "再次输入密码",
+    "submit": "提交",
+    "passwordMismatch": "两次密码不一致",
+    "success": "注册成功！",
+    "continue": "继续！"
+  },
+  "lobby": {
+    "online": "在线",
+    "sessions": "会话",
+    "sessionChat": "会话聊天",
+    "noOneOnline": "暂无在线用户...",
+    "noSessions": "暂无会话",
+    "noMessages": "暂无消息"
+  },
+  "profile": {
+    "friends": "好友",
+    "changeAvatar": "更换头像",
+    "requests": "请求",
+    "noFriends": "暂无好友",
+    "uploading": "上传中…"
+  },
+  "chat": {
+    "sayHi": "跟 {{name}} 打个招呼吧！"
+  },
+  "friends": {
+    "add": "添加 {{username}} 为好友",
+    "chatWith": "与 {{username}} 聊天",
+    "remove": "将 {{username}} 从好友中移除"
+  },
+  "session": {
+    "join": "加入",
+    "full": "已满",
+    "pending": "等待中...",
+    "notJoined": "未加入",
+    "requestJoin": "请求加入 {{id}}",
+    "cancelJoin": "取消加入 {{id}} 的请求",
+    "wantsToJoin": "{{username}} 想加入你的会话",
+    "rejected": "已拒绝",
+    "rejectionFull": "已满",
+    "busy": "忙碌，请重试",
+    "gone": "已关闭",
+    "alreadyInSession": "已在会话中"
+  },
+  "launchpad": {
+    "loading": "加载中…"
   }
 }
