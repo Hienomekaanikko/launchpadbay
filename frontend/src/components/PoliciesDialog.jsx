@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import PolicyDocument from "./Policies.jsx";
+import { useTranslation } from 'react-i18next'
 
 export default function PolicyDialog({ kind, onClose }) {
+    const { t } = useTranslation()
     const dialogRef = useRef(null);
     const titleRef = useRef(null);
 
@@ -34,7 +36,7 @@ export default function PolicyDialog({ kind, onClose }) {
                 <button type="button" onClick={() => dialogRef.current.close()}
                     className="cursor-pointer rounded-md bg-white/10 px-4 py-2 hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow-300"
                 >
-                    Close
+                    {t('policies.close')}
                 </button>
             </div>
             <PolicyDocument kind={kind} titleRef={titleRef}

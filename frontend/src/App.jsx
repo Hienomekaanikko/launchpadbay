@@ -17,6 +17,7 @@ import useSessionJoin from './useSessionJoin.js'
 import useChat from './useChat.js'
 import JoinRequestPopup from './components/JoinRequestPopup.jsx'
 import PolicyDialog from './components/PoliciesDialog.jsx'
+import { useTranslation } from 'react-i18next'
 
 function App() {
   const { t } = useTranslation()
@@ -46,6 +47,7 @@ function App() {
     online: onlineUsers.some((user) => user.username === friend && user.online),
   }))
   const [openPolicy, setOpenPolicy] = useState(null)
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!playMode) {
@@ -216,7 +218,7 @@ function App() {
           onClick={() => setOpenPolicy('privacy')}
           className="cursor-pointer text-sm text-white/80 underline underline-offset-4 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-yellow-300"
         >
-          Privacy Policy
+          {t('policies.privacy.title')}
         </button>
 
         <button
@@ -224,7 +226,7 @@ function App() {
           onClick={() => setOpenPolicy('service')}
           className="cursor-pointer text-sm text-white/80 underline underline-offset-4 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-yellow-300"
         >
-          Terms of Service
+          {t('policies.service.title')}
         </button>
       </footer>
 
