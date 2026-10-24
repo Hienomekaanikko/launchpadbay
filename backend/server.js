@@ -26,6 +26,7 @@ import {
     handleSessionAccept,
     handleSessionReject,
     handleSessionLeave,
+    handleSessionAction,
     leaveSessionAndBroadcastUpdate
 } from './sessions.js'
 import { handleChatMessage } from './chat.js'
@@ -114,6 +115,7 @@ wsHandlers.join_cancel    = handleJoinCancel
 wsHandlers.session_accept = handleSessionAccept
 wsHandlers.session_reject = handleSessionReject
 wsHandlers.session_leave  = handleSessionLeave
+wsHandlers.session_action = handleSessionAction
 wsHandlers.chat_message   = handleChatMessage
 wsHandlers.session_chat   = handleChatMessage
 
