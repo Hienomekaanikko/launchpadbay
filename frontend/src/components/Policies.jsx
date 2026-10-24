@@ -1,39 +1,15 @@
-const policies = {
-    privacy: {
-        title: 'Privacy Policy',
-        sections: [
-            {
-
-                title: 'About',
-                text: 'Launchpad Bay is a browser based music application.'
-            },
-            {
-                title: 'Information Processing',
-                text: 'We process up and to including your username, email address, password hash, avatar, Github account identifier, friendship connections, and chat messages.'
-            },
-        ],
-    },
-    service: {
-        title: 'Terms of Service',
-        sections: [
-            {
-                title: 'About',
-                text: 'Launchpad Bay is a browser based launchpad for playing music together with an account and social features.',
-
-            },
-            {
-                title: 'Acceptable Use',
-                text: 'Do not cause harm to other users by spamming, uploading unlawful content, or attempting to disrupt ordinary function of the application.',
-            },
-        ],
-    },
-}
+import { useTranslation } from "react-i18next"
 
 export default function PolicyDocument({ kind, titleRef }) {
-    const policy = policies[kind]
+    const { t, i18n } = useTranslation()
+
+    const policy = t(`policies.${kind}`, {
+        returnObjects: true,
+    })
 
     return (
-        <article className="rounded-xl bg-slate-900 p-6 text-left text-slate-100">
+        <article dir={i18n.language === 'hebrew' ? 'rtl' : 'ltr'}
+            className="rounded-xl bg-slate-900 p-6 text-start text-slate-100">
             <h1 id={`policy-${kind}-title`}
                 ref={titleRef}
                 tabIndex={-1}

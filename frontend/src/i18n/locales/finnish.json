@@ -75,5 +75,38 @@
   },
   "launchpad": {
     "loading": "Ladataan…"
+  },
+  "policies": {
+    "close": "Close",
+    "privacy": {
+      "title": "Privacy Policy",
+      "sections": [
+        {
+          "id": "about",
+          "title": "About",
+          "text": "Launchpad Bay is a browser-based music application."
+        },
+        {
+          "id": "information",
+          "title": "Information Processing",
+          "text": "Depending on the features you use, we process your username, email address, password hash, avatar, GitHub account identifier, friendship connections, and chat messages."
+        }
+      ]
+    },
+    "service": {
+      "title": "Terms of Service",
+      "sections": [
+        {
+          "id": "about",
+          "title": "About",
+          "text": "Launchpad Bay is a browser-based launchpad for playing music, with account and social features."
+        },
+        {
+          "id": "acceptable-use",
+          "title": "Acceptable Use",
+          "text": "Do not harm other users by spamming, uploading unlawful content, or attempting to disrupt the application."
+        }
+      ]
+    }
   }
 }
