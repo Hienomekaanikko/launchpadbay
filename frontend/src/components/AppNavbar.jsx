@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import LanguageSwitcher from './LanguageSwitcher.jsx'
 
 const buttonClasses = [
@@ -22,20 +23,22 @@ export default function AppNavbar({
   onLobby,
   onProfile,
 }) {
+  const { t } = useTranslation()
+
   return (
     <header className="app-header border-t border-t-white/18 border-b border-b-white/8 bg-surface/30 backdrop-blur-[15px]">
-      <nav className="app-navbar" aria-label="Main navigation">
+      <nav className="app-navbar" aria-label={t('nav.mainNavigation')}>
         <div className="app-navbar-brand">
           <NavbarButton
             aria-current={!playMode && !lobbyOpen && !profileOpen ? 'page' : undefined}
             onClick={onHome}
           >
-            Home
+            {t('nav.home')}
           </NavbarButton>
           <LanguageSwitcher />
           {sessionId && (
-            <span className="app-navbar-session" title={`Session: ${sessionId}`}>
-              Session: {sessionId}
+            <span className="app-navbar-session" title={t('nav.session', { id: sessionId })}>
+              {t('nav.session', { id: sessionId })}
             </span>
           )}
         </div>
@@ -48,13 +51,13 @@ export default function AppNavbar({
               onClick={onLobby}
             >
               <span className="relative">
-                Lobby
+                {t('nav.lobby')}
                 {hasUnread && <span className="absolute -top-1 -right-2.5 w-2 h-2 rounded-full bg-brand" aria-hidden="true" />}
               </span>
             </NavbarButton>
             <NavbarButton
               className="app-nav-user"
-              aria-label={`Profile for ${username}`}
+              aria-label={t('nav.profileFor', { username })}
               aria-expanded={profileOpen}
               title={username}
               onClick={onProfile}

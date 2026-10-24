@@ -8,10 +8,10 @@ const LANGUAGES = [
 ]
 
 export default function LanguageSwitcher() {
-  const { i18n } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   return (
-    <div className="inline-flex items-center gap-1" role="group" aria-label="Language">
+    <div className="inline-flex items-center gap-1" role="group" aria-label={t('common.language')}>
       {LANGUAGES.map(({ code, label }) => (
         <button
           key={code}

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { register } from '../auth.js'
 import Modal from './Modal.jsx'
 import CloseButton from './CloseButton.jsx'
@@ -6,15 +7,17 @@ import Input from './Input.jsx'
 import FormButton from './FormButton.jsx'
 
 function ValidateRegister({ message, onContinue }) {
+  const { t } = useTranslation()
   return (
     <Modal className="z-11">
       {message}
-      <FormButton onClick={onContinue}>Continue!</FormButton>
+      <FormButton onClick={onContinue}>{t('register.continue')}</FormButton>
     </Modal>
   )
 }
 
 export default function RegisterView({ setRegisterView }) {
+  const { t } = useTranslation()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -27,7 +30,7 @@ export default function RegisterView({ setRegisterView }) {
     setError('')
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match')
+      setError(t('register.passwordMismatch'))
       return
     }
 
@@ -43,14 +46,14 @@ export default function RegisterView({ setRegisterView }) {
     <>
       {!submitted && <Modal as="form" className="z-11" onSubmit={handleSubmit}>
         <CloseButton onClick={() => setRegisterView(false)}>x</CloseButton>
-        <Input type="text" placeholder="Set username" value={username} onChange={(e) => setUsername(e.target.value)} required />
-        <Input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <Input type="password" placeholder="Set password" value={password} onChange={(e) => setPassword(e.target.value)} required />
-        <Input type="password" placeholder="Type password again" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+        <Input type="text" placeholder={t('register.username')} value={username} onChange={(e) => setUsername(e.target.value)} required />
+        <Input type="email" placeholder={t('register.email')} value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <Input type="password" placeholder={t('register.password')} value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <Input type="password" placeholder={t('register.confirmPassword')} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
         {error && <div className="text-error text-xs text-center max-w-55">{error}</div>}
-        <FormButton type="submit">Submit</FormButton>
+        <FormButton type="submit">{t('register.submit')}</FormButton>
       </Modal>}
-      {submitted && <ValidateRegister message="Registration successful!" onContinue={() => setRegisterView(false)} />}
+      {submitted && <ValidateRegister message={t('register.success')} onContinue={() => setRegisterView(false)} />}
     </>
   )
 }

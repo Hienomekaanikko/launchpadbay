@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { mountLaunchpad } from './engine.js'
 import { fetchThemes } from './themes.js'
 import launchpadCss from './launchpad.css?raw'
@@ -7,8 +8,10 @@ import landing from '../assets/landing.jpg'
 const MIN_LOADING_MS = 1000
 
 export default function LaunchpadView() {
+  const { t } = useTranslation()
   const containerRef = useRef(null)
   const [ready, setReady] = useState(false)
+
 
   useEffect(() => {
     const styleTag = document.createElement('style')
@@ -75,7 +78,7 @@ export default function LaunchpadView() {
           backgroundPosition: 'center',
         }}
       >
-        Loading&hellip;
+        {t('launchpad.loading')}
       </div>
 
       <div className={`grid-wrapper${ready ? ' ready' : ''}`}>

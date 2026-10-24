@@ -1,9 +1,79 @@
 {
+  "common": {
+    "accept": "Accept",
+    "reject": "Reject",
+    "send": "Send",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "language": "Language",
+    "terms": "Terms & Conditions",
+    "messagePlaceholder": "Type a message..."
+  },
+  "nav": {
+    "home": "Home",
+    "lobby": "Lobby",
+    "play": "Play",
+    "login": "Login",
+    "logout": "Logout",
+    "session": "Session: {{id}}",
+    "profileFor": "Profile for {{username}}",
+    "mainNavigation": "Main navigation"
+  },
   "login": {
     "username": "Username",
     "password": "Password",
     "login": "Login",
     "loginWithGithub": "Login With GitHub",
     "notRegisteredYet": "Not Registered Yet?"
+  },
+  "register": {
+    "username": "Set username",
+    "email": "Email",
+    "password": "Set password",
+    "confirmPassword": "Type password again",
+    "submit": "Submit",
+    "passwordMismatch": "Passwords do not match",
+    "success": "Registration successful!",
+    "continue": "Continue!"
+  },
+  "lobby": {
+    "online": "Online",
+    "sessions": "Sessions",
+    "sessionChat": "Session-chat",
+    "noOneOnline": "No one is online...",
+    "noSessions": "No sessions yet",
+    "noMessages": "No messages yet"
+  },
+  "profile": {
+    "friends": "Friends",
+    "changeAvatar": "Change avatar",
+    "requests": "Requests",
+    "noFriends": "No friends yet",
+    "uploading": "Uploading…"
+  },
+  "chat": {
+    "sayHi": "Say hi to {{name}}!"
+  },
+  "friends": {
+    "add": "Add {{username}} as a friend",
+    "chatWith": "Chat with {{username}}",
+    "remove": "Remove {{username}} from friends"
+  },
+  "session": {
+    "join": "JOIN",
+    "full": "FULL",
+    "pending": "Pending...",
+    "notJoined": "Not joined",
+    "requestJoin": "Request to join {{id}}",
+    "cancelJoin": "Cancel join request for {{id}}",
+    "wantsToJoin": "{{username}} wants to join your session",
+    "rejected": "Declined",
+    "rejectionFull": "Full",
+    "busy": "Busy, retry",
+    "gone": "Closed",
+    "alreadyInSession": "In a session"
+  },
+  "launchpad": {
+    "loading": "Loading…"
   }
 }
