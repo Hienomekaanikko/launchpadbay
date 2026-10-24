@@ -16,6 +16,7 @@ import useSessions from './useSessions.js'
 import useSessionJoin from './useSessionJoin.js'
 import useChat from './useChat.js'
 import JoinRequestPopup from './components/JoinRequestPopup.jsx'
+import PolicyDialog from './components/PoliciesDialog.jsx'
 
 function App() {
   const { t } = useTranslation()
@@ -44,6 +45,7 @@ function App() {
     username: friend,
     online: onlineUsers.some((user) => user.username === friend && user.online),
   }))
+  const [openPolicy, setOpenPolicy] = useState(null)
 
   useEffect(() => {
     if (!playMode) {
@@ -165,28 +167,28 @@ function App() {
         {(lobbyMode || (profileMode && loggedIn)) && (
           <div className="app-panels">
             {profileMode && loggedIn && <ProfileView
-                                            token={token}
-                                            friends={friendsWithStatus}
-                                            incoming={friendsState.incoming}
-                                            unread={chat.unread}
-                                            onChatClick={chat.openChat}
-                                            onAcceptClick={friendsState.accept}
-                                            onRejectClick={friendsState.reject}
-                                            onRemoveClick={friendsState.remove}
-                                            onFriendsOpen={friendsState.refresh}
-                                          />}
+              token={token}
+              friends={friendsWithStatus}
+              incoming={friendsState.incoming}
+              unread={chat.unread}
+              onChatClick={chat.openChat}
+              onAcceptClick={friendsState.accept}
+              onRejectClick={friendsState.reject}
+              onRemoveClick={friendsState.remove}
+              onFriendsOpen={friendsState.refresh}
+            />}
             {lobbyMode && <LobbyView
-                              activeSession={activeSession}
-                              online={onlineUsers}
-                              unread={chat.unread}
-                              canAddFriend={canAddFriend}
-                              onAddFriendClick={handleAddFriendClick}
-                              sessions={sessions}
-                              onJoinClick={join.requestJoin}
-                              onCancelClick={join.cancelJoin}
-                              onChatClick={chat.openChat}
-                              sessionMessages={chat.sessionMessages}
-                              onSendSessionMessage={chat.sendSession}
+              activeSession={activeSession}
+              online={onlineUsers}
+              unread={chat.unread}
+              canAddFriend={canAddFriend}
+              onAddFriendClick={handleAddFriendClick}
+              sessions={sessions}
+              onJoinClick={join.requestJoin}
+              onCancelClick={join.cancelJoin}
+              onChatClick={chat.openChat}
+              sessionMessages={chat.sessionMessages}
+              onSendSessionMessage={chat.sendSession}
             />}
           </div>
         )}
@@ -208,12 +210,29 @@ function App() {
           />
         )}
       </main>
-      {!playMode && (
-        <footer>
-          <button className="bg-transparent text-white/40 text-xs tracking-nav font-sans cursor-pointer no-underline transition-colors hover:text-white/80 hover:underline">
-            {t('common.terms')}
-          </button>
-        </footer>
+      <footer className="flex-wrap gap-6 px-4 py-6">
+        <button
+          type="button"
+          onClick={() => setOpenPolicy('privacy')}
+          className="cursor-pointer text-sm text-white/80 underline underline-offset-4 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-yellow-300"
+        >
+          Privacy Policy
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setOpenPolicy('service')}
+          className="cursor-pointer text-sm text-white/80 underline underline-offset-4 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-yellow-300"
+        >
+          Terms of Service
+        </button>
+      </footer>
+
+      {openPolicy && (
+        <PolicyDialog
+          kind={openPolicy}
+          onClose={() => setOpenPolicy(null)}
+        />
       )}
 
     </>
