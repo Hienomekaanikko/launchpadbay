@@ -9,12 +9,12 @@ const policies = {
             },
             {
                 title: 'Information Processing',
-                text: 'We process up and to including your username, email address, password hasd, avatar, Github account identifier, friendship connections, and chat messages.'
+                text: 'We process up and to including your username, email address, password hash, avatar, Github account identifier, friendship connections, and chat messages.'
             },
         ],
     },
     service: {
-        title: 'Termss of Service',
+        title: 'Terms of Service',
         sections: [
             {
                 title: 'About',
@@ -29,12 +29,15 @@ const policies = {
     },
 }
 
-export default function PolicyDocument({ kind }) {
+export default function PolicyDocument({ kind, titleRef }) {
     const policy = policies[kind]
 
     return (
         <article className="rounded-xl bg-slate-900 p-6 text-left text-slate-100">
-            <h1 className="text-2xl font-bold">
+            <h1 id={`policy-${kind}-title`}
+                ref={titleRef}
+                tabIndex={-1}
+                className="text-2xl font-bold">
                 {policy.title}
             </h1>
             {policy.sections.map((section) => (
