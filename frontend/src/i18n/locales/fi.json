@@ -71,40 +71,40 @@
     "rejectionFull": "Täynnä",
     "busy": "Varattu, yritä uudelleen",
     "gone": "Suljettu",
-    "alreadyInSession": "Jo sessio"
+    "alreadyInSession": "Jo sessiossa"
   },
   "launchpad": {
     "loading": "Ladataan…"
   },
   "policies": {
-    "close": "Close",
+    "close": "Sulje",
     "privacy": {
-      "title": "Privacy Policy",
+      "title": "Tietosuojaseloste",
       "sections": [
         {
           "id": "about",
-          "title": "About",
-          "text": "Launchpad Bay is a browser-based music application."
+          "title": "Tietoja",
+          "text": "Launchpad Bay on selainpohjainen musiikkisovellus."
         },
         {
           "id": "information",
-          "title": "Information Processing",
-          "text": "Depending on the features you use, we process your username, email address, password hash, avatar, GitHub account identifier, friendship connections, and chat messages."
+          "title": "Tietojen käsittely",
+          "text": "Käsittelemme käyttämiesi ominaisuuksien mukaan käyttäjänimeäsi, sähköpostiosoitettasi, salasanan tiivistettä, avataria, GitHub-tilin tunnistetta, kaverisuhteita ja chat-viestejä."
         }
       ]
     },
     "service": {
-      "title": "Terms of Service",
+      "title": "Käyttöehdot",
       "sections": [
         {
           "id": "about",
-          "title": "About",
-          "text": "Launchpad Bay is a browser-based launchpad for playing music, with account and social features."
+          "title": "Tietoja",
+          "text": "Launchpad Bay on selainpohjainen launchpad musiikin soittamiseen, sekä tili- ja yhteisöominaisuuksia."
         },
         {
           "id": "acceptable-use",
-          "title": "Acceptable Use",
-          "text": "Do not harm other users by spamming, uploading unlawful content, or attempting to disrupt the application."
+          "title": "Hyväksyttävä käyttö",
+          "text": "Älä altista muita käyttäjiä roskapostille, laittomalla sisällöllä äläkä yrittämällä häiritä sovelluksen toimintaa."
         }
       ]
     }
