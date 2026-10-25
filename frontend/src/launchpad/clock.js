@@ -1,4 +1,4 @@
-const LOOKAHEAD_SEC = 0.1
+export const LOOKAHEAD_SEC = 0.1
 
 export function createClock() {
     let loopOrigin = null
@@ -20,7 +20,12 @@ export function createClock() {
     }
 
     function startClock(currentTime, fullDuration) {
-      loopOrigin = currentTime + LOOKAHEAD_SEC
+      return startClockAt(currentTime + LOOKAHEAD_SEC, fullDuration)
+    }
+
+    // Starts the loop at an exact time (e.g. to line up with a session partner's loop)
+    function startClockAt(origin, fullDuration) {
+      loopOrigin = origin
       fullLength = fullDuration
       return loopOrigin
     }
@@ -60,6 +65,7 @@ export function createClock() {
       isSplit,
       getLoopLength,
       startClock,
+      startClockAt,
       clear,
       getNextGrid,
       getPhase,

@@ -6,11 +6,14 @@ const REJECTION_SHOWN_MS = 3000
 // Join flow for both sides of a session:
 // guest: pendingSessionId while asking, activeSession once accepted, rejection to show why not
 // host: incomingRequest ({ sessionId, from: { id, name } }) to accept or reject
+// both: partner, the name of the last player we were paired with (whether they're
+// still there is up to the session's player count)
 export default function useSessionJoin(socket) {
   const [pendingSessionId, setPendingSessionId] = useState(null)
   const [activeSession, setActiveSession] = useState(null)
   const [incomingRequest, setIncomingRequest] = useState(null)
   const [rejection, setRejection] = useState(null)
+  const [partner, setPartner] = useState(null)
 
   useEffect(() => {
     if (!socket) {
@@ -18,6 +21,7 @@ export default function useSessionJoin(socket) {
       setActiveSession(null)
       setIncomingRequest(null)
       setRejection(null)
+      setPartner(null)
       return
     }
 
@@ -25,6 +29,7 @@ export default function useSessionJoin(socket) {
       if (msg.type === 'session_accepted') {
         setPendingSessionId(null)
         setActiveSession(msg.sessionId)
+        setPartner(msg.host ?? null)
       } else if (msg.type === 'session_rejected') {
         setPendingSessionId((prev) => (prev === msg.sessionId ? null : prev))
         setRejection({ sessionId: msg.sessionId, reason: msg.reason })
@@ -58,6 +63,7 @@ export default function useSessionJoin(socket) {
 
   const acceptRequest = () => {
     sendMessage(socket, { type: 'session_accept', from: incomingRequest.from.id })
+    setPartner(incomingRequest.from.name)
     setIncomingRequest(null)
   }
 
@@ -70,7 +76,8 @@ export default function useSessionJoin(socket) {
     sendMessage(socket, { type: 'session_leave' })
     setActiveSession(null)
     setIncomingRequest(null)
+    setPartner(null)
   }
 
-  return { pendingSessionId, activeSession, incomingRequest, rejection, requestJoin, cancelJoin, acceptRequest, rejectRequest, leave }
+  return { pendingSessionId, activeSession, incomingRequest, rejection, partner, requestJoin, cancelJoin, acceptRequest, rejectRequest, leave }
 }

@@ -36,3 +36,12 @@ Signal chain per channel: loop source → gain (VOL) → lowpass (LP) → output
 - voice: `padVoices[pad] = { buffer, playback }`.
 - playback: a looping AudioBufferSourceNode. Replaced, never reused, whenever start time or loop length changes. During stutter the channel plays from `stutterLoops[channelId]` instead.
 - queue: a pending switch to another pad in the same channel (`queuedPad`, `queuedAt`). Re-queueing keeps `queuedAt`.
+
+## Session sync
+
+- `useLaunchpadSync.js` connects the engine to the socket while the user is in a session. Outside one, input goes straight to `handleUiAction` as before.
+- Input from `bindings.js` goes through `dispatch`. In a session the hook gets it instead and sends `{ type: 'session_action', action }`. The backend relays it to every player in the session, sender included, with `mine: true/false`.
+- Pads, split and stutter are applied only when the relay comes back, so both launchpads see the same actions in the same order. Knobs (volume, filter) aren't shared; each player keeps their own mix.
+- Joining mid-play: once the samples are loaded the joiner sends `SYNC_REQUEST`; the other player answers with `SYNC_STATE` (`getState()`: loop length, split, and per row the playing pad and stutter division). `applyState()` stops everything the joiner had, then starts those pads on the partner's next loop boundary (sent as `phase`), so both loops run in phase. Until then `#sync-msg` shows a countdown.
+- Every relay carries `sessionId`; the hook drops any that aren't for the current session.
+- Each player hears only their own launchpad. The snapshot's network travel time isn't compensated (a few ms on a LAN).

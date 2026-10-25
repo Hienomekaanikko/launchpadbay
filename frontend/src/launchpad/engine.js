@@ -26,7 +26,7 @@ import {
     renderPad,
     renderChannel,
 } from './ui.js'
-import { createClock } from './clock.js'
+import { createClock, LOOKAHEAD_SEC } from './clock.js'
 import { createSplitControl } from './split.js'
 import { createStutterControl } from './stutter.js'
 import {
@@ -46,6 +46,11 @@ export function mountLaunchpad(container, themes) {
     const clock = createClock()
     const channels = createChannels(CHANNEL_COUNT)
     const startUiTimers = {} // pad → ui timer that fires at the clip's scheduled start
+
+    // --- session sync ---
+    // In a session, user input goes to actionHandler (useLaunchpadSync) instead of
+    // straight to handleUiAction; it comes back through applyAction.
+    let actionHandler = null
 
     initAudio()
 
@@ -251,6 +256,85 @@ export function mountLaunchpad(container, themes) {
       }
     }
 
+    // Everything bindings.js reports goes through here.
+    function dispatch(action) {
+      if (actionHandler)
+        actionHandler(action)
+      else
+        handleUiAction(action)
+    }
+
+    // --- session snapshot ---
+
+    // Countdown shown to a joiner until their loop starts on the partner's boundary
+    let syncMsgTimer = null
+
+    function showSyncMessage(startAt) {
+      uiTimers.cancel(syncMsgTimer)
+      const el = byId('sync-msg')
+      if (!el)
+        return
+      const secondsLeft = Math.ceil(startAt - audioContext.currentTime)
+      el.classList.toggle('visible', secondsLeft > 0)
+      if (secondsLeft <= 0)
+        return
+      el.textContent = `Syncing with your partner… ${secondsLeft} s`
+      syncMsgTimer = uiTimers.track(() => showSyncMessage(startAt), 250)
+    }
+
+    // What a player who joins mid-play needs to catch up. Knobs aren't shared,
+    // so each player keeps their own mix.
+    function getState() {
+      const state = {
+        split: clock.isSplit(),
+        loopLength: clock.isRunning() ? clock.getLoopLength() : null,
+        phase: clock.getPhase(audioContext.currentTime), // 0..1 through the current loop
+        channels: {},
+      }
+      for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
+        const ch = channels[channelId]
+        const pad = ch.state === 'idle' ? null : (ch.queuedPad ?? ch.activePad)
+        state.channels[channelId] = { pad, division: ch.stutter.division }
+      }
+      return state
+    }
+
+    // Replaces our whole launchpad state with the partner's: whatever we were
+    // playing stops first, so the joiner can't keep anything the partner doesn't have.
+    function applyState(state) {
+      resumeAudio()
+      stopAllPlayback()
+      for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++)
+        lightChannel(channelId, { type: 'RESET' })
+
+      for (const [id, saved] of Object.entries(state.channels)) {
+        const channelId = Number(id)
+        lightChannel(channelId, { type: 'STUTTER_DIVISION', division: saved.division })
+        stutter.refreshBtn(channelId)
+      }
+      clock.setSplit(state.split)
+      updateSplitBtn(byId, state.split)
+
+      if (state.loopLength == null) {
+        showSyncMessage(0) // hides one left over from an earlier snapshot
+        return
+      }
+      // Start our loop on the partner's next loop boundary, so both play in
+      // phase. Too close to the boundary to schedule in time: wait one loop more.
+      // (The snapshot's travel time isn't compensated; a few ms on a LAN.)
+      const now = audioContext.currentTime
+      let remaining = (1 - state.phase) * state.loopLength
+      if (remaining < LOOKAHEAD_SEC)
+        remaining += state.loopLength
+      const fullLength = state.split ? state.loopLength * 2 : state.loopLength
+      const when = clock.startClockAt(now + remaining, fullLength)
+      for (const saved of Object.values(state.channels)) {
+        if (saved.pad != null)
+          armClipAt(saved.pad, when)
+      }
+      showSyncMessage(when)
+    }
+
     function stopAllPlayback() {
       stutter.stopAll()
       for (const key of Object.keys(padVoices))
@@ -294,12 +378,12 @@ export function mountLaunchpad(container, themes) {
       byId,
       padEl,
       uiTimers,
-      handleUiAction,
+      handleUiAction: dispatch,
     })
     const stopProgress = startProgressLoop(byId('loop-bar-fill'), () =>
       clock.getPhase(audioContext.currentTime)
     )
-    loadThemeSounds(themes[0]).catch((err) => {
+    const loaded = loadThemeSounds(themes[0]).catch((err) => {
       console.error('Launchpad init error:', err)
     })
 
@@ -321,5 +405,12 @@ export function mountLaunchpad(container, themes) {
         theme.bodyClass && document.body.classList.remove(theme.bodyClass))
     }
 
-    return { destroy }
+    return {
+      destroy,
+      loaded, // resolves once the theme's samples are in
+      setActionHandler: (handler) => { actionHandler = handler },
+      applyAction: handleUiAction,
+      getState,
+      applyState,
+    }
 }
