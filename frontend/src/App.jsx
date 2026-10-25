@@ -17,7 +17,6 @@ import useSessionJoin from './useSessionJoin.js'
 import useChat from './useChat.js'
 import JoinRequestPopup from './components/JoinRequestPopup.jsx'
 import PolicyDialog from './components/PoliciesDialog.jsx'
-import { useTranslation } from 'react-i18next'
 
 function App() {
   const { t } = useTranslation()
@@ -47,7 +46,6 @@ function App() {
     online: onlineUsers.some((user) => user.username === friend && user.online),
   }))
   const [openPolicy, setOpenPolicy] = useState(null)
-  const { t } = useTranslation();
 
   useEffect(() => {
     if (!playMode) {
