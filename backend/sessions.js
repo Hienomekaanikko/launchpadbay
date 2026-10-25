@@ -208,6 +208,32 @@ export function leaveSessionAndBroadcastUpdate(userId) {
     }
 }
 
+// Tells a connecting or reconnecting client what session or pending request
+// they are already part of, so that a page refresh will get them right back
+// where they were
+export function sendSessionState(socket, userId) {
+    const session = getSessionByUserId(userId)
+    if (session) {
+        send(socket, { type: 'session_active', sessionId: session.id })
+        // check if they had a pending join request before refreshing, to avoid
+        // losing it
+        if (session.hostId === userId && session.pending) {
+            send(socket, {
+                type: 'join_requested',
+                sessionId: session.id,
+                from: { id: session.pending.id, name: session.pending.name }
+            })
+        }
+        return
+    }
+
+    // The user was not in a session before - but perhaps they had a pending request?
+    const pending = getPendingSessionByUserId(userId)
+    if (pending) {
+        send(socket, { type: 'session_pending', sessionId: pending.id })
+    }
+}
+
 // finds the session on which a user has a pending join request ->
 // frees that pending seat -> notifies the session's host
 function giveUpPendingRequest(userId) {

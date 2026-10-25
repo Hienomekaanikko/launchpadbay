@@ -22,6 +22,7 @@ import {
 } from './ws.js'
 import {
     getAllSessionViews,
+    sendSessionState,
     handleSessionCreate,
     handleJoinRequest,
     handleJoinCancel,
@@ -247,6 +248,8 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
             }))
         })
         send(socket, { type: 'sessions_snapshot', sessions: getAllSessionViews() })
+        // restore whatever this client was doing before a refresh
+        sendSessionState(socket, jwtPayload.id)
     } catch (err) {
         request.log.error(err, `ws: failed to send initial snapshots ` +
             `(userId=${jwtPayload.id}, username=${jwtPayload.username})`)
