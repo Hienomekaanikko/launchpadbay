@@ -53,7 +53,7 @@ export default function AppNavbar({
             >
               <span className="relative">
                 {t('nav.lobby')}
-                {hasUnread && <span className="absolute -top-1 -right-2.5 w-2 h-2 rounded-full bg-brand" aria-hidden="true" />}
+                {hasUnread && <span className="absolute -top-1 -end-2.5 w-2 h-2 rounded-full bg-brand" aria-hidden="true" />}
               </span>
             </NavbarButton>
             <NavbarButton

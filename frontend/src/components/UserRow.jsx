@@ -10,7 +10,7 @@ function RowIconButton({ icon, label, onClick, dot = false }) {
       className="relative p-1 rounded-full text-white/90 hover:text-white hover:bg-white/50 transition-colors"
     >
       <Icon name={icon} className="w-4 h-4" />
-      {dot && <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-brand" aria-hidden="true" />}
+      {dot && <span className="absolute -top-0.5 -inset-e-0.5 w-2 h-2 rounded-full bg-brand" aria-hidden="true" />}
     </button>
   )
 }

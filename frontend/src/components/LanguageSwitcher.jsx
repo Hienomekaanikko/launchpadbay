@@ -1,10 +1,10 @@
 import { useTranslation } from 'react-i18next'
 
 const LANGUAGES = [
-  { code: 'english', label: 'ENGLISH' },
-  { code: 'finnish', label: 'FINNISH' },
-  { code: 'hebrew', label: 'HEBREW' },
-  { code: 'mandarin', label: 'MANDARIN' },
+  { code: 'en', label: 'ENGLISH' },
+  { code: 'fi', label: 'SUOMEKSI' },
+  { code: 'he', label: 'עברית' },
+  { code: 'zh', label: '中文' },
 ]
 
 export default function LanguageSwitcher() {

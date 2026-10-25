@@ -129,7 +129,7 @@
   .app-panels {
     position: fixed;
     top: var(--app-nav-height);
-    right: max(24px, calc((100vw - 1120px) / 2 + 24px));
+    inset-inline-end: max(24px, calc((100vw - 1120px) / 2 + 24px));
     bottom: 24px;
     z-index: 30;
     display: flex;
@@ -180,7 +180,7 @@
     }
 
     .app-panels {
-      right: 16px;
+      inset-inline-end: 16px;
     }
 
     .app-nav {

@@ -1,0 +1,79 @@
+{
+  "common": {
+    "accept": "אשר",
+    "reject": "דחה",
+    "send": "שלח",
+    "cancel": "ביטול",
+    "loading": "טוען...",
+    "language": "שפה",
+    "terms": "תנאים והגבלות",
+    "messagePlaceholder": "כתוב הודעה..."
+  },
+  "nav": {
+    "home": "בית",
+    "lobby": "לובי",
+    "play": "שחק",
+    "login": "התחברות",
+    "logout": "התנתקות",
+    "session": "סשן: {{id}}",
+    "profileFor": "פרופיל של {{username}}",
+    "mainNavigation": "ניווט ראשי"
+  },
+  "login": {
+    "username": "שם משתמש",
+    "password": "סיסמה",
+    "login": "התחברות",
+    "loginWithGithub": "התחברות עם GitHub",
+    "notRegisteredYet": "עדיין לא רשום?"
+  },
+  "register": {
+    "username": "בחר שם משתמש",
+    "email": "אימייל",
+    "password": "בחר סיסמה",
+    "confirmPassword": "הקלד סיסמה שוב",
+    "submit": "שלח",
+    "passwordMismatch": "הסיסמאות אינן תואמות",
+    "success": "ההרשמה הצליחה!",
+    "continue": "המשך!"
+  },
+  "lobby": {
+    "online": "מחוברים",
+    "sessions": "סשנים",
+    "sessionChat": "צ'אט סשן",
+    "noOneOnline": "אף אחד לא מחובר...",
+    "noSessions": "אין סשנים עדיין",
+    "noMessages": "אין הודעות עדיין"
+  },
+  "profile": {
+    "friends": "חברים",
+    "changeAvatar": "החלף תמונת פרופיל",
+    "requests": "בקשות",
+    "noFriends": "אין חברים עדיין",
+    "uploading": "מעלה…"
+  },
+  "chat": {
+    "sayHi": "תגיד שלום ל־{{name}}!"
+  },
+  "friends": {
+    "add": "הוסף את {{username}} כחבר",
+    "chatWith": "צ'אט עם {{username}}",
+    "remove": "הסר את {{username}} מהחברים"
+  },
+  "session": {
+    "join": "הצטרף",
+    "full": "מלא",
+    "pending": "ממתין...",
+    "notJoined": "לא הצטרף",
+    "requestJoin": "בקשה להצטרף ל־{{id}}",
+    "cancelJoin": "בטל בקשת הצטרפות ל־{{id}}",
+    "wantsToJoin": "{{username}} רוצה להצטרף לסשן שלך",
+    "rejected": "נדחה",
+    "rejectionFull": "מלא",
+    "busy": "עסוק, נסה שוב",
+    "gone": "נסגר",
+    "alreadyInSession": "בסשן"
+  },
+  "launchpad": {
+    "loading": "טוען…"
+  }
+}

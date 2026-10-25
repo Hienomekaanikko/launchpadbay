@@ -1,19 +1,46 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
-import english from './locales/english.json'
-import finnish from './locales/finnish.json'
-import hebrew from './locales/hebrew.json'
-import mandarin from './locales/mandarin.json'
+import en from './locales/en.json'
+import fi from './locales/fi.json'
+import he from './locales/he.json'
+import zh from './locales/zh.json'
+
+const LEGACY_LANG = {
+  english: 'en',
+  finnish: 'fi',
+  hebrew: 'he',
+  mandarin: 'zh',
+}
+
+const SUPPORTED = new Set(['en', 'fi', 'he', 'zh'])
+
+function resolveStoredLang() {
+  const stored = localStorage.getItem('lang')
+  if (!stored) return 'en'
+  const mapped = LEGACY_LANG[stored] || stored
+  if (mapped !== stored) localStorage.setItem('lang', mapped)
+  return SUPPORTED.has(mapped) ? mapped : 'en'
+}
+
+function syncDocument(lng) {
+  const language = lng || 'en'
+  document.documentElement.lang = language
+  document.documentElement.dir = i18n.dir(language)
+}
 
 i18n.use(initReactI18next).init({
-   resources: {
-     english: { translation: english },
-     finnish: { translation: finnish },
-     hebrew: { translation: hebrew },
-		mandarin: { translation: mandarin },
-   },
-   lng: localStorage.getItem('lang') || 'english',
-   fallbackLng: 'english',
-   interpolation: { escapeValue: false },
- })
- export default i18n
+  resources: {
+    en: { translation: en },
+    fi: { translation: fi },
+    he: { translation: he },
+    zh: { translation: zh },
+  },
+  lng: resolveStoredLang(),
+  fallbackLng: 'en',
+  interpolation: { escapeValue: false },
+})
+
+syncDocument(i18n.resolvedLanguage)
+i18n.on('languageChanged', syncDocument)
+
+export default i18n
