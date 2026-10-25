@@ -38,6 +38,7 @@ export default function useSessionJoin(socket) {
       } else if (msg.type === 'session_active') {
         setActiveSession(msg.sessionId)
         setPendingSessionId(null)
+        setPartner(msg.partner ?? null)
       } else if (msg.type === 'session_pending') {
         setPendingSessionId(msg.sessionId)
       } else if (msg.type === 'join_cancelled') {

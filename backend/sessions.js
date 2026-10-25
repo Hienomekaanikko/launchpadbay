@@ -214,7 +214,13 @@ export function leaveSessionAndBroadcastUpdate(userId) {
 export function sendSessionState(socket, userId) {
     const session = getSessionByUserId(userId)
     if (session) {
-        send(socket, { type: 'session_active', sessionId: session.id })
+        // check if they had a partner as well, allowing the header to display it
+        const partnerId = [...session.players].find((id) => id !== userId)
+        send(socket, {
+            type: 'session_active',
+            sessionId: session.id,
+            partner: partnerId ? wsConnectionRegistry.get(partnerId)?.username ?? null : null
+        })
         // check if they had a pending join request before refreshing, to avoid
         // losing it
         if (session.hostId === userId && session.pending) {
