@@ -10,7 +10,7 @@ function RowIconButton({ icon, label, onClick, dot = false }) {
       className="relative p-1 rounded-full text-white/90 hover:text-white hover:bg-white/50 transition-colors"
     >
       <Icon name={icon} className="w-4 h-4" />
-      {dot && <span className="absolute -top-0.5 -inset-e-0.5 w-2 h-2 rounded-full bg-brand" aria-hidden="true" />}
+      {dot && <span className="absolute -top-0.5 -end-0.5 w-2 h-2 rounded-full bg-brand" aria-hidden="true" />}
     </button>
   )
 }
@@ -29,7 +29,7 @@ export default function UserRow({ username, online, unread = false, onChatClick,
       {(online || unread) && (
         <RowIconButton
           icon="chat"
-          label={unread ? `${t('friends.chatWith', { username })} (unread messages)` : t('friends.chatWith', { username })}
+          label={t(unread ? 'friends.chatWithUnread' : 'friends.chatWith', { username })}
           onClick={() => onChatClick?.(username)}
           dot={unread}
         />

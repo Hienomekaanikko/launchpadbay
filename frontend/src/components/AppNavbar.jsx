@@ -47,7 +47,7 @@ export default function AppNavbar({
         {loggedIn && (
           <div className="app-nav">
             <NavbarButton
-              aria-label={hasUnread ? 'Lobby (unread messages)' : undefined}
+              aria-label={hasUnread ? t('nav.lobbyUnread') : undefined}
               aria-expanded={lobbyOpen}
               onClick={onLobby}
             >

@@ -5,21 +5,11 @@ import fi from './locales/fi.json'
 import he from './locales/he.json'
 import zh from './locales/zh.json'
 
-const LEGACY_LANG = {
-  english: 'en',
-  finnish: 'fi',
-  hebrew: 'he',
-  mandarin: 'zh',
-}
-
 const SUPPORTED = new Set(['en', 'fi', 'he', 'zh'])
 
 function resolveStoredLang() {
   const stored = localStorage.getItem('lang')
-  if (!stored) return 'en'
-  const mapped = LEGACY_LANG[stored] || stored
-  if (mapped !== stored) localStorage.setItem('lang', mapped)
-  return SUPPORTED.has(mapped) ? mapped : 'en'
+  return SUPPORTED.has(stored) ? stored : 'en'
 }
 
 function syncDocument(lng) {

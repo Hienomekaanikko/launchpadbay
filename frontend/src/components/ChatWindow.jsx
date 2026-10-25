@@ -8,19 +8,18 @@ import MessageBubble from './MessageBubble.jsx'
 import { MAX_MESSAGE_CHARS } from '../useChat.js'
 import useStickToBottom from '../useStickToBottom.js'
 
-// backend error reason → what to tell the user
-const ERROR_TEXT = {
-  user_offline: (recipient) => `${recipient} is offline, message not sent`,
-  no_such_user: (recipient) => `${recipient} doesn't exist anymore, message not sent`,
-  message_too_long: () => 'Message too long, not sent',
-  empty_message: () => 'Empty message, not sent',
+const ERROR_KEYS = {
+  user_offline: 'chat.errors.userOffline',
+  no_such_user: 'chat.errors.noSuchUser',
+  message_too_long: 'chat.errors.messageTooLong',
+  empty_message: 'chat.errors.emptyMessage',
 }
 
 export default function ChatWindow({ recipient, messages, error, onSendMessage, onClose }) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState('')
   const { listRef, onScroll } = useStickToBottom(messages)
-  const errorText = error && (ERROR_TEXT[error]?.(recipient) ?? 'Message not sent')
+  const errorText = error && t(ERROR_KEYS[error] ?? 'chat.errors.notSent', { name: recipient })
 
   const handleSubmit = (e) => {
     e.preventDefault()

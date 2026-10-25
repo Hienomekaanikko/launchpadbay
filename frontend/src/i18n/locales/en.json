@@ -17,7 +17,8 @@
     "logout": "Logout",
     "session": "Session: {{id}}",
     "profileFor": "Profile for {{username}}",
-    "mainNavigation": "Main navigation"
+    "mainNavigation": "Main navigation",
+    "lobbyUnread": "Lobby (unread messages)"
   },
   "login": {
     "username": "Username",
@@ -52,11 +53,19 @@
     "uploading": "Uploading…"
   },
   "chat": {
-    "sayHi": "Say hi to {{name}}!"
+    "sayHi": "Say hi to {{name}}!",
+    "errors": {
+      "userOffline": "{{name}} is offline, message not sent",
+      "noSuchUser": "{{name}} doesn't exist anymore, message not sent",
+      "messageTooLong": "Message too long, not sent",
+      "emptyMessage": "Empty message, not sent",
+      "notSent": "Message not sent"
+    }
   },
   "friends": {
     "add": "Add {{username}} as a friend",
     "chatWith": "Chat with {{username}}",
+    "chatWithUnread": "Chat with {{username}} (unread messages)",
     "remove": "Remove {{username}} from friends"
   },
   "session": {

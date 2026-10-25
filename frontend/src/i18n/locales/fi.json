@@ -17,7 +17,8 @@
     "logout": "Kirjaudu ulos",
     "session": "Sessio: {{id}}",
     "profileFor": "Profiili: {{username}}",
-    "mainNavigation": "Päävalikko"
+    "mainNavigation": "Päävalikko",
+    "lobbyUnread": "Lobby (lukemattomia viestejä)"
   },
   "login": {
     "username": "Nimi",
@@ -52,11 +53,19 @@
     "uploading": "Lähetetään…"
   },
   "chat": {
-    "sayHi": "Sano hei käyttäjälle {{name}}!"
+    "sayHi": "Sano hei käyttäjälle {{name}}!",
+    "errors": {
+      "userOffline": "{{name}} on offline, viestiä ei lähetetty",
+      "noSuchUser": "{{name}} ei ole enää olemassa, viestiä ei lähetetty",
+      "messageTooLong": "Viesti on liian pitkä, ei lähetetty",
+      "emptyMessage": "Tyhjä viesti, ei lähetetty",
+      "notSent": "Viestiä ei lähetetty"
+    }
   },
   "friends": {
     "add": "Lisää {{username}} kaveriksi",
     "chatWith": "Keskustele käyttäjän {{username}} kanssa",
+    "chatWithUnread": "Keskustele käyttäjän {{username}} kanssa (lukemattomia viestejä)",
     "remove": "Poista {{username}} kavereista"
   },
   "session": {

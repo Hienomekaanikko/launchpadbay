@@ -17,7 +17,8 @@
     "logout": "התנתקות",
     "session": "סשן: {{id}}",
     "profileFor": "פרופיל של {{username}}",
-    "mainNavigation": "ניווט ראשי"
+    "mainNavigation": "ניווט ראשי",
+    "lobbyUnread": "לובי (הודעות שלא נקראו)"
   },
   "login": {
     "username": "שם משתמש",
@@ -52,11 +53,19 @@
     "uploading": "מעלה…"
   },
   "chat": {
-    "sayHi": "תגיד שלום ל־{{name}}!"
+    "sayHi": "תגיד שלום ל־{{name}}!",
+    "errors": {
+      "userOffline": "{{name}} לא מחובר, ההודעה לא נשלחה",
+      "noSuchUser": "{{name}} כבר לא קיים, ההודעה לא נשלחה",
+      "messageTooLong": "ההודעה ארוכה מדי, לא נשלחה",
+      "emptyMessage": "הודעה ריקה, לא נשלחה",
+      "notSent": "ההודעה לא נשלחה"
+    }
   },
   "friends": {
     "add": "הוסף את {{username}} כחבר",
     "chatWith": "צ'אט עם {{username}}",
+    "chatWithUnread": "צ'אט עם {{username}} (הודעות שלא נקראו)",
     "remove": "הסר את {{username}} מהחברים"
   },
   "session": {
