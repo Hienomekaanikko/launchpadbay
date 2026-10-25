@@ -75,5 +75,38 @@
   },
   "launchpad": {
     "loading": "加载中…"
+  },
+  "policies": {
+    "close": "关闭",
+    "privacy": {
+      "title": "隐私政策",
+      "sections": [
+        {
+          "id": "about",
+          "title": "关于本应用",
+          "text": "Launchpad Bay 是一款基于浏览器的音乐应用。"
+        },
+        {
+          "id": "information",
+          "title": "信息处理",
+          "text": "根据您使用的功能,我们会处理您的用户名、电子邮箱地址、密码哈希值、头像、GitHub 账号标识符、好友关系和聊天消息。"
+        }
+      ]
+    },
+    "service": {
+      "title": "服务条款",
+      "sections": [
+        {
+          "id": "about",
+          "title": "关于本服务",
+          "text": "Launchpad Bay 是一款基于浏览器的音乐打击垫应用，提供账号和社交功能。"
+        },
+        {
+          "id": "acceptable-use",
+          "title": "使用规范",
+          "text": "请勿通过发送垃圾信息、上传违法内容或试图干扰应用正常运行等行为损害其他用户的权益。"
+        }
+      ]
+    }
   }
 }

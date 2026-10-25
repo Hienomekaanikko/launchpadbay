@@ -1,4 +1,4 @@
-*This project has been created as part of the 42 curriculum by mbonsdor, ykadosh, msuokas.*
+*This project has been created as part of the 42 curriculum by mbonsdor, ykadosh, msuokas, timurray*
 
 # LaunchpadBay
 
@@ -23,7 +23,7 @@ Key features so far:
 | `msuokas` | Roles we'll setup later :D
 | `mbonsdor` | Roles we'll setup later :D
 | `ykadosh` | Roles we'll setup later :D
-| _4th member_ | _TBD_ | Not locked in yet. |
+| `timurray` | _TBD_ | Not locked in yet. |
 
 ## Project Management
 
