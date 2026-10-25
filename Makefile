@@ -18,11 +18,19 @@ endif
 
 MKCERT_PLATFORM ?= $(MKCERT_OS)/$(MKCERT_ARCH)
 
-up: certs
+up: .env certs
 	@docker compose up -d --build
 	@printf '\nLaunchpadbay:\t https://$(LAN_IP):8443 and https://localhost:8443\n'
 	@printf 'Grafana:\t http://localhost:3001\n'
 	@printf 'Prometheus:\t http://localhost:9090\n'
+
+.env:
+	@if [ ! -f "$(HOME)/.env.launchpadbay" ]; then \
+		printf '%s\n' 'Missing $(HOME)/.env.launchpadbay. Save your working configuration there, or configure .env manually from .env.example.' >&2; \
+		exit 1; \
+	fi
+	@umask 077; cp "$(HOME)/.env.launchpadbay" "$@"
+	@printf '%s\n' 'Created .env from $(HOME)/.env.launchpadbay.'
 
 certs: $(MKCERT)
 	@mkdir -p certs
@@ -57,10 +65,10 @@ down:
 re: down
 	$(MAKE) up
 
-fclean:
-	docker compose down -v --rmi all
-	rm -rf certs
-	rm -rf backend/uploads/images/avatars/*.*
-
+fclean: .env
+	@docker compose down -v --rmi all
+	@rm -rf certs
+	@rm -rf backend/uploads/images/avatars/*.*
+	@printf '%s\n' 'Repository has been reset.'
 
 .PHONY: up certs dev down re fclean

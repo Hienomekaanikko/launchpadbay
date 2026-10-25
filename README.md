@@ -156,7 +156,8 @@ Import certs/ca.pem into browser to trust certificate.
 Open https://localhost:8443.
 Startup also prints localhost monitoring URLs.
 
-- `.env.example` has working local-dev credentials, safe to reuse as-is.
+- Replace the credential placeholders in `.env` before starting, including the GitHub OAuth App credentials.
+- To reuse a working configuration, store it privately at `$HOME/.env.launchpadbay`. `make` copies it to `.env` with owner-only permissions when `.env` is missing; an existing `.env` is preserved.
 - First run auto-applies migrations and seeds the default theme/sounds.
 
 ### Makefile
