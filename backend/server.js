@@ -160,9 +160,15 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
         entry.isAlive = true
     })
 
-    // received message handler:
-    // runs every time anything is sent from a client to the server
-    socket.on('message', async (raw) => {
+    // Create a queue system, that is at first 'resolved' - i.e.: empty.
+    // Since handleMessage() is asynchronous, as it 'awaits' responses for its
+    // DB queries, quick messages can result in data races, and be processed in
+    // the wrong order. To solve this problem, each incoming message is first
+    // appended to the back of this queue, and messages are then handled in a
+    // "first come, first served" basis.
+    let queue = Promise.resolve()
+
+    async function handleMessage(raw) {
         let msg
 
         try {
@@ -196,6 +202,14 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
             request.log.error(err, 'ws: handler exception')
             send(socket, { type: 'error', reason: 'internal_error' })
         }
+    }
+
+    // Append the new task to the back of the promise queue. This also schedules
+    // it to be executed, via handleMessage(), as soon as the task before it
+    // finishes. JavaScript's built-in garbage collector automatically notices
+    // when a task is not needed anymore, and cleans it out of memory.
+    socket.on('message', (raw) => {
+        queue = queue.then(() => handleMessage(raw))
     })
 
     const handleDisconnect = () => {
