@@ -39,7 +39,7 @@ export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
         accept="image/png,image/jpeg,image/webp"
         onChange={handleFileSelected}
         disabled={uploading}
-        className="w-full text-xs text-black/80 font-sans file:mr-2"
+        className="w-full text-xs text-black/80 font-sans file:me-2"
       />
       {uploading && <p className="text-black/60 text-xs font-sans">{t('profile.uploading')}</p>}
       {error && <p className="text-error text-xs font-sans">{error}</p>}

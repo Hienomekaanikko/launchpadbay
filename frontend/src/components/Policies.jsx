@@ -8,7 +8,7 @@ export default function PolicyDocument({ kind, titleRef }) {
     })
 
     return (
-        <article dir={i18n.language === 'hebrew' ? 'rtl' : 'ltr'}
+        <article dir={i18n.dir()}
             className="rounded-xl bg-slate-900 p-6 text-start text-slate-100">
             <h1 id={`policy-${kind}-title`}
                 ref={titleRef}

@@ -37,3 +37,4 @@ frontend/jsconfig.json
 /certs/
 OAUTH_FLOW.md
 .cursor/
+env.launchpadbay

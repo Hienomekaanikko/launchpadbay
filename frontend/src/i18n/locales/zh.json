@@ -17,7 +17,8 @@
     "logout": "退出",
     "session": "会话：{{id}}",
     "profileFor": "{{username}} 的个人资料",
-    "mainNavigation": "主导航"
+    "mainNavigation": "主导航",
+    "lobbyUnread": "大厅（未读消息）"
   },
   "login": {
     "username": "用户名",
@@ -52,11 +53,19 @@
     "uploading": "上传中…"
   },
   "chat": {
-    "sayHi": "跟 {{name}} 打个招呼吧！"
+    "sayHi": "跟 {{name}} 打个招呼吧！",
+    "errors": {
+      "userOffline": "{{name}} 已离线，消息未发送",
+      "noSuchUser": "{{name}} 已不存在，消息未发送",
+      "messageTooLong": "消息过长，未发送",
+      "emptyMessage": "消息为空，未发送",
+      "notSent": "消息未发送"
+    }
   },
   "friends": {
     "add": "添加 {{username}} 为好友",
     "chatWith": "与 {{username}} 聊天",
+    "chatWithUnread": "与 {{username}} 聊天（未读消息）",
     "remove": "将 {{username}} 从好友中移除"
   },
   "session": {

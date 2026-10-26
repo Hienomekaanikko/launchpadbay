@@ -1,7 +1,7 @@
 import { twMerge } from 'tailwind-merge'
 
 const baseClasses = [
-  'absolute top-2.5 right-2.5',
+  'absolute top-2.5 end-2.5',
   'w-[15px] h-[15px] p-0',
   'flex items-center justify-center',
   'text-[11px] leading-none font-sans',

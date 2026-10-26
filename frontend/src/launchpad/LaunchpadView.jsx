@@ -75,7 +75,7 @@ export default function LaunchpadView({ socket, activeSession }) {
   const pads = Array.from({ length: 25 }, (_, i) => i + 1)
 
   return (
-    <div ref={containerRef} className="lpad-view">
+    <div ref={containerRef} className="lpad-view" dir="ltr">
       <div className="dot-grid" />
 
       <div

@@ -8,19 +8,18 @@ import MessageBubble from './MessageBubble.jsx'
 import { MAX_MESSAGE_CHARS } from '../useChat.js'
 import useStickToBottom from '../useStickToBottom.js'
 
-// backend error reason → what to tell the user
-const ERROR_TEXT = {
-  user_offline: (recipient) => `${recipient} is offline, message not sent`,
-  no_such_user: (recipient) => `${recipient} doesn't exist anymore, message not sent`,
-  message_too_long: () => 'Message too long, not sent',
-  empty_message: () => 'Empty message, not sent',
+const ERROR_KEYS = {
+  user_offline: 'chat.errors.userOffline',
+  no_such_user: 'chat.errors.noSuchUser',
+  message_too_long: 'chat.errors.messageTooLong',
+  empty_message: 'chat.errors.emptyMessage',
 }
 
 export default function ChatWindow({ recipient, messages, error, onSendMessage, onClose }) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState('')
   const { listRef, onScroll } = useStickToBottom(messages)
-  const errorText = error && (ERROR_TEXT[error]?.(recipient) ?? 'Message not sent')
+  const errorText = error && t(ERROR_KEYS[error] ?? 'chat.errors.notSent', { name: recipient })
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -30,7 +29,7 @@ export default function ChatWindow({ recipient, messages, error, onSendMessage, 
   }
 
   return (
-    <GlassPanel className="fixed bottom-25 right-12.5 w-[clamp(16rem,22vw,24rem)] max-w-[calc(100vw-4.125rem)] z-30 h-96 max-h-[calc(100vh-12rem)] flex flex-col gap-3 p-4">
+    <GlassPanel className="fixed bottom-25 end-12.5 w-[clamp(16rem,22vw,24rem)] max-w-[calc(100vw-4.125rem)] z-30 h-96 max-h-[calc(100vh-12rem)] flex flex-col gap-3 p-4">
       <CloseButton onClick={onClose}>x</CloseButton>
       <div className="text-white text-sm font-medium font-sans">{recipient}</div>
       <div ref={listRef} onScroll={onScroll} className="flex-1 overflow-y-auto flex flex-col gap-2">

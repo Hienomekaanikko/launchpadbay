@@ -1,0 +1,121 @@
+{
+  "common": {
+    "accept": "אשר",
+    "reject": "דחה",
+    "send": "שלח",
+    "cancel": "ביטול",
+    "loading": "טוען...",
+    "language": "שפה",
+    "terms": "תנאים והגבלות",
+    "messagePlaceholder": "כתוב הודעה..."
+  },
+  "nav": {
+    "home": "בית",
+    "lobby": "לובי",
+    "play": "שחק",
+    "login": "התחברות",
+    "logout": "התנתקות",
+    "session": "סשן: {{id}}",
+    "profileFor": "פרופיל של {{username}}",
+    "mainNavigation": "ניווט ראשי",
+    "lobbyUnread": "לובי (הודעות שלא נקראו)"
+  },
+  "login": {
+    "username": "שם משתמש",
+    "password": "סיסמה",
+    "login": "התחברות",
+    "loginWithGithub": "התחברות עם GitHub",
+    "notRegisteredYet": "עדיין לא רשום?"
+  },
+  "register": {
+    "username": "בחר שם משתמש",
+    "email": "אימייל",
+    "password": "בחר סיסמה",
+    "confirmPassword": "הקלד סיסמה שוב",
+    "submit": "שלח",
+    "passwordMismatch": "הסיסמאות אינן תואמות",
+    "success": "ההרשמה הצליחה!",
+    "continue": "המשך!"
+  },
+  "lobby": {
+    "online": "מחוברים",
+    "sessions": "סשנים",
+    "sessionChat": "צ'אט סשן",
+    "noOneOnline": "אף אחד לא מחובר...",
+    "noSessions": "אין סשנים עדיין",
+    "noMessages": "אין הודעות עדיין"
+  },
+  "profile": {
+    "friends": "חברים",
+    "changeAvatar": "החלף תמונת פרופיל",
+    "requests": "בקשות",
+    "noFriends": "אין חברים עדיין",
+    "uploading": "מעלה…"
+  },
+  "chat": {
+    "sayHi": "תגיד שלום ל־{{name}}!",
+    "errors": {
+      "userOffline": "{{name}} לא מחובר, ההודעה לא נשלחה",
+      "noSuchUser": "{{name}} כבר לא קיים, ההודעה לא נשלחה",
+      "messageTooLong": "ההודעה ארוכה מדי, לא נשלחה",
+      "emptyMessage": "הודעה ריקה, לא נשלחה",
+      "notSent": "ההודעה לא נשלחה"
+    }
+  },
+  "friends": {
+    "add": "הוסף את {{username}} כחבר",
+    "chatWith": "צ'אט עם {{username}}",
+    "chatWithUnread": "צ'אט עם {{username}} (הודעות שלא נקראו)",
+    "remove": "הסר את {{username}} מהחברים"
+  },
+  "session": {
+    "join": "הצטרף",
+    "full": "מלא",
+    "pending": "ממתין...",
+    "notJoined": "לא הצטרף",
+    "requestJoin": "בקשה להצטרף ל־{{id}}",
+    "cancelJoin": "בטל בקשת הצטרפות ל־{{id}}",
+    "wantsToJoin": "{{username}} רוצה להצטרף לסשן שלך",
+    "rejected": "נדחה",
+    "rejectionFull": "מלא",
+    "busy": "עסוק, נסה שוב",
+    "gone": "נסגר",
+    "alreadyInSession": "בסשן"
+  },
+  "launchpad": {
+    "loading": "טוען…"
+  },
+  "policies": {
+    "close": "סגור",
+    "privacy": {
+      "title": "מדיניות פרטיות",
+      "sections": [
+        {
+          "id": "about",
+          "title": "אודות",
+          "text": "Launchpad Bay היא אפליקציית מוזיקה מבוססת דפדפן."
+        },
+        {
+          "id": "information",
+          "title": "עיבוד מידע",
+          "text": "בהתאם לתכונות שבהן תשתמשו, אנו מעבדים את שם המשתמש, כתובת האימייל, גיבוב הסיסמה, האווטאר, מזהה חשבון GitHub, קשרי חברות והודעות צ'אט שלכם."
+        }
+      ]
+    },
+    "service": {
+      "title": "תנאי שימוש",
+      "sections": [
+        {
+          "id": "about",
+          "title": "אודות",
+          "text": "Launchpad Bay הוא לאונצ'פד מבוסס דפדפן לנגינת מוזיקה, עם תכונות חשבון וחברתיות."
+        },
+        {
+          "id": "acceptable-use",
+          "title": "שימוש מקובל",
+          "text": "אין לפגוע במשתמשים אחרים באמצעות ספאם, העלאת תוכן בלתי חוקי או ניסיון לשבש את האפליקציה."
+        }
+      ]
+    }
+  }
+}
