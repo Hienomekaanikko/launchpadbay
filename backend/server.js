@@ -234,10 +234,8 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     // socket error handler, for extra safety
     socket.on('error', handleDisconnect)
 
-    // send the initial snapshots (online presence + active sessions) over this same
-    // socket. This way, the snapshot and the live events travel on a single ordered
-    // channel. Reading the online flags after the 'await' prisma query guarantees
-    // the snapshot is never older than an event already sent on this socket
+    // Initial snapshots (online users + active sessions) are sent synchronously,
+    // before any live events, so the client starts from a consistent state
     try {
         const users = [...wsConnectionRegistry.values()].map(({ username }) => ({
             username,
