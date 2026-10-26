@@ -317,7 +317,7 @@ fastify.post('/login', async (request, reply) => {
     }
 
     const token = fastify.jwt.sign({ id: user.id, username: user.username })
-    return { token }
+    return { token, username: user.username }
 })
 
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {
