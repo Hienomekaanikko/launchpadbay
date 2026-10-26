@@ -1,6 +1,6 @@
 #!/bin/sh
 set -e
-
+mkdir -p uploads/images/avatars
 # Belt-and-suspenders for the mysql healthcheck in docker-compose.yml: on a
 # slow/loaded machine (e.g. a school lab PC) MySQL can still not be fully
 # ready the instant the healthcheck flips green, or this image can be run

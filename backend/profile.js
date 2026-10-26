@@ -1,26 +1,19 @@
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { createWriteStream } from 'node:fs'
 import { unlink } from 'node:fs/promises'
 import { pipeline } from 'node:stream/promises'
-import { randomUUID } from 'node:crypto'
 import multipart from '@fastify/multipart'
 import bcrypt from 'bcrypt'
 import { getSessionByUserId } from './sessions.js'
 import { wsConnectionRegistry, broadcastEvent, removeEntry } from './ws.js'
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-
-const AVATAR_DIR = path.join(__dirname, 'uploads', 'images', 'avatars')
-const ALLOWED_AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-
-// Must stay in sync with the @fastify/static prefixes in server.js, and with nginx's /api/ proxy
-const DEFAULT_AVATAR_URL = '/api/defaultImages/DefaultAvatar.png'
-const avatarUrl = (filename) => `/api/uploads/images/avatars/${filename}`
-
-const extensionFor = (mimetype) => mimetype === 'image/png' ? 'png'
-	: mimetype === 'image/webp' ? 'webp'
-	: 'jpg'
+import {
+	AVATAR_DIR,
+	ALLOWED_AVATAR_TYPES,
+	DEFAULT_AVATAR_URL,
+	avatarUrl,
+	extensionFor,
+	removeUserAvatars,
+} from './avatars.js'
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
@@ -132,7 +125,8 @@ export default async function profileRoutes(fastify) {
 			return reply.code(400).send({ error: 'Only JPEG, PNG, or WebP allowed' })
 		}
 
-		const filename = `${request.user.id}-${randomUUID()}.${extensionFor(upload.mimetype)}`
+		const filename = `${request.user.id}.${extensionFor(upload.mimetype)}`
+		await removeUserAvatars(request.user.id)
 		await pipeline(upload.file, createWriteStream(path.join(AVATAR_DIR, filename)))
 
 		await prisma.users.update({
