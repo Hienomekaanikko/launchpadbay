@@ -43,6 +43,12 @@ export default function useSessionJoin(socket) {
         setPendingSessionId(msg.sessionId)
       } else if (msg.type === 'join_cancelled') {
         setIncomingRequest(null)
+      } else if (msg.type === 'session_none') {
+        // after a reconnect: whatever session we were in ended while we were gone
+        setActiveSession(null)
+        setPendingSessionId(null)
+        setIncomingRequest(null)
+        setPartner(null)
       }
     })
   }, [socket])
