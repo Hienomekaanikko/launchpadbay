@@ -1,11 +1,9 @@
 import crypto from 'node:crypto'
 import cookie from '@fastify/cookie'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { writeFile } from 'node:fs/promises'
+import { AVATAR_DIR, removeUserAvatars } from './avatars.js'
 
-const BACKEND_DIR = path.dirname(fileURLToPath(import.meta.url))
-const AVATAR_DIR = path.join(BACKEND_DIR, 'uploads', 'images', 'avatars')
 const REQUIRED_ENV = ['GITHUB_CLIENT_ID', 'GITHUB_CLIENT_SECRET', 'GITHUB_CALLBACK_URL']
 const STATE_COOKIE = 'gh_oauth_state'
 
@@ -130,6 +128,7 @@ export default async function githubAuth(fastify) {
 					if (githubAvatarResponse.ok) {
 						const buf = Buffer.from(await githubAvatarResponse.arrayBuffer())
 						const filename = `${user.id}.jpg`
+						await removeUserAvatars(user.id)
 						await writeFile(path.join(AVATAR_DIR, filename), buf)
 						user = await prisma.users.update({
 							where: { id: user.id },
