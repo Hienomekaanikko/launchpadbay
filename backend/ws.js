@@ -20,6 +20,32 @@ export function broadcastEvent(payload) {
     }
 }
 
+// Grace period given to a user whose connection just died, so that a page refresh
+// or opening a second tab doesn't drop their running session and online presence
+const RECONNECT_GRACE_MS = 7_000
+
+// Map keeping track of grace period countdowns currently running.
+// key = userId, value = timer (setTimeout handle)
+const pendingLeaves = new Map()
+
+// cleanup function called when a user gets back before their grace period is over
+export function cancelPendingLeave(userId) {
+    const handle = pendingLeaves.get(userId)
+    if (handle !== undefined) {
+        clearTimeout(handle)
+        pendingLeaves.delete(userId)
+    }
+}
+
+// List of callback functions to be run when a user's grace period expires and they
+// did not come back
+const graceExpiredHandlers = new Set()
+
+// adds a callback to the above list
+export function onGraceExpired(handler) {
+    graceExpiredHandlers.add(handler)
+}
+
 // used to clean up an entry from the connection registry, when a client leaves
 export function removeEntry(userId, entry) {
     // Boil out whether this entry is no longer the registered one: either a newer
@@ -29,9 +55,33 @@ export function removeEntry(userId, entry) {
         return
     }
 
-    // delete the client first, to avoid sending it a presence update notification
+    // Detach right away, so nothing mistakes this user for reachable
     wsConnectionRegistry.delete(userId)
-    broadcastEvent({ type: 'user_disconnected', username: entry.username })
+
+    cancelPendingLeave(userId) // clear any old pending countdown for that user, if any
+
+    // Create a new alarm for this user. setTimeout() recieves a callback function
+    // that fires once the grace period is up (i.e. when the 'alarm' goes off),
+    // regardless of whether the user has come back or not. If they do come back
+    // within the grace period, 'wsConnectionRegistry' has an entry for its userId.
+    pendingLeaves.set(userId, setTimeout(() => {
+
+        // Time is out! Delete this pending leave
+        pendingLeaves.delete(userId)
+
+        // Did the user come back since the timeout start?
+        if (wsConnectionRegistry.has(userId)) {
+            return   // They did return, forget about their disconnect!
+        }
+        // They did not return, and are definitely gone now. Alert the others
+        broadcastEvent({ type: 'user_disconnected', username: entry.username })
+
+        // and let go of whatever they were doing (e.g. their running session)
+        for (const handler of graceExpiredHandlers) {
+            handler(userId)
+        }
+
+    }, RECONNECT_GRACE_MS))
 }
 
 async function heartbeatRound() {
@@ -62,9 +112,17 @@ const HEARTBEAT_INTERVAL_MS = 30_000
 const heartbeatTimer = setInterval(heartbeatRound, HEARTBEAT_INTERVAL_MS)
 
 // Makes sure that a server will not stay alive when it tries to shut down, just
-// because it still has a heartbeat check scheduled for every 30 seconds
+// because it still has a heartbeat check scheduled for every 30 seconds, or
+// some other grace period timer is still pending
 export function stopHeartbeat() {
+    // clean heartbeat Timer
     clearInterval(heartbeatTimer)
+
+    // clean pending leaves map
+    for (const timer of pendingLeaves.values()) {
+        clearTimeout(timer)
+    }
+    pendingLeaves.clear()
 }
 
 // helper function serializing and sending a JSON payload to a socket

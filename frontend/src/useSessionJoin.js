@@ -37,6 +37,10 @@ export default function useSessionJoin(socket) {
         setIncomingRequest({ sessionId: msg.sessionId, from: msg.from })
       } else if (msg.type === 'session_active') {
         setActiveSession(msg.sessionId)
+        setPendingSessionId(null)
+        setPartner(msg.partner ?? null)
+      } else if (msg.type === 'session_pending') {
+        setPendingSessionId(msg.sessionId)
       } else if (msg.type === 'join_cancelled') {
         setIncomingRequest(null)
       }
