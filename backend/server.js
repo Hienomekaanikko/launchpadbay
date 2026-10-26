@@ -239,14 +239,11 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     // channel. Reading the online flags after the 'await' prisma query guarantees
     // the snapshot is never older than an event already sent on this socket
     try {
-        const users = await prisma.users.findMany({ select: { id: true, username: true } })
-        send(socket, {
-            type: 'presence_snapshot',
-            users: users.map((user) => ({
-                username: user.username,
-                online: wsConnectionRegistry.has(user.id)
-            }))
-        })
+        const users = [...wsConnectionRegistry.values()].map(({ username }) => ({
+            username,
+            online: true
+        }))
+        send(socket, { type: 'presence_snapshot', users })
         send(socket, { type: 'sessions_snapshot', sessions: getAllSessionViews() })
         // restore whatever this client was doing before a refresh
         sendSessionState(socket, jwtPayload.id)
