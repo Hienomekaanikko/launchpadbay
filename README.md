@@ -22,14 +22,15 @@ Key features so far:
 |---|---|---|
 | `msuokas` | Roles we'll setup later :D
 | `mbonsdor` | Roles we'll setup later :D
-| `ykadosh` | Roles we'll setup later :D
+| `ykadosh` | Backend / WebSockets | Client/server messaging, backend wiring for: online presence, session management, chat functionality |
 | `timurray` | _TBD_ | Not locked in yet. |
 
 ## Project Management
 
-- **Communication:** Discord.
-- **Task tracking:** GitHub Issues and a GitHub Project board.
-- _More detail (meeting cadence, task distribution process) to be added once the full team is active._
+- **Communication:** Discord for day-to-day coordination. GitHub pull request threads are used for code and design review, keeping technical discussion and decisions attached to the change they affect, while providing insight into the creation of new tickets.
+- **Meetings:** One weekly sync, run Kanban-style: walk the board, review progress and blockers, and reprioritise the coming week's work.
+- **Task tracking:** GitHub Issues on a Kanban-style GitHub Project board. Work flows continuously through the columns rather than in fixed sprints, so status and ownership are visible at a glance.
+- _More detail (task distribution process) to be added once the full team is active._
 
 ## Technical Stack
 
@@ -77,8 +78,6 @@ What's actually functional today:
 - **Login/Register, end-to-end** (`frontend/src/App.jsx`, `frontend/src/auth.js`) — the forms call the real backend endpoints; a successful login stores the JWT in `localStorage` (session survives a reload) and flips the nav button to "Logout"; duplicate-username, password-mismatch, and bad-login errors all surface inline in the form.
 - **Fully containerized startup** — `make up` builds and starts everything, auto-runs Prisma migrations and seeding, and retries against MySQL until it's actually ready instead of failing on a slow first boot.
 - **Monitoring the Backend** — Prometheus collects data from Node.js (process metrics, HTTP requests and reponse durations). Grafana automatically loads these into a dashboard graphing the statistics.
-
-Still a UI mock, not yet wired up:
 - **Lobby view** ("who's playing", chat, join/observe) — static placeholder text only, no real data or backend support. Assigned to `ykadosh`, see [Modules](#modules).
 
 ## Modules
@@ -118,9 +117,9 @@ This plan will be revised as the team and scope firm up.
 
 ## Individual Contributions
 
-- **msuokas:** Project bootstrap; landing page and launchpad UI/design; Dockerized the full stack (frontend, backend, MySQL) with a `Makefile`; `users` table and Prisma migration; backend auth (`bcrypt` + JWT) in `server.js`; hardened container startup against slow/unready MySQL (Compose healthcheck, backend entrypoint retry loop, frontend fetch retry) after hitting that exact failure on a school computer.
-- **mbonsdor:** sound engine and pad grid (`launchpad/engine.js`);
-- **ykadosh:** Assigned the lobby experience (not started yet) — real-time presence and session join/observe (Real-time/WebSockets module), plus chat, profile view, and friends list (User interaction module).
+- **msuokas:** Project bootstrap; landing page and launchpad UI/design; Dockerized the full stack (frontend, backend, MySQL) with a `Makefile`; `users` table and Prisma migration; backend auth (`bcrypt` + JWT) in `server.js`; hardened container startup against slow/unready MySQL (Compose healthcheck, backend entrypoint retry loop, frontend fetch retry) after hitting that exact failure on a school computer. Implemented friendship management (User interaction module); Also profile view?
+- **mbonsdor:** sound engine and pad grid (`launchpad/engine.js`); profile view; i18n support for multiple languages (Finnish, Mandarin, Hebrew), including RTL layout for Hebrew.
+- **ykadosh:** Real-time backend and WebSocket layer: JWT-guarded `/ws`, connection/reconnect and heartbeat handling, presence registry and broadcasts, session request/accept/join/leave flows, and private/session chat. App and socket stability on page refreshes and reconnects (additional tabs). Also small frontend integration for the real-time layer, and regular PR reviews.
 - **timurray:** Certificate creation, DevOps implementation, mobile frontend.
 
 ## Instructions
@@ -160,7 +159,7 @@ Startup also prints localhost monitoring URLs.
 ### Architecture
 
 - **`frontend/`** — Vite/React SPA. Built and served by nginx in production (`frontend/Dockerfile`, `frontend/nginx.conf`), which also proxies `/api/*` to the backend — one origin, no CORS.
-- **`backend/`** — Fastify + Prisma. `server.js` is the entry point, routes added directly there for now. Sound/theme files live in `backend/uploads/` (bind-mounted, no rebuild needed to replace one), served via `@fastify/static`.
+- **`backend/`** — Fastify + Prisma. `server.js` is the entry point, routes added directly there for now. Sound/theme files live in `backend/uploads/` (bind-mounted, no rebuild needed to replace one), served via `@fastify/static`. Realtime events are backed by WebSockets, via the `@fastify/websocket` plugin.
 - **`mysql`** — MySQL 8, data in the `mysql_data` volume.
 - **`prometheus`** — Scrapes backend metrics over HTTPS using `certs/ca.pem`. Stores metric history in `prometheus_data`.
 - **`grafana`** — Queries Prometheus and loads its connection and dashboard from `monitoring/grafana/`. Stores accounts and local settings in `grafana_data`.
