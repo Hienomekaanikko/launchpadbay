@@ -19,8 +19,8 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
     setError('')
 
     try {
-      const { token } = await login(username, password)
-      onLoggedIn(token, username)
+      const result = await login(username, password)
+      onLoggedIn(result.token, result.username)
       setShowLogin(false)
     } catch (err) {
       setError(err.message)
