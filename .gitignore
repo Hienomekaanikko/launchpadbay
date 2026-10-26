@@ -5,6 +5,7 @@ node_modules
 .env
 .env.*
 !.env.example
+env.launchpadbay
 *.local
 
 # Build output
@@ -22,6 +23,7 @@ lerna-debug.log*
 
 # Editor directories and files
 .vscode/*
+.cursor/
 !.vscode/extensions.json
 .idea
 .DS_Store
@@ -32,9 +34,11 @@ lerna-debug.log*
 *.sw?
 frontend/jsconfig.json
 
+# local images
+backend/uploads/images/avatars/
 
 # Certs
 /certs/
+
+# local notes
 OAUTH_FLOW.md
-.cursor/
-env.launchpadbay

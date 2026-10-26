@@ -82,6 +82,10 @@
     "gone": "Suljettu",
     "alreadyInSession": "Jo sessiossa"
   },
+  "alreadyOpen": {
+    "alreadyOpenNotice": "LaunchpadBay on jo auki toisessa välilehdessä.",
+    "closeAndReload": "Sulje se ja lataa tämä sivu uudelleen."
+  },
   "launchpad": {
     "loading": "Ladataan…"
   },
