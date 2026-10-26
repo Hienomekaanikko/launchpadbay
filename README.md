@@ -42,32 +42,48 @@ Key features so far:
 - **Containerization:** Docker Compose runs the frontend, backend, MySQL, Prometheus, and Grafana. A `Makefile` wraps the startup and shutdown commands.
 - **Monitoring:** Prometheus used to collect backend process data and HTTP request metrics. Grafana displays data in dashboard.
 
-## Database Schema (for now)
+## Database Schema
 
-Three tables, managed through Prisma migrations (`backend/prisma/migrations/`):
+Five tables plus one enum, managed through Prisma migrations (`backend/prisma/migrations/`):
 
 ```
 users
 ├── id             VARCHAR(50)  PK, UUID
-├── username       VARCHAR(100) UNIQUE
-├── email          VARCHAR(255) UNIQUE
-├── password_hash  VARCHAR(255)
-└── created_at     DATETIME, default now()
+├── username       VARCHAR(100) UNIQUE (case-insensitive)
+├── email          VARCHAR(255) UNIQUE, nullable
+├── password_hash  VARCHAR(255) nullable (null for GitHub-only accounts)
+├── github_id      VARCHAR(50)  UNIQUE, nullable
+├── avatar         VARCHAR(255) nullable (uploaded avatar file name)
+└── created_at     DATETIME(3), default now()
 
 themes
-├── id           VARCHAR(50) PK
-├── name         VARCHAR(100)
-├── bg_image     VARCHAR(255), nullable
-└── body_class   VARCHAR(100), nullable
+├── id             VARCHAR(50) PK
+├── name           VARCHAR(100)
+├── bg_image       VARCHAR(255), nullable
+└── body_class     VARCHAR(100), nullable
 
 theme_sounds
-├── theme_id  VARCHAR(50) PK (part 1), FK -> themes.id, ON DELETE CASCADE
-├── slot      INT         PK (part 2)
-└── filename  VARCHAR(255)
+├── theme_id       VARCHAR(50) PK (part 1), FK -> themes.id, ON DELETE CASCADE
+├── slot           INT         PK (part 2)
+└── filename       VARCHAR(255)
+
+friendships
+├── requester_id   VARCHAR(50) PK (part 1), FK -> users.id, ON DELETE CASCADE ON UPDATE CASCADE
+├── addressee_id   VARCHAR(50) PK (part 2), FK -> users.id, ON DELETE CASCADE ON UPDATE CASCADE
+├── status         ENUM('pending', 'accepted'), default 'pending'
+└── created_at     DATETIME(3), default now()
+
+messages
+├── id             VARCHAR(50) PK, UUID
+├── sender_id      VARCHAR(50) FK -> users.id, ON DELETE CASCADE ON UPDATE CASCADE
+├── receiver_id    VARCHAR(50) FK -> users.id, ON DELETE CASCADE ON UPDATE CASCADE
+├── content        TEXT
+└── created_at     DATETIME(3), default now()
 ```
 
 - `themes` 1—N `theme_sounds`: each theme has one sound file per pad slot (1–25); deleting a theme cascades to its sounds.
-- `users` is currently standalone — no relation yet to themes or sessions.
+- `users` 1—N `friendships` (twice, as requester and addressee): one row per friendship direction; `status` starts as `pending` and becomes `accepted` on approval. The pair is the composite primary key, and `addressee_id` is indexed for incoming-request lookups.
+- `users` 1—N `messages` (twice, as sender and receiver): private chat messages; deleting a user cascades to their sent and received messages. Composite indexes on `(sender_id, receiver_id, created_at)` and `(receiver_id, sender_id, created_at)` support both sides of a conversation.
 
 ## Features
 
@@ -182,7 +198,7 @@ Saving in Grafana alone does not update the repository but will update local set
 
 ### Auth
 
-- `users` table: `id` (uuid), `username`/`email` (unique), `password_hash` (bcrypt), `created_at`.
+- `users` table: `id` (uuid), `username` (case-insensitively unique), `email`/`github_id` (unique, nullable), `password_hash` (bcrypt, nullable for GitHub-only accounts), `avatar` (nullable), `created_at`.
 - `POST /register` — hashes password, creates user, 409 on duplicate username/email.
 - `POST /login` — bcrypt-compares password, returns a JWT on success. Wrong password and unknown username both return the same generic 401 (no username enumeration).
 - `JWT_SECRET` in `.env` signs/verifies tokens.
