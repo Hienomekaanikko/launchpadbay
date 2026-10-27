@@ -82,6 +82,10 @@
     "gone": "Closed",
     "alreadyInSession": "In a session"
   },
+  "alreadyOpen":{
+  	"alreadyOpenNotice": "LaunchpadBay is already open in another tab.",
+  	"closeAndReload": "Close it, then reload this page."
+  },
   "launchpad": {
     "loading": "Loading…"
   },

@@ -82,6 +82,10 @@
     "gone": "נסגר",
     "alreadyInSession": "בסשן"
   },
+  "alreadyOpen": {
+    "alreadyOpenNotice": "LaunchpadBay כבר פתוח בלשונית אחרת.",
+    "closeAndReload": "סגרו אותה ואז טענו מחדש את העמוד הזה."
+  },
   "launchpad": {
     "loading": "טוען…"
   },
