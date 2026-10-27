@@ -49,6 +49,7 @@ function App() {
     username: friend,
     online: onlineUsers.some((user) => user.username === friend && user.online),
   }))
+  const chatRecipientOnline = onlineUsers.some((user) => user.username === chat.activeChat && user.online)
   const [openPolicy, setOpenPolicy] = useState(null)
 
   useEffect(() => {
@@ -213,6 +214,7 @@ function App() {
         {chat.activeChat && (
           <ChatWindow
             recipient={chat.activeChat}
+            recipientOnline={chatRecipientOnline}
             messages={chat.conversations[chat.activeChat] || []}
             error={chat.error}
             onSendMessage={(text) => chat.sendPrivate(chat.activeChat, text)}

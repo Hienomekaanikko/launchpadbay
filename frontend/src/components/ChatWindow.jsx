@@ -15,15 +15,19 @@ const ERROR_KEYS = {
   empty_message: 'chat.errors.emptyMessage',
 }
 
-export default function ChatWindow({ recipient, messages, error, onSendMessage, onClose }) {
+export default function ChatWindow({ recipient, recipientOnline, messages, error, onSendMessage, onClose }) {
   const { t } = useTranslation()
   const [draft, setDraft] = useState('')
   const { listRef, onScroll } = useStickToBottom(messages)
-  const errorText = error && t(ERROR_KEYS[error] ?? 'chat.errors.notSent', { name: recipient })
+  // presence says whether the recipient is offline right now, so a failed send's
+  // 'user_offline' error is replaced by the live notice and is gone once they're back
+  const errorText = recipientOnline
+    ? error && error !== 'user_offline' && t(ERROR_KEYS[error] ?? 'chat.errors.notSent', { name: recipient })
+    : t('chat.offline', { name: recipient })
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (!draft.trim()) return
+    if (!recipientOnline || !draft.trim()) return
     onSendMessage(draft)
     setDraft('')
   }
@@ -40,7 +44,7 @@ export default function ChatWindow({ recipient, messages, error, onSendMessage, 
       </div>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <Input className="flex-1 min-w-0" maxLength={MAX_MESSAGE_CHARS} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('common.messagePlaceholder')} />
-        <FormButton type="submit" className="shrink-0">{t('common.send')}</FormButton>
+        <FormButton type="submit" disabled={!recipientOnline} className="shrink-0 disabled:opacity-50 disabled:cursor-default disabled:active:scale-100">{t('common.send')}</FormButton>
       </form>
     </GlassPanel>
   )

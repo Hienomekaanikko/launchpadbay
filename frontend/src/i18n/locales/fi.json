@@ -55,6 +55,7 @@
   },
   "chat": {
     "sayHi": "Sano hei käyttäjälle {{name}}!",
+    "offline": "{{name}} on offline",
     "errors": {
       "userOffline": "{{name}} on offline, viestiä ei lähetetty",
       "noSuchUser": "{{name}} ei ole enää olemassa, viestiä ei lähetetty",

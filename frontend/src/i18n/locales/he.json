@@ -55,6 +55,7 @@
   },
   "chat": {
     "sayHi": "תגיד שלום ל־{{name}}!",
+    "offline": "{{name}} לא מחובר",
     "errors": {
       "userOffline": "{{name}} לא מחובר, ההודעה לא נשלחה",
       "noSuchUser": "{{name}} כבר לא קיים, ההודעה לא נשלחה",
