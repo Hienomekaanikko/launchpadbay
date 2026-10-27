@@ -22,7 +22,7 @@ Key features so far:
 |---|---|---|
 | `msuokas` | Roles we'll setup later :D
 | `mbonsdor` | Roles we'll setup later :D
-| `ykadosh` | Backend / WebSockets | Client/server messaging, backend wiring for: online presence, session management, chat functionality |
+| `ykadosh` | Developer | Backend / WebSockets; Client/server messaging, backend wiring for: online presence, session management, chat functionality, reconnection logic |
 | `timurray` | _TBD_ | Not locked in yet. |
 
 ## Project Management
