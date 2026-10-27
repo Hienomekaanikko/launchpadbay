@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { onMessage } from './useSocket.js'
 
-// Keeps a live list of registered users and their online status.
+// Keeps a live list of online users.
 export default function usePresence(socket) {
   const [users, setUsers] = useState([])
 
