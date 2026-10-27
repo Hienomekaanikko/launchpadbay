@@ -237,7 +237,12 @@ export function sendSessionState(socket, userId) {
     const pending = getPendingSessionByUserId(userId)
     if (pending) {
         send(socket, { type: 'session_pending', sessionId: pending.id })
+        return
     }
+
+    // Neither: say so explicitly. After a reconnect the client may still think it
+    // is in a session that ended while it was gone (e.g. its grace period ran out)
+    send(socket, { type: 'session_none' })
 }
 
 // finds the session on which a user has a pending join request ->

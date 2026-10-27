@@ -30,7 +30,7 @@ function App() {
   const [lobbyMode, setLobbyMode] = useState(false);
   const [profileMode, setProfileMode] = useState(false);
   const loggedIn = Boolean(token)
-  const socket = useSocket(token)
+  const { socket, reconnecting } = useSocket(token)
   const closeCode = useCloseCode(socket)
   const onlineUsers = usePresence(socket).filter((user) => user.username !== username)
   const join = useSessionJoin(socket)
@@ -104,6 +104,11 @@ function App() {
     setProfileMode(false)
     setLobbyMode(false)
   }
+
+  // the server refused our token (expired or invalid): reconnecting can't help, log out
+  useEffect(() => {
+    if (closeCode === 4001) handleLogout()
+  }, [closeCode])
 
   // logged in, Play also hosts a new session that shows up in everyone's lobby.
   // The backend drops a pending join request on create, so we drop ours too
@@ -215,6 +220,11 @@ function App() {
           />
         )}
         {closeCode === 1008 && <AlreadyOpenNotice />}
+        {reconnecting && (
+          <div role="status" className="fixed top-24 left-1/2 z-40 -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-white text-xs font-sans">
+            {t('common.reconnecting')}
+          </div>
+        )}
       </main>
       <footer className="flex-wrap gap-6 px-4 py-6">
         <button

@@ -49,9 +49,12 @@ export default function useChat(socket, username, activeSession) {
     })
   }, [socket, username])
 
-  // every session starts with an empty chat
+  // every session starts with an empty chat; a reconnect within the same session keeps it
   useEffect(() => {
     setSessionMessages([])
+  }, [activeSession])
+
+  useEffect(() => {
     if (!socket || !activeSession) return
 
     return onMessage(socket, (msg) => {

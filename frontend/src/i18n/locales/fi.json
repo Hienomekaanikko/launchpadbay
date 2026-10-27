@@ -7,7 +7,8 @@
     "loading": "Ladataan...",
     "language": "Kieli",
     "terms": "Käyttöehdot",
-    "messagePlaceholder": "Kirjoita viesti..."
+    "messagePlaceholder": "Kirjoita viesti...",
+    "reconnecting": "Yhteys katkesi, yhdistetään uudelleen..."
   },
   "nav": {
     "home": "Koti",

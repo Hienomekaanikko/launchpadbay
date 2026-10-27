@@ -7,7 +7,8 @@
     "loading": "Loading...",
     "language": "Language",
     "terms": "Terms & Conditions",
-    "messagePlaceholder": "Type a message..."
+    "messagePlaceholder": "Type a message...",
+    "reconnecting": "Connection lost, reconnecting..."
   },
   "nav": {
     "home": "Home",
