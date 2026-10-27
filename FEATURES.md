@@ -18,21 +18,21 @@ Prisma 7 with the `@prisma/adapter-mariadb` driver adapter. Done.
 
 ## Initial plan (target: 14+ points)
 
-### Real-time features — WebSockets (Major, 2pts) — owner: `ykadosh`
+### Real-time features — WebSockets (Major, 2pts) — owners: `msuokas` & `ykadosh`
 Lobby presence + the ability to join/observe someone else's session, in real time.
 
-- [ ] WebSocket connection from the frontend (e.g. `@fastify/websocket` on the backend)
-- [ ] Broadcast presence: who's currently in the launchpad
-- [ ] Graceful connect/disconnect handling (don't leave stale "online" users)
-- [ ] Join/observe another user's live session
+- [x] WebSocket connection from the frontend (e.g. `@fastify/websocket` on the backend)
+- [x] Broadcast presence: who's currently in the launchpad
+- [x] Graceful connect/disconnect handling (don't leave stale "online" users)
+- [x] Join another user's live session
 - [ ] Efficient message broadcasting (don't naively fan out to everyone on every event)
 
-### User interaction (Major, 2pts) — owner: `ykadosh`
+### User interaction (Major, 2pts) — owners: `msuokas`, `ykadosh`, `mbonsdor`
 Subject requires all three of these to count as complete — chat alone isn't enough:
 
-- [ ] Basic chat — send/receive messages between users
+- [x] Basic chat — send/receive messages between users
 - [ ] Profile system — view another user's basic info
-- [ ] Friends system — add/remove friends, see a friends list
+- [x] Friends system — add/remove friends, see a friends list
 
 This is the other half of the "lobby experience," built alongside the WebSocket work above rather than as a separate effort.
 

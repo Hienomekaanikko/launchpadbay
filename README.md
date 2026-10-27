@@ -22,14 +22,15 @@ Key features so far:
 |---|---|---|
 | `msuokas` | Roles we'll setup later :D
 | `mbonsdor` | Roles we'll setup later :D
-| `ykadosh` | Roles we'll setup later :D
+| `ykadosh` | Developer | Backend / WebSockets; Client/server messaging, backend wiring for: online presence, session management, chat functionality, reconnection logic |
 | `timurray` | _TBD_ | Not locked in yet. |
 
 ## Project Management
 
-- **Communication:** Discord.
-- **Task tracking:** GitHub Issues and a GitHub Project board.
-- _More detail (meeting cadence, task distribution process) to be added once the full team is active._
+- **Communication:** Discord for day-to-day coordination. GitHub pull request threads are used for code and design review, keeping technical discussion and decisions attached to the change they affect, while providing insight into the creation of new tickets.
+- **Meetings:** One weekly sync, run Kanban-style: walk the board, review progress and blockers, and reprioritise the coming week's work.
+- **Task tracking:** GitHub Issues on a Kanban-style GitHub Project board. Work flows continuously through the columns rather than in fixed sprints, so status and ownership are visible at a glance.
+- _More detail (task distribution process) to be added once the full team is active._
 
 ## Technical Stack
 
@@ -41,32 +42,48 @@ Key features so far:
 - **Containerization:** Docker Compose runs the frontend, backend, MySQL, Prometheus, and Grafana. A `Makefile` wraps the startup and shutdown commands.
 - **Monitoring:** Prometheus used to collect backend process data and HTTP request metrics. Grafana displays data in dashboard.
 
-## Database Schema (for now)
+## Database Schema
 
-Three tables, managed through Prisma migrations (`backend/prisma/migrations/`):
+Five tables plus one enum, managed through Prisma migrations (`backend/prisma/migrations/`):
 
 ```
 users
 ├── id             VARCHAR(50)  PK, UUID
-├── username       VARCHAR(100) UNIQUE
-├── email          VARCHAR(255) UNIQUE
-├── password_hash  VARCHAR(255)
-└── created_at     DATETIME, default now()
+├── username       VARCHAR(100) UNIQUE (case-insensitive)
+├── email          VARCHAR(255) UNIQUE, nullable
+├── password_hash  VARCHAR(255) nullable (null for GitHub-only accounts)
+├── github_id      VARCHAR(50)  UNIQUE, nullable
+├── avatar         VARCHAR(255) nullable (uploaded avatar file name)
+└── created_at     DATETIME(3), default now()
 
 themes
-├── id           VARCHAR(50) PK
-├── name         VARCHAR(100)
-├── bg_image     VARCHAR(255), nullable
-└── body_class   VARCHAR(100), nullable
+├── id             VARCHAR(50) PK
+├── name           VARCHAR(100)
+├── bg_image       VARCHAR(255), nullable
+└── body_class     VARCHAR(100), nullable
 
 theme_sounds
-├── theme_id  VARCHAR(50) PK (part 1), FK -> themes.id, ON DELETE CASCADE
-├── slot      INT         PK (part 2)
-└── filename  VARCHAR(255)
+├── theme_id       VARCHAR(50) PK (part 1), FK -> themes.id, ON DELETE CASCADE
+├── slot           INT         PK (part 2)
+└── filename       VARCHAR(255)
+
+friendships
+├── requester_id   VARCHAR(50) PK (part 1), FK -> users.id, ON DELETE CASCADE ON UPDATE CASCADE
+├── addressee_id   VARCHAR(50) PK (part 2), FK -> users.id, ON DELETE CASCADE ON UPDATE CASCADE
+├── status         ENUM('pending', 'accepted'), default 'pending'
+└── created_at     DATETIME(3), default now()
+
+messages
+├── id             VARCHAR(50) PK, UUID
+├── sender_id      VARCHAR(50) FK -> users.id, ON DELETE CASCADE ON UPDATE CASCADE
+├── receiver_id    VARCHAR(50) FK -> users.id, ON DELETE CASCADE ON UPDATE CASCADE
+├── content        TEXT
+└── created_at     DATETIME(3), default now()
 ```
 
 - `themes` 1—N `theme_sounds`: each theme has one sound file per pad slot (1–25); deleting a theme cascades to its sounds.
-- `users` is currently standalone — no relation yet to themes or sessions.
+- `users` 1—N `friendships` (twice, as requester and addressee): one row per friendship direction; `status` starts as `pending` and becomes `accepted` on approval. The pair is the composite primary key, and `addressee_id` is indexed for incoming-request lookups.
+- `users` 1—N `messages` (twice, as sender and receiver): private chat messages; deleting a user cascades to their sent and received messages. Composite indexes on `(sender_id, receiver_id, created_at)` and `(receiver_id, sender_id, created_at)` support both sides of a conversation.
 
 ## Features
 
@@ -77,8 +94,6 @@ What's actually functional today:
 - **Login/Register, end-to-end** (`frontend/src/App.jsx`, `frontend/src/auth.js`) — the forms call the real backend endpoints; a successful login stores the JWT in `localStorage` (session survives a reload) and flips the nav button to "Logout"; duplicate-username, password-mismatch, and bad-login errors all surface inline in the form.
 - **Fully containerized startup** — `make up` builds and starts everything, auto-runs Prisma migrations and seeding, and retries against MySQL until it's actually ready instead of failing on a slow first boot.
 - **Monitoring the Backend** — Prometheus collects data from Node.js (process metrics, HTTP requests and reponse durations). Grafana automatically loads these into a dashboard graphing the statistics.
-
-Still a UI mock, not yet wired up:
 - **Lobby view** ("who's playing", chat, join/observe) — static placeholder text only, no real data or backend support. Assigned to `ykadosh`, see [Modules](#modules).
 
 ## Modules
@@ -118,9 +133,9 @@ This plan will be revised as the team and scope firm up.
 
 ## Individual Contributions
 
-- **msuokas:** Project bootstrap; landing page and launchpad UI/design; Dockerized the full stack (frontend, backend, MySQL) with a `Makefile`; `users` table and Prisma migration; backend auth (`bcrypt` + JWT) in `server.js`; hardened container startup against slow/unready MySQL (Compose healthcheck, backend entrypoint retry loop, frontend fetch retry) after hitting that exact failure on a school computer.
-- **mbonsdor:** sound engine and pad grid (`launchpad/engine.js`);
-- **ykadosh:** Assigned the lobby experience (not started yet) — real-time presence and session join/observe (Real-time/WebSockets module), plus chat, profile view, and friends list (User interaction module).
+- **msuokas:** Project bootstrap; landing page and launchpad UI/design; Dockerized the full stack (frontend, backend, MySQL) with a `Makefile`; `users` table and Prisma migration; backend auth (`bcrypt` + JWT) in `server.js`; hardened container startup against slow/unready MySQL (Compose healthcheck, backend entrypoint retry loop, frontend fetch retry) after hitting that exact failure on a school computer. Implemented friendship management (User interaction module); Also profile view?
+- **mbonsdor:** sound engine and pad grid (`launchpad/engine.js`); profile view; i18n support for multiple languages (Finnish, Mandarin, Hebrew), including RTL layout for Hebrew.
+- **ykadosh:** Real-time backend and WebSocket layer: JWT-guarded `/ws`, connection/reconnect and heartbeat handling, presence registry and broadcasts, session request/accept/join/leave flows, and private/session chat. App and socket stability on page refreshes and reconnects (additional tabs). Also small frontend integration for the real-time layer, and regular PR reviews.
 - **timurray:** Certificate creation, DevOps implementation, mobile frontend.
 
 ## Instructions
@@ -160,7 +175,7 @@ Startup also prints localhost monitoring URLs.
 ### Architecture
 
 - **`frontend/`** — Vite/React SPA. Built and served by nginx in production (`frontend/Dockerfile`, `frontend/nginx.conf`), which also proxies `/api/*` to the backend — one origin, no CORS.
-- **`backend/`** — Fastify + Prisma. `server.js` is the entry point, routes added directly there for now. Sound/theme files live in `backend/uploads/` (bind-mounted, no rebuild needed to replace one), served via `@fastify/static`.
+- **`backend/`** — Fastify + Prisma. `server.js` is the entry point, routes added directly there for now. Sound/theme files live in `backend/uploads/` (bind-mounted, no rebuild needed to replace one), served via `@fastify/static`. Realtime events are backed by WebSockets, via the `@fastify/websocket` plugin.
 - **`mysql`** — MySQL 8, data in the `mysql_data` volume.
 - **`prometheus`** — Scrapes backend metrics over HTTPS using `certs/ca.pem`. Stores metric history in `prometheus_data`.
 - **`grafana`** — Queries Prometheus and loads its connection and dashboard from `monitoring/grafana/`. Stores accounts and local settings in `grafana_data`.
@@ -183,7 +198,7 @@ Saving in Grafana alone does not update the repository but will update local set
 
 ### Auth
 
-- `users` table: `id` (uuid), `username`/`email` (unique), `password_hash` (bcrypt), `created_at`.
+- `users` table: `id` (uuid), `username` (case-insensitively unique), `email`/`github_id` (unique, nullable), `password_hash` (bcrypt, nullable for GitHub-only accounts), `avatar` (nullable), `created_at`.
 - `POST /register` — hashes password, creates user, 409 on duplicate username/email.
 - `POST /login` — bcrypt-compares password, returns a JWT on success. Wrong password and unknown username both return the same generic 401 (no username enumeration).
 - `JWT_SECRET` in `.env` signs/verifies tokens.
