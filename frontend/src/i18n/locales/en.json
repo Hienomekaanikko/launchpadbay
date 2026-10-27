@@ -55,6 +55,7 @@
   },
   "chat": {
     "sayHi": "Say hi to {{name}}!",
+    "offline": "{{name}} is offline",
     "errors": {
       "userOffline": "{{name}} is offline, message not sent",
       "noSuchUser": "{{name}} doesn't exist anymore, message not sent",

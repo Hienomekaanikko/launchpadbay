@@ -55,6 +55,7 @@
   },
   "chat": {
     "sayHi": "跟 {{name}} 打个招呼吧！",
+    "offline": "{{name}} 已离线",
     "errors": {
       "userOffline": "{{name}} 已离线，消息未发送",
       "noSuchUser": "{{name}} 已不存在，消息未发送",
