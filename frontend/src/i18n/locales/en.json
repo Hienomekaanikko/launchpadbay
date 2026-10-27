@@ -51,7 +51,22 @@
     "changeAvatar": "Change avatar",
     "requests": "Requests",
     "noFriends": "No friends yet",
-    "uploading": "Uploading…"
+    "uploading": "Uploading…",
+    "edit": "Edit profile",
+    "memberSince": "Member since",
+    "save": "Save",
+    "saved": "Saved",
+    "password": "Password",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "changePassword": "Change password",
+    "passwordChanged": "Password changed",
+    "deleteAccount": "Delete account",
+    "deleteConfirmPassword": "This permanently deletes your account, friends and messages. Enter your password to confirm.",
+    "deleteConfirmUsername": "This permanently deletes your account, friends and messages. Type your username to confirm.",
+    "deletePermanently": "Delete permanently",
+    "leaveSessionToDelete": "Leave your session to delete your account.",
+    "deleteConfirmLabel": "Confirm deletion"
   },
   "chat": {
     "sayHi": "Say hi to {{name}}!",

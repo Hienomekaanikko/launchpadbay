@@ -13,6 +13,7 @@ const baseClasses = [
   'transition-all duration-200',
   'hover:bg-white/16 hover:shadow-nav-hover',
   'active:scale-[0.96]',
+  'disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100',
 ].join(' ')
 
 export default function FormButton({ className = '', ...props }) {

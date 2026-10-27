@@ -51,7 +51,22 @@
     "changeAvatar": "Vaihda kuva",
     "requests": "Pyynnöt",
     "noFriends": "Ei kavereita vielä",
-    "uploading": "Lähetetään…"
+    "uploading": "Lähetetään…",
+    "edit": "Muokkaa profiilia",
+    "memberSince": "Jäsen alkaen",
+    "save": "Tallenna",
+    "saved": "Tallennettu",
+    "password": "Salasana",
+    "currentPassword": "Nykyinen salasana",
+    "newPassword": "Uusi salasana",
+    "changePassword": "Vaihda salasana",
+    "passwordChanged": "Salasana vaihdettu",
+    "deleteAccount": "Poista tili",
+    "deleteConfirmPassword": "Tämä poistaa tilisi, kaverisi ja viestisi pysyvästi. Vahvista syöttämällä salasanasi.",
+    "deleteConfirmUsername": "Tämä poistaa tilisi, kaverisi ja viestisi pysyvästi. Vahvista kirjoittamalla käyttäjänimesi.",
+    "deletePermanently": "Poista pysyvästi",
+    "leaveSessionToDelete": "Poistu sessiosta poistaaksesi tilin.",
+    "deleteConfirmLabel": "Vahvista poisto"
   },
   "chat": {
     "sayHi": "Sano hei käyttäjälle {{name}}!",

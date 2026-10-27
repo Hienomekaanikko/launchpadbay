@@ -51,7 +51,22 @@
     "changeAvatar": "更换头像",
     "requests": "请求",
     "noFriends": "暂无好友",
-    "uploading": "上传中…"
+    "uploading": "上传中…",
+    "edit": "编辑资料",
+    "memberSince": "注册时间",
+    "save": "保存",
+    "saved": "已保存",
+    "password": "密码",
+    "currentPassword": "当前密码",
+    "newPassword": "新密码",
+    "changePassword": "修改密码",
+    "passwordChanged": "密码已修改",
+    "deleteAccount": "删除账户",
+    "deleteConfirmPassword": "这将永久删除你的账户、好友和消息。请输入密码确认。",
+    "deleteConfirmUsername": "这将永久删除你的账户、好友和消息。请输入用户名确认。",
+    "deletePermanently": "永久删除",
+    "leaveSessionToDelete": "请先离开会话再删除账户。",
+    "deleteConfirmLabel": "确认删除"
   },
   "chat": {
     "sayHi": "跟 {{name}} 打个招呼吧！",
