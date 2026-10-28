@@ -16,6 +16,7 @@ import useSessions from './useSessions.js'
 import useSessionJoin from './useSessionJoin.js'
 import useChat from './useChat.js'
 import JoinRequestPopup from './components/JoinRequestPopup.jsx'
+import UserProfilePopup from './components/UserProfilePopup.jsx'
 import PolicyDialog from './components/PoliciesDialog.jsx'
 import AlreadyOpenNotice from './components/AlreadyOpenNotice.jsx'
 
@@ -29,6 +30,7 @@ function App() {
   const [username, setUsername] = useState(() => localStorage.getItem('username'));
   const [lobbyMode, setLobbyMode] = useState(false);
   const [profileMode, setProfileMode] = useState(false);
+  const [viewedUser, setViewedUser] = useState(null) // username whose profile popup is open
   const loggedIn = Boolean(token)
   const { socket, reconnecting } = useSocket(token)
   const closeCode = useCloseCode(socket)
@@ -49,7 +51,8 @@ function App() {
     username: friend,
     online: onlineUsers.some((user) => user.username === friend && user.online),
   }))
-  const chatRecipientOnline = onlineUsers.some((user) => user.username === chat.activeChat && user.online)
+  const isOnline = (other) => onlineUsers.some((user) => user.username === other && user.online)
+  const chatRecipientOnline = isOnline(chat.activeChat)
   const [openPolicy, setOpenPolicy] = useState(null)
 
   useEffect(() => {
@@ -104,6 +107,7 @@ function App() {
     setUsername(null)
     setProfileMode(false)
     setLobbyMode(false)
+    setViewedUser(null)
   }
 
   // the server refused our token (expired or invalid): reconnecting can't help, log out
@@ -142,6 +146,24 @@ function App() {
   const handleAddFriendClick = (other) => {
     if (friendsState.incoming.includes(other)) friendsState.accept(other)
     else friendsState.add(other)
+  }
+
+  const friendStatusOf = (other) => {
+    if (friendsState.friends.includes(other)) return 'friend'
+    if (friendsState.incoming.includes(other)) return 'incoming'
+    if (friendsState.outgoing.includes(other)) return 'outgoing'
+    return 'none'
+  }
+
+  // the friend lists are only fetched on demand, so refresh them for an up-to-date button
+  const handleProfileClick = (other) => {
+    friendsState.refresh()
+    setViewedUser(other)
+  }
+
+  const handleProfileChatClick = (other) => {
+    setViewedUser(null)
+    chat.openChat(other)
   }
 
   return (
@@ -184,6 +206,7 @@ function App() {
               friends={friendsWithStatus}
               incoming={friendsState.incoming}
               unread={chat.unread}
+              onProfileClick={handleProfileClick}
               onChatClick={chat.openChat}
               onAcceptClick={friendsState.accept}
               onRejectClick={friendsState.reject}
@@ -199,6 +222,7 @@ function App() {
               sessions={sessions}
               onJoinClick={join.requestJoin}
               onCancelClick={join.cancelJoin}
+              onProfileClick={handleProfileClick}
               onChatClick={chat.openChat}
               sessionMessages={chat.sessionMessages}
               onSendSessionMessage={chat.sendSession}
@@ -211,6 +235,18 @@ function App() {
             username={join.incomingRequest.from.name}
             onAcceptClick={handleAcceptJoin}
             onRejectClick={join.rejectRequest}
+          />
+        )}
+        {loggedIn && viewedUser && (
+          <UserProfilePopup
+            token={token}
+            username={viewedUser}
+            online={isOnline(viewedUser)}
+            friendStatus={friendStatusOf(viewedUser)}
+            onAddFriendClick={handleAddFriendClick}
+            onRemoveClick={friendsState.remove}
+            onChatClick={handleProfileChatClick}
+            onClose={() => setViewedUser(null)}
           />
         )}
         {chat.activeChat && (

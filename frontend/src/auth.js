@@ -35,6 +35,11 @@ export function fetchProfile(token) {
   return requestWithToken('GET', '/profile', token)
 }
 
+// another user's public profile: { username, avatar, createdAt }
+export function fetchUser(token, username) {
+  return requestWithToken('GET', `/users/${encodeURIComponent(username)}`, token)
+}
+
 // changes: { email }
 export function updateProfile(token, changes) {
   return requestWithToken('PATCH', '/profile', token, changes)

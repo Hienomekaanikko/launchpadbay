@@ -84,7 +84,14 @@
     "add": "添加 {{username}} 为好友",
     "chatWith": "与 {{username}} 聊天",
     "chatWithUnread": "与 {{username}} 聊天（未读消息）",
-    "remove": "将 {{username}} 从好友中移除"
+    "remove": "将 {{username}} 从好友中移除",
+    "addFriend": "加为好友",
+    "acceptRequest": "接受好友请求",
+    "requestSent": "请求已发送",
+    "removeFriend": "删除好友",
+    "chat": "聊天",
+    "online": "在线",
+    "offline": "离线"
   },
   "session": {
     "join": "加入",
