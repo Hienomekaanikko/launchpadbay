@@ -35,6 +35,20 @@ export function fetchProfile(token) {
   return requestWithToken('GET', '/profile', token)
 }
 
+// changes: { email }
+export function updateProfile(token, changes) {
+  return requestWithToken('PATCH', '/profile', token, changes)
+}
+
+export function changePassword(token, currentPassword, newPassword) {
+  return requestWithToken('PUT', '/profile/password', token, { currentPassword, newPassword })
+}
+
+// confirm: { password } or, for GitHub-only accounts, { username }
+export function deleteAccount(token, confirm) {
+  return requestWithToken('DELETE', '/profile', token, confirm)
+}
+
 export async function uploadAvatar(token, file) {
   const body = new FormData()
   body.append('avatar', file)

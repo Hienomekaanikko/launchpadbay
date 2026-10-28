@@ -179,6 +179,8 @@ function App() {
           <div className="app-panels">
             {profileMode && loggedIn && <ProfileView
               token={token}
+              inSession={Boolean(activeSession)}
+              onAccountDeleted={handleLogout}
               friends={friendsWithStatus}
               incoming={friendsState.incoming}
               unread={chat.unread}

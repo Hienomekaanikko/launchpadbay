@@ -12,6 +12,7 @@ const baseClasses = [
   'transition-all duration-200',
   "placeholder:text-white placeholder:[text-shadow:0_0_8px_rgba(255,255,255,0.4)]",
   'focus:outline-none focus:bg-black/35 focus:shadow-input-focus',
+  'disabled:opacity-50 disabled:cursor-not-allowed',
 ].join(' ')
 
 export default function Input({ className = '', ...props }) {

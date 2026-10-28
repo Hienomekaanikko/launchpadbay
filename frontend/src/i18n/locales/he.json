@@ -51,7 +51,22 @@
     "changeAvatar": "החלף תמונת פרופיל",
     "requests": "בקשות",
     "noFriends": "אין חברים עדיין",
-    "uploading": "מעלה…"
+    "uploading": "מעלה…",
+    "edit": "עריכת פרופיל",
+    "memberSince": "חבר מאז",
+    "save": "שמור",
+    "saved": "נשמר",
+    "password": "סיסמה",
+    "currentPassword": "סיסמה נוכחית",
+    "newPassword": "סיסמה חדשה",
+    "changePassword": "שנה סיסמה",
+    "passwordChanged": "הסיסמה שונתה",
+    "deleteAccount": "מחק חשבון",
+    "deleteConfirmPassword": "פעולה זו מוחקת לצמיתות את החשבון, החברים וההודעות שלך. הזן את הסיסמה שלך לאישור.",
+    "deleteConfirmUsername": "פעולה זו מוחקת לצמיתות את החשבון, החברים וההודעות שלך. הקלד את שם המשתמש שלך לאישור.",
+    "deletePermanently": "מחק לצמיתות",
+    "leaveSessionToDelete": "צא מהסשן כדי למחוק את החשבון.",
+    "deleteConfirmLabel": "אישור מחיקה"
   },
   "chat": {
     "sayHi": "תגיד שלום ל־{{name}}!",
