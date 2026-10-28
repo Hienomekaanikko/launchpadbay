@@ -17,6 +17,7 @@
     "login": "Login",
     "logout": "Logout",
     "session": "Session: {{id}}",
+    "withPartner": " · with {{partner}}",
     "profileFor": "Profile for {{username}}",
     "mainNavigation": "Main navigation",
     "lobbyUnread": "Lobby (unread messages)"
@@ -89,7 +90,8 @@
   	"closeAndReload": "Close it, then reload this page."
   },
   "launchpad": {
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "syncing": "Syncing with your partner… {{seconds}} s"
   },
   "policies": {
     "close": "Close",

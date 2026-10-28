@@ -1,3 +1,4 @@
+import i18n from '../i18n/index.js'
 import {
     initAudio,
     loadPadClip,
@@ -278,7 +279,7 @@ export function mountLaunchpad(container, themes) {
       el.classList.toggle('visible', secondsLeft > 0)
       if (secondsLeft <= 0)
         return
-      el.textContent = `Syncing with your partner… ${secondsLeft} s`
+      el.textContent = i18n.t('launchpad.syncing', { seconds: secondsLeft })
       syncMsgTimer = uiTimers.track(() => showSyncMessage(startAt), 250)
     }
 
