@@ -17,6 +17,7 @@
     "login": "Kirjaudu sisään",
     "logout": "Kirjaudu ulos",
     "session": "Sessio: {{id}}",
+    "withPartner": " · {{partner}} kanssa",
     "profileFor": "Profiili: {{username}}",
     "mainNavigation": "Päävalikko",
     "lobbyUnread": "Lobby (lukemattomia viestejä)"
@@ -104,7 +105,8 @@
     "closeAndReload": "Sulje se ja lataa tämä sivu uudelleen."
   },
   "launchpad": {
-    "loading": "Ladataan…"
+    "loading": "Ladataan…",
+    "syncing": "Synkronoidaan partnerin kanssa… {{seconds}} s"
   },
   "policies": {
     "close": "Sulje",

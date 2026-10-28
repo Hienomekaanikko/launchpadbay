@@ -38,8 +38,9 @@ export default function AppNavbar({
           </NavbarButton>
           <LanguageSwitcher />
           {sessionId && (
-            <span className="app-navbar-session" title={`${t('nav.session', { id: sessionId })}${partner ? ` with ${partner}` : ''}`}>
-              {t('nav.session', { id: sessionId })}{partner && <> · with <span className="text-white">{partner}</span></>}
+            <span className="app-navbar-session" title={`${t('nav.session', { id: sessionId })}${partner ? t('nav.withPartner', { partner }) : ''}`}>
+              {t('nav.session', { id: sessionId })}
+              {partner && <span className="text-white">{t('nav.withPartner', { partner })}</span>}
             </span>
           )}
         </div>

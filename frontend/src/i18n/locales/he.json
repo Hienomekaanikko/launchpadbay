@@ -17,6 +17,7 @@
     "login": "התחברות",
     "logout": "התנתקות",
     "session": "סשן: {{id}}",
+    "withPartner": " · עם {{partner}}",
     "profileFor": "פרופיל של {{username}}",
     "mainNavigation": "ניווט ראשי",
     "lobbyUnread": "לובי (הודעות שלא נקראו)"
@@ -104,7 +105,8 @@
     "closeAndReload": "סגרו אותה ואז טענו מחדש את העמוד הזה."
   },
   "launchpad": {
-    "loading": "טוען…"
+    "loading": "טוען…",
+    "syncing": "מסנכרן עם השותף… {{seconds}} שנ׳"
   },
   "policies": {
     "close": "סגור",

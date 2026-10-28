@@ -17,6 +17,7 @@
     "login": "登录",
     "logout": "退出",
     "session": "会话：{{id}}",
+    "withPartner": " · 与 {{partner}}",
     "profileFor": "{{username}} 的个人资料",
     "mainNavigation": "主导航",
     "lobbyUnread": "大厅（未读消息）"
@@ -104,7 +105,8 @@
     "closeAndReload": "请关闭该标签页，然后重新加载此页面。"
   },
   "launchpad": {
-    "loading": "加载中…"
+    "loading": "加载中…",
+    "syncing": "正在与伙伴同步… {{seconds}} 秒"
   },
   "policies": {
     "close": "关闭",
