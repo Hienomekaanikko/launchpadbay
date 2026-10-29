@@ -18,12 +18,17 @@ Key features so far:
 
 ## Team Information
 
+Role options: Product Owner (PO), Project Manager (PM) / Scrum Master, Technical Lead / Architect, and Developer(DV).
+
 | Login | Role(s) | Responsibilities |
 |---|---|---|
-| `msuokas` | Roles we'll setup later :D
-| `mbonsdor` | Roles we'll setup later :D
-| `ykadosh` | Developer | Backend / WebSockets; Client/server messaging, backend wiring for: online presence, session management, chat functionality, reconnection logic |
-| `timurray` | _TBD_ | Not locked in yet. |
+| `msuokas` | PO, DV | Project concept, initial UI and sample integration, Docker/MySQL/Prisma setup, bcrypt/JWT authentication, the Tailwind design system, friends/profile editing, and session/chat frontend integration
+| `mbonsdor` | TL, DV | Audio engine refactoring and modularisation, GitHub OAuth, avatar handling, internationalization, and Hebrew RTL support
+| `ykadosh` | TL, DV | WebSocket backend, presence, shared sessions and join requests, private/session chat and message persistence, ordered message processing, and connection recovery |
+| `timurray` | PM, DV | HTTPS and certificates, environment/deployment hardening, Prometheus/Grafana monitoring and metrics, CI workflow setup, responsive layouts and navbar, and Privacy Policy/Terms of Service pages |
+
+> Missing database details and others.
+
 
 ## Project Management
 
@@ -96,40 +101,302 @@ What's actually functional today:
 - **Monitoring the Backend** — Prometheus collects data from Node.js (process metrics, HTTP requests and reponse durations). Grafana automatically loads these into a dashboard graphing the statistics.
 - **Lobby view** ("who's playing", chat, join/observe) — static placeholder text only, no real data or backend support. Assigned to `ykadosh`, see [Modules](#modules).
 
-## Modules
+## Checklist
+### Mandatory
+#### General requirements
 
-The subject requires 14 points total (Major = 2pts, Minor = 1pt). Below is the initial plan — done modules first, then what's planned next. Only fully working, demonstrable modules count at evaluation, so nothing here is claimed until it's actually wired end-to-end.
+- [x] The project is a web application with a frontend, backend, and database.
+- [x] Git history contains commits from all four team members, meaningful commit messages, and contributions across different parts of the project.
+- [x] Containerized deployment is available through one command: `make up` starts the frontend, backend, MySQL, Prometheus, and Grafana.
+- [ ] The website is compatible with the latest stable version of Google Chrome.
+- [ ] No warnings or errors appear in the browser console.
 
-### Done
+> We need to document the browser results when ready. Check the console results.
 
-| Module | Type | Points | Notes |
-|---|---|---|---|
-| Web — full-stack frameworks (frontend + backend) | Major | 2 | React (frontend) + Fastify (backend) |
-| User Management — standard user management and authentication | Major | 2 | Done — backend (bcrypt + JWT) and frontend both wired end-to-end, see [Features](#features) |
-| ORM for the database | Minor | 1 | Prisma 7 with the MariaDB driver adapter |
+- [x] Privacy Policy and Terms of Service are accessible from footer controls and contain project-specific information rather than empty placeholder pages.
 
-**Subtotal: 5 points.**
+> Policy docs need to be extended with final specs.
 
-### Initial plan (target: 14+ points)
+- [x] Multiple users can be logged in and active at the same time.
+- [x] Real-time updates are reflected across connected users where applicable.
+- [ ] Concurrent actions by different users have been verified to work without conflicts or performance issues.
+- [ ] Simultaneous user actions have been verified not to cause data corruption or race conditions.
 
-| Module | Type | Points | Owner | Status |
-|---|---|---|---|---|
-| Real-time features (WebSockets) — lobby presence + join/observe sessions | Major | 2 | `ykadosh` | Planned |
-| User interaction — chat + profile + friends list | Major | 2 | `ykadosh` | Planned |
-| Custom-made design system | Minor | 1 | TBD | Planned |
-| Remote OAuth 2.0 login (e.g. GitHub) | Minor | 1 | TBD | Planned |
-| Support for additional browsers | Minor | 1 | TBD | Planned |
-| Multiple languages (i18n, 3 languages) | Minor | 1 | TBD | Planned |
-| File upload & management — admin-only page to upload sounds/background for a new theme | Minor | 1 | TBD | Planned — buffer module |
+> We need to verify these then tick them off. 
 
-**Planned subtotal: 9 points → target total: 14 points**, with the file-upload module as margin above the required minimum, since the subject notes unvalidated modules score 0 and recommends aiming above 14.
+#### Technical requirements
 
-- *Web / User Management / ORM:* see [Technical Stack](#technical-stack) — these follow directly from the stack already in place.
-- *Real-time + User interaction:* both come out of the lobby feature (live presence, session join/observe, chat), so it's one coherent feature area rather than two disconnected ones; delegated to `ykadosh`.
-- *Design system, OAuth, browser support, i18n:* independent, parallelizable minors that don't block on the lobby work — good candidates to split across the rest of the team as it fills in.
-- *File upload:* scoped as an admin-only page (create a theme by uploading its pad sounds + background image, with validation, preview, upload progress, and delete) rather than a per-user upload system — same 1 point, less scope: reuses the existing `themes`/`theme_sounds` tables as-is, no ownership model needed.
+- [ ] The frontend is clear, responsive, and accessible across different devices.
 
-This plan will be revised as the team and scope firm up.
+> Validation, confirmation, testing.
+
+- [x] A CSS framework or styling solution is used: Tailwind CSS with shared theme tokens and custom CSS.
+- [x] Credentials are read from local, Git-ignored `.env` files, and `.env.example` is provided. The Compose database URL now interpolates environment variables instead of containing a literal password.
+- [x] The database has a clear schema and well-defined relations: users, friendships, messages, themes, and theme sounds are defined in Prisma with migrations.
+- [x] Passwords are hashed and salted with bcrypt, and protected routes verify JWTs.
+- [ ] Email and password authentication is available for both signup and login.
+
+> Technically the signup collects an email, but login currently looks up the account by username rather than email. We should sign in with email.
+
+- [ ] All forms and user inputs are properly validated in both the frontend and backend.
+
+> From the LLM assessment: "registration/login lack complete server-side field validation; empty JSON requests currently return HTTP 500, and login exposes Prisma error details. Session actions only receive shallow validation, and avatar uploads lack complete client-side size/format validation and server-side file-content validation."
+
+- [x] HTTPS is used for frontend-to-backend requests and the nginx-to-backend connection; browser WebSockets use WSS in the HTTPS deployment.
+
+#### README requirements
+
+- [x] The first line is italicized and identifies the project as part of the 42 curriculum with all team logins.
+- [x] Description includes the project name, purpose, and key features.
+- [x] Instructions describe prerequisites, environment configuration, certificate trust, and commands to run the project.
+- [x] Resources lists technical references and explains the tasks for which AI was used.
+- [x] Team Information assigns PO, PM, Tech Lead, and Developer responsibilities to the team members.
+- [x] Project Management explains the workflow, tracking tools, meetings, and communication channels.
+- [ ] Technical Stack accurately describes all significant technologies and their choices.
+
+Missing: the existing Technical Stack paragraph still says plain CSS and needs to reflect the Tailwind implementation.
+
+- [x] Database Schema describes tables, fields, data types, and relationships.
+- [ ] Features List is complete, accurate, and identifies the contributors to each feature.
+
+Missing: the existing feature list still describes the working lobby as a static placeholder and omits several implemented features.
+
+- [x] Modules lists the selected and candidate modules, requirements, implementation evidence, justifications, and point calculation in this checklist.
+- [ ] Each selected module has its contributing team member(s) clearly identified.
+- [ ] Individual Contributions gives every member's specific work and the challenges they faced and overcame.
+
+> We need to add these details.
+
+#### EVAL CHECKS - THIS SECTION WILL BE REMOVED
+
+These are evaluation targets not already covered by the mandatory implementation requirements above. They do not add module points.
+
+- [ ] All team members are present and participate in the evaluation.
+- [ ] Each member can individually explain their role, contributions, and at least one feature or module they personally implemented.
+- [ ] At least two different members can coherently explain the project concept, technology choices, and how the team coordinated its work.
+- [ ] Members can explain each other's work and show how their contributions were integrated.
+- [ ] The team can explain its architecture, technical decisions, challenges, solutions, and development trade-offs.
+
+Pending: these require preparation and confirmation with the team during a rehearsal or the evaluation itself.
+
+- [x] Code has a readable structure with separate backend feature files, frontend components/hooks, and audio engine, clock, channel, and effects files.
+- [ ] Deployment has been demonstrated from a fresh clone of the submitted repository in an empty directory, without relying on untracked assets or local-only configuration beyond the documented setup.
+- [ ] Any testing or automation scripts used during evaluation have been reviewed with the evaluator.
+- [ ] The main user flows have been demonstrated together without critical failures, including reasonable handling of unexpected or bad usage.
+- [ ] The team can demonstrate its learning, explain the project's creative choices, and make a small code modification if requested.
+
+Pending: complete a defense rehearsal and fresh-clone run. The known validation failures must be addressed before the unexpected-input check can pass.
+
+### Modules
+
+`[x]` marks completed, `[ ]` missing or incomplete, `[-]` not applicable, and `[?]` pending completion, verification, or acceptance. Pending requirements do not count as achieved points. The pending-inclusive tally assumes all `[?]` requirements are completed and accepted; any remaining `[ ]` requirement keeps a module out of that tally. The public API and file-upload modules are explicitly excluded from the pending-inclusive tally.
+
+#### Web — 9/12 points; partially complete
+
+##### Major: Use a framework for both the frontend and backend. — 2/2 points; implemented
+
+Responsible teammates: msuokas, mbonsdor, ykadosh, timurray
+
+- [x] Use a frontend framework (React, Vue, Angular, Svelte, etc.).
+- [x] Use a backend framework (Express, NestJS, Django, Flask, Ruby on Rails, etc.).
+- [-] Full-stack frameworks (Next.js, Nuxt.js, SvelteKit) count as both if you use both their frontend and backend capabilities.
+
+##### Major: Implement real-time features using WebSockets or similar technology. — 2/2 points; implemented
+
+Responsible teammates: ykadosh, msuokas
+
+- [x] Real-time updates across clients.
+- [x] Handle connection/disconnection gracefully.
+- [x] Efficient message broadcasting.
+
+Implementation: presence and session updates, heartbeat, reconnect attempts and a disconnect grace period. Session actions and chat are sent to their intended recipients; lobby-wide presence/session changes are broadcast to connected users. See `backend/ws.js`, `backend/sessions.js`, and `frontend/src/useSocket.js`.
+
+##### Major: Allow users to interact with other users. The minimum requirements are: — 2/2 points; implemented
+
+Responsible teammates: msuokas, ykadosh, mbonsdor
+
+- [x] A basic chat system (send/receive messages between users).
+- [x] A profile system (view user information).
+- [x] A friends system (add/remove friends, see friends list).
+
+Implementation: private/session chat, the signed-in user's profile, and friend requests, acceptance, removal, and listing. Viewing another user's full profile is not implemented; confirm that the evaluator accepts the existing profile system under this wording.
+
+##### Major: A public API to interact with the database with a secured API key, rate limiting, documentation, and at least 5 endpoints: — 0/2 points; incomplete optional candidate
+
+Responsible teammates: TBD for the public API work; existing database-route contributors: msuokas, mbonsdor, ykadosh
+
+- [x] GET /api/{something}
+- [x] POST /api/{something}
+- [x] PUT /api/{something}
+- [x] DELETE /api/{something}
+
+Existing routes cover these methods and exceed five endpoints: for example, GET `/api/themes`, `/api/profile`, and `/api/friends`; POST `/api/friends/requests`; PUT `/api/profile/password`; and DELETE `/api/profile`.
+
+> PROBLEM. I realised late that we do these endpoints but they are not public, they are private. We'd need to document and expose the endpoints. 
+
+##### Minor: Use an ORM for the database. — 1/1 point; implemented
+
+Responsible teammates: msuokas, mbonsdor, ykadosh
+
+- [x] Use an ORM for the database.
+
+Implementation: Prisma models, relations, migrations, and queries with the MariaDB driver adapter.
+
+##### Minor: Real-time collaborative features (shared workspaces, live editing, collaborative drawing, etc.). — 1/1 point; implemented
+
+Responsible teammates: msuokas, ykadosh
+
+- [x] Real-time collaborative features (shared workspaces, live editing, collaborative drawing, etc.).
+
+Implementation: two users share launchpad pad, split, and stutter actions, with a state snapshot for a partner joining an existing session. This is the shared music workspace; presence and connection handling are covered by the separate real-time Major module. Volume and filter mixes stay local. See `useLaunchpadSync.js` and the session action relay.
+
+##### Minor: Custom-made design system with reusable components, including a proper color palette, typography, and icons (minimum: 10 reusable components). — 1/1 point; implemented
+
+Responsible teammates: msuokas, timurray
+
+- [x] Custom-made design system with reusable components, including a proper color palette, typography, and icons (minimum: 10 reusable components).
+
+Implementation: Tailwind theme tokens in `frontend/src/index.css`, shared colors and typography, an SVG icon system, and at least 12 reusable components: `NavButton`, `FormButton`, `CloseButton`, `Input`, `Modal`, `GlassPanel`, `Icon`, `Tag`, `UserRow`, `FriendRequestRow`, `SessionRow`, and `MessageBubble`.
+
+##### Minor: File upload and management system. — 0/1 point; incomplete optional candidate
+
+Responsible teammates: mbonsdor, msuokas for existing avatar/account flows; TBD for the full file-management system
+
+- [x] Support multiple file types (images, documents, etc.).
+- [ ] Client-side and server-side validation (type, size, format).
+- [x] Secure file storage with proper access control.
+- [x] File preview functionality where applicable.
+- [x] Progress indicators for uploads.
+- [ ] Ability to delete uploaded files.
+
+Existing scope: authenticated avatar uploads accept JPEG, PNG, and WebP MIME types, use user-ID-based storage names, display the resulting avatar, and show an “Uploading…” status. Avatar images are intentionally publicly readable.
+
+>LLM analysis "Missing: complete client-side type/size/format checks, server-side validation of actual image content, and a dedicated uploaded-file deletion action. Replacing an avatar or deleting the entire account is not treated here as a complete file-management interface. The broader theme/sound upload manager remains unimplemented, so avatar upload is only claimed as part of user management."
+
+> If allowed the upload of wav files then I think this could work. 
+
+
+#### Accessibility and Internationalization — 0/3 points; completion and verification pending
+
+##### Minor: Support for multiple languages (at least 3 languages). — 0/1 point; full translation coverage pending
+
+Responsible teammates: mbonsdor
+
+- [x] Implement i18n (internationalization) system.
+- [x] At least 3 complete language translations.
+- [x] Language switcher in the UI.
+- [?] All user-facing text must be translatable.
+
+Implementation: i18next resources for English, Finnish, Hebrew, and Mandarin, a language switcher, and stored language selection. The locale files have matching translation keys.
+
+> I think we should consider the final labels. It is a digital interface so doesn't exactly follow the rules of physical. Maybe even just for Hebrew and or Mandarin? Would be easy. Sucks to do something just for evaluation.
+
+##### Minor: Right-to-left (RTL) language support. — 0/1 point; incomplete, review pending
+
+Responsible teammates: mbonsdor
+
+- [x] Support for at least one RTL language (Arabic, Hebrew, etc.).
+- [?] Complete layout mirroring (not just text direction).
+- [?] RTL-specific UI adjustments where needed.
+- [x] Seamless switching between LTR and RTL.
+
+Implementation: Hebrew changes the document language and direction immediately, and some layout positioning uses logical CSS properties.
+
+> Just need to validate completely here.
+
+Pending: validate complete mirroring and RTL-specific adjustments, including the launchpad and chat layouts that currently force LTR. The pending-inclusive point assumes any required adjustments are completed and the full requirement passes review.
+
+##### Minor: Support for additional browsers. — 0/1 point; awaiting verification
+
+Responsible teammates: TBD
+
+- [?] Full compatibility with at least 2 additional browsers (Firefox, Safari, Edge, etc.).
+- [?] Test and fix all features in each browser.
+- [?] Document any browser-specific limitations.
+- [?] Consistent UI/UX across all supported browsers.
+
+> Just missing validation and the point about documentation.
+
+Pending: finish compatibility checks, resolve any failures, and document the results and any browser-specific limitations. The pending-inclusive point assumes all these requirements are completed.
+
+#### User Management — 2/3 points; OAuth verification pending
+
+##### Major: Standard user management and authentication. — 2/2 points; implemented
+
+Responsible teammates: msuokas, mbonsdor, ykadosh
+
+- [x] Users can update their profile information.
+- [x] Users can upload an avatar (with a default avatar if none provided).
+- [x] Users can add other users as friends and see their online status.
+- [x] Users have a profile page displaying their information.
+
+Implementation: profile/email editing, password changes for password accounts, uploaded/default avatars, friends with online status, and the profile panel.
+
+##### Minor: Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.). — 0/1 point; pending live verification
+
+Responsible teammates: mbonsdor
+
+- [?] Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.).
+
+Implementation: GitHub authorization redirect, state-cookie validation, authorization-code exchange, local account creation/lookup, and the same application JWT flow used by password login. See `backend/authGithub.js` and the login/callback frontend integration.
+
+Pending: demonstrate a successful GitHub login round trip with the evaluation configuration. Passing this check adds 1 point; no further implementation is currently identified as necessary for this module.
+
+#### Devops — 0/2 points; alerting pending
+
+##### Major: Monitoring system with Prometheus and Grafana. — 0/2 points; alerting pending
+
+Responsible teammates: timurray
+
+- [x] Set up Prometheus to collect metrics.
+- [x] Configure exporters and integrations.
+- [x] Create custom Grafana dashboards.
+- [?] Set up alerting rules.
+- [x] Secure access to Grafana.
+
+Implementation: backend process and HTTP metrics, HTTPS scraping, provisioned dashboards/datasource, and Grafana login with its password supplied through `.env`, disabled signup, and a localhost. only host port.
+
+> Need to add alerting and possible some prometheus example queuries.
+
+#### Modules of choice — 0/2 points; custom-module acceptance pending
+
+##### Major: Implement a custom module that is not listed above. — 0/2 points; pending evaluator acceptance of the audio engine
+
+Responsible teammates: mbonsdor, msuokas
+
+- [?] The module must be substantial and demonstrate technical complexity.
+- [x] You must provide proper justification in your README.md explaining:
+  - [x] Why you chose this module.
+  - [x] What technical challenges it addresses.
+  - [x] How it adds value to your project.
+  - [x] Why it deserves Major module status (2 points).
+- [x] Taking shortcuts or implementing trivial features will result in rejection.
+- [x] Be creative and think outside the box.
+- [x] The module should be relevant to your project context.
+
+**Proposed module: Custom Web Audio sampler and performance engine.**
+
+**Why it was chosen:** LaunchpadBay is a playable browser-based music instrument. Its central feature needs a sampler and performance controls that support musical timing rather than independent, immediate sound triggers.
+
+**Technical challenges:** The engine schedules looping sources against the AudioContext clock, calculates loop and subdivision boundaries, tracks channel states (`idle`, `armed`, `playing`, and `queued`), switches or cancels queued clips, changes split timing, and starts/releases stutter divisions. It also manages decoding/caching, per-channel gain and low-pass filtering, parameter smoothing, and playback cleanup.
+
+**Value to the project:** Users can combine the 25 pads across five channels, make timed clip transitions, and perform split/stutter effects while controlling each channel's mix in the browser.
+
+**Why Major status is proposed:** This is a multi-part playback and timing system implemented across `engine.js`, `audio.js`, `clock.js`, `channel.js`, `split.js`, and `stutter.js`, with distinct state, scheduling, signal-processing, and resource-lifecycle responsibilities. It works locally without a partner; network action delivery and shared workspace synchronization remain the scope of the separate collaboration module. The scope goes beyond simply attaching a sound to each button.
+
+See [launchpad notes](frontend/src/launchpad/launchpad_notes.md) for architecture and timing details.
+
+#### Module point totals
+
+| Subject category | Achieved | Pending | Possible |
+|---|---:|---:|---:|
+| Web | 9 | 9 | 12 |
+| Accessibility and Internationalization | 0 | 3 | 3 |
+| User Management | 2 | 3 | 3 |
+| Devops | 0 | 2 | 2 |
+| Modules of choice | 0 | 2 | 2 |
+| **Total** | **11** | **19** | **22** |
+
 
 ## Individual Contributions
 
@@ -146,9 +413,9 @@ This plan will be revised as the team and scope firm up.
 - `make`
 
 ### Run it
+A .env.launchpadbay in $HOME is required for running.
 
 ```bash
-cp .env.example .env
 make
 ```
 Import certs/ca.pem into browser to trust certificate.
@@ -242,6 +509,6 @@ make dev
 - [Prometheus documentation](https://prometheus.io/docs/introduction/overview/)
 - [Grafana documentation](https://grafana.com/docs/grafana/latest/)
 
-**AI usage:** AI (Claude) was used as a learning and research tool throughout the project — to understand unfamiliar concepts (e.g. Prisma 7's driver-adapter requirement, Docker Compose healthcheck/`depends_on` semantics) and to explore current best practices before implementing them, rather than to generate unreviewed code wholesale. It was also used directly to diagnose and fix a real startup-ordering bug between the backend and MySQL containers, and to help draft this README from the project's actual code and Git history.
+**AI usage:** AI (Claude) was used as a learning and research tool throughout the project — to understand unfamiliar concepts (e.g. Prisma 7's driver-adapter requirement, Docker Compose healthcheck/`depends_on` semantics) and to explore current best practices before implementing them, rather than to generate unreviewed code wholesale. It was also used directly to diagnose and fix a real startup-ordering bug between the backend and MySQL containers, and to help draft this README from the project's actual code and Git history. Codex was used to compare the implementation with the subject and evaluation sheet, assemble the requirements checklist, and draft the audio engine's custom-module justification. The resulting point estimates still require live demonstrations and peer validation.
 
 ---
