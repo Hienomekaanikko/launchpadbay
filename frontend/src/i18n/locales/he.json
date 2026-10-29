@@ -106,7 +106,11 @@
   },
   "launchpad": {
     "loading": "טוען…",
-    "syncing": "מסנכרן עם השותף… {{seconds}} שנ׳"
+    "syncing": "מסנכרן עם השותף… {{seconds}} שנ׳",
+    "split": "פיצול ½",
+    "vol": "עוצ׳",
+    "lp": "מסנן",
+    "stu": "גמגום"
   },
   "policies": {
     "close": "סגור",
