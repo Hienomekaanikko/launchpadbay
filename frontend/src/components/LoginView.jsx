@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 
 export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' }) {
   const [registerView, setRegisterView] = useState(false)
-  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState(initialError)
   const { t } = useTranslation()
@@ -19,7 +19,7 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
     setError('')
 
     try {
-      const result = await login(username, password)
+      const result = await login(email, password)
       onLoggedIn(result.token, result.username)
       setShowLogin(false)
     } catch (err) {
@@ -32,7 +32,7 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
       {!registerView && <Modal as="form" className="z-10 text-black" onSubmit={handleSubmit}>
         <CloseButton className="text-black" onClick={() => setShowLogin(false)}>x</CloseButton>
 
-        <Input className="text-black placeholder:text-black placeholder:text-shadow:none" type="text" placeholder={t('login.username')} value={username} onChange={(e) => setUsername(e.target.value)} required />
+        <Input className="text-black placeholder:text-black placeholder:text-shadow:none" type="email" placeholder={t('login.email')} value={email} onChange={(e) => setEmail(e.target.value)} required />
         <Input className="text-black placeholder:text-black placeholder:text-shadow:none" type="password" placeholder={t('login.password')} value={password} onChange={(e) => setPassword(e.target.value)} required />
         {error && <div className="text-xs text-center max-w-55">{error}</div>}
         <FormButton className="text-black" type="submit">{t('login.login')}</FormButton>

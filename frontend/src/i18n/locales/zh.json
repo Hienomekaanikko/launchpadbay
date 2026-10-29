@@ -24,6 +24,7 @@
   },
   "login": {
     "username": "用户名",
+    "email": "邮箱",
     "password": "密码",
     "login": "登录",
     "loginWithGithub": "使用 GitHub 登录",
