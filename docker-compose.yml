@@ -21,7 +21,7 @@ services:
     env_file:
       - ./.env
     environment:
-      DATABASE_URL: "mysql://dj:greatestdj@mysql:3306/launchpadbay"
+      DATABASE_URL: "mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}"
     volumes:
       - ./backend/uploads:/app/uploads
       - ./certs/backend.pem:/run/tls/backend.pem:ro
