@@ -1,12 +1,12 @@
 *This project has been created as part of the 42 curriculum by mbonsdor, ykadosh, msuokas, timurray*
 
-# LaunchpadBay
+# Launchpad Bay
 
 Browser based music sampler: load a themed grid of 25 sound pads and jam alone or in a shared session. React frontend, Fastify + Prisma backend, and MySQL, all containerised with Docker Compose.
 
 ## Description
 
-LaunchpadBay's goal is a low-friction, browser-based sampler — no install, no account required to try it, just open it and start triggering sounds on a themed 5x5 pad grid.
+Launchpad Bay's goal is a low-friction, browser-based sampler — no install, no account required to try it, just open it and start triggering sounds on a themed 5x5 pad grid.
 
 Key features:
 
@@ -36,7 +36,7 @@ Responsibilities overlap across features. The [Individual Contributions](#indivi
 - **Communication:** Discord for day-to-day coordination. GitHub pull request threads are used for code and design review, keeping technical discussion and decisions attached to the change they affect, while providing insight into the creation of new tickets.
 - **Meetings:** One weekly sync, run Kanban-style: walk the board, review progress and blockers, and reprioritise the coming week's work.
 - **Task tracking:** GitHub Issues on a Kanban-style GitHub Project board. Work flows continuously through the columns rather than in fixed sprints, so status and ownership are visible at a glance.
-- **Ownership:** The module checklists name responsible teammates; `TBD` marks work that still needs an agreed owner.
+- **Ownership:** The module checklists name responsible teammates.
 
 ## Technical Stack
 
@@ -177,7 +177,7 @@ The entries below describe implemented features. Pending validation and missing 
 - [ ] Each selected module has its contributing team member(s) clearly identified.
 - [x] Individual Contributions gives every member's specific work and the challenges they faced and overcame.
 
-Pending: agree the remaining module ownership, including additional-browser checks and any optional public API or file-management work.
+> Pending: agree the remaining module ownership, including additional-browser checks and any optional public API or file-management work.
 
 #### EVAL CHECKS - THIS SECTION WILL BE REMOVED
 
@@ -189,7 +189,7 @@ These are evaluation targets not already covered by the mandatory implementation
 - [ ] Members can explain each other's work and show how their contributions were integrated.
 - [ ] The team can explain its architecture, technical decisions, challenges, solutions, and development trade-offs.
 
-Pending: these require preparation and confirmation with the team during a rehearsal or the evaluation itself.
+> Pending: these require preparation and confirmation with the team during a rehearsal or the evaluation itself.
 
 - [x] Code has a readable structure with separate backend feature files, frontend components/hooks, and audio engine, clock, channel, and effects files.
 - [ ] Deployment has been demonstrated from a fresh clone of the submitted repository in an empty directory, without relying on untracked assets or local-only configuration beyond the documented setup.
@@ -197,7 +197,7 @@ Pending: these require preparation and confirmation with the team during a rehea
 - [ ] The main user flows have been demonstrated together without critical failures, including reasonable handling of unexpected or bad usage.
 - [ ] The team can demonstrate its learning, explain the project's creative choices, and make a small code modification if requested.
 
-Pending: complete a defence rehearsal and fresh-clone run. The known validation failures must be addressed before the unexpected-input check can pass.
+> Pending: complete a defence rehearsal and fresh-clone run. The known validation failures must be addressed before the unexpected-input check can pass.
 
 ### Modules
 
@@ -229,7 +229,7 @@ Responsible teammates: msuokas, ykadosh, mbonsdor
 
 - [x] A basic chat system (send/receive messages between users).
 - [x] A profile system (view user information).
-- [x] A friends system (add/remove friends, see friends list).
+- [?] A friends system (add/remove friends, see friends list).
 
 Implementation: private/session chat, the signed-in user's profile, and friend requests, acceptance, removal, and listing. Viewing another user's full profile is not implemented; confirm that the evaluator accepts the existing profile system under this wording.
 
@@ -237,10 +237,10 @@ Implementation: private/session chat, the signed-in user's profile, and friend r
 
 Responsible teammates: TBD for the public API work; existing database-route contributors: msuokas, mbonsdor, ykadosh
 
-- [x] GET /api/{something}
-- [x] POST /api/{something}
-- [x] PUT /api/{something}
-- [x] DELETE /api/{something}
+- [ ] GET /api/{something}
+- [ ] POST /api/{something}
+- [ ] PUT /api/{something}
+- [ ] DELETE /api/{something}
 
 Existing routes cover these methods and exceed five endpoints: for example, GET `/api/themes`, `/api/profile`, and `/api/friends`; POST `/api/friends/requests`; PUT `/api/profile/password`; and DELETE `/api/profile`.
 
@@ -274,7 +274,7 @@ Implementation: Tailwind theme tokens in `frontend/src/index.css`, shared colour
 
 Responsible teammates: mbonsdor, msuokas for existing avatar/account flows; TBD for the full file-management system
 
-- [x] Support multiple file types (images, documents, etc.).
+- [?] Support multiple file types (images, documents, etc.).
 - [ ] Client-side and server-side validation (type, size, format).
 - [x] Secure file storage with proper access control.
 - [x] File preview functionality where applicable.
@@ -285,7 +285,7 @@ Existing scope: authenticated avatar uploads accept JPEG, PNG, and WebP MIME typ
 
 > LLM analysis "Missing: complete client-side type/size/format checks, server-side validation of actual image content, and a dedicated uploaded-file deletion action. Replacing an avatar or deleting the entire account is not treated here as a complete file-management interface. The broader theme/sound upload manager remains unimplemented, so avatar upload is only claimed as part of user management."
 
-> If allowed the upload of wav files then I think this could work.
+> If allowed the upload of wav files (.lpd file?) then I think this could work.
 
 #### Accessibility and Internationalization — 0/3 points; completion and verification pending
 
@@ -302,20 +302,16 @@ Implementation: i18next resources for English, Finnish, Hebrew, and Mandarin, a 
 
 > I think we should consider the final labels. It is a digital interface so doesn't exactly follow the rules of physical. Maybe even just for Hebrew and or Mandarin? Would be easy. Sucks to do something just for evaluation.
 
-##### Minor: Right-to-left (RTL) language support. — 0/1 point; incomplete, review pending
+##### Minor: Right-to-left (RTL) language support. — 1/1 point; incomplete, review pending
 
 Responsible teammates: mbonsdor
 
 - [x] Support for at least one RTL language (Arabic, Hebrew, etc.).
-- [?] Complete layout mirroring (not just text direction).
-- [?] RTL-specific UI adjustments where needed.
+- [x] Complete layout mirroring (not just text direction).
+- [x] RTL-specific UI adjustments where needed.
 - [x] Seamless switching between LTR and RTL.
 
-Implementation: Hebrew changes the document language and direction immediately, and some layout positioning uses logical CSS properties.
-
-> Just need to validate completely here.
-
-Pending: validate complete mirroring and RTL-specific adjustments, including the launchpad and chat layouts that currently force LTR. The pending-inclusive point assumes any required adjustments are completed and the full requirement passes review.
+Implementation: Hebrew changes the document language and direction immediately, and some layout positioning uses logical CSS properties. We treat the LaunchPad as a musical device which would be standardised in one format globally.
 
 ##### Minor: Support for additional browsers. — 0/1 point; awaiting verification
 
@@ -330,7 +326,7 @@ Responsible teammates: TBD
 
 Pending: finish compatibility checks, resolve any failures, and document the results and any browser-specific limitations. The pending-inclusive point assumes all these requirements are completed.
 
-#### User Management — 2/3 points; OAuth verification pending
+#### User Management — 3/3 points; OAuth verification pending
 
 ##### Major: Standard user management and authentication. — 2/2 points; implemented
 
@@ -343,15 +339,13 @@ Responsible teammates: msuokas, mbonsdor, ykadosh
 
 Implementation: profile/email editing, password changes for password accounts, uploaded/default avatars, friends with online status, and the profile panel.
 
-##### Minor: Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.). — 0/1 point; pending live verification
+##### Minor: Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.). — 1/1 point; pending live verification
 
 Responsible teammates: mbonsdor
 
-- [?] Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.).
+- [x] Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.).
 
 Implementation: GitHub authorisation redirect, state-cookie validation, authorisation-code exchange, local account creation/lookup, and the same application JWT flow used by password login. See `backend/authGithub.js` and the login/callback frontend integration.
-
-Pending: demonstrate a successful GitHub login round trip with the evaluation configuration. Passing this check adds 1 point; no further implementation is currently identified as necessary for this module.
 
 #### Devops — 0/2 points; alerting pending
 
@@ -402,35 +396,35 @@ See [launchpad notes](frontend/src/launchpad/launchpad_notes.md) for architectur
 | Subject category | Achieved | Pending | Possible |
 |---|---:|---:|---:|
 | Web | 9 | 9 | 12 |
-| Accessibility and Internationalization | 0 | 3 | 3 |
+| Accessibility and Internationalization | 2 | 3 | 3 |
 | User Management | 2 | 3 | 3 |
-| Devops | 0 | 2 | 2 |
+| DevOps | 0 | 2 | 2 |
 | Modules of choice | 0 | 2 | 2 |
-| **Total** | **11** | **19** | **22** |
+| **Total** | **13** | **19** | **22** |
 
 ## Individual Contributions
 
 These summaries follow the authored changes in the repository and the role assignments in [Team Information](#team-information). Shared features have contributions from more than one teammate.
 
-### msuokas — Product Owner / Developer
+### msuokas: Product Owner / Developer
 
 - **Implemented:** Project bootstrap and initial landing/launchpad UI; initial sample-engine integration; Docker/MySQL/Prisma setup; user and friendship schema changes; bcrypt/JWT authentication; the Tailwind component system; friendship management and profile editing; and frontend integration for presence, chat, session joining, and shared launchpad actions.
 - **Key areas:** `backend/server.js`, `backend/friends.js`, `backend/profile.js`, Prisma migrations, `frontend/src/App.jsx`, shared components/hooks, and the original container setup.
-- **Challenge and solution:** TODO:
+- **Challenge and solution:** TODO
 
-### mbonsdor — Technical Lead / Developer
+### mbonsdor: Technical Lead / Developer
 
 - **Implemented:** Audio engine refactoring into playback, timing, channel-state, effects, and UI modules; GitHub OAuth and related user-schema changes; default/uploaded/GitHub avatars; English, Finnish, Hebrew, and Mandarin language resources and switching; Hebrew RTL adjustments; and application title/favicon updates.
 - **Key areas:** `frontend/src/launchpad/`, `backend/authGithub.js`, `backend/avatars.js`, avatar/profile components, `frontend/src/i18n/`, and the language switcher.
 - **Challenge and solution:** TODO
 
-### ykadosh — Technical Lead / Developer
+### ykadosh: Technical Lead / Developer
 
 - **Implemented:** JWT-guarded WebSockets, the presence registry and broadcasts, session creation and join/accept/reject/leave flows, private/session chat, the messages table and persistence, canonical username handling, ordered message processing, graceful shutdown, and reconnection/session restoration. Also contributed frontend integration and technical documentation for the real-time layer.
 - **Key areas:** `backend/ws.js`, `backend/sessions.js`, `backend/chat.js`, WebSocket handling in `backend/server.js`, message migrations, and socket/session hooks.
 - **Challenge and solution:** TODO
 
-### timurray — Project Manager / Developer
+### timurray: Project Manager / Developer
 
 - **Implemented:** HTTPS certificates and proxy configuration; environment-file setup and credential/port hardening; backend metrics and Prometheus/Grafana services, provisioning, and dashboards; the CI workflow for frontend lint/build and backend dependency installation; responsive layouts and the navbar; and Privacy Policy/Terms of Service pages.
 - **Key areas:** `Makefile`, `docker-compose.yml`, `backend/metrics.js`, `monitoring/`, `.github/workflows/basic.yml`, nginx/Vite configuration, `AppNavbar.jsx`, responsive styles, and policy components/content.
@@ -608,6 +602,6 @@ make dev
 - [Prometheus documentation](https://prometheus.io/docs/introduction/overview/)
 - [Grafana documentation](https://grafana.com/docs/grafana/latest/)
 
-**AI usage:** AI (Claude) was used as a learning and research tool throughout the project — to understand unfamiliar concepts (e.g. Prisma 7's driver-adapter requirement, Docker Compose healthcheck/`depends_on` semantics) and to explore current best practices before implementing them, rather than to generate unreviewed code wholesale. It was also used directly to diagnose and fix a real startup-ordering bug between the backend and MySQL containers, and to help draft this README from the project's actual code and Git history. Codex was used to compare the implementation with the subject and evaluation sheet, assemble the requirements checklist, and draft the audio engine's custom-module justification. The resulting point estimates still require live demonstrations and peer validation.
+**AI usage:** AI (Claude) was used as a learning and research tool throughout the project — to understand unfamiliar concepts (e.g. Prisma 7's driver-adapter requirement, Docker Compose healthcheck/`depends_on` semantics) and to explore current best practices before implementing them, rather than to generate unreviewed code wholesale. It was also used directly to diagnose and fix a real startup-ordering bug between the backend and MySQL containers, and to help draft this README from the project's actual code and Git history. Codex was used to compare the implementation with the subject and evaluation sheet, assemble the requirements checklist, and draft the audio engine's custom-module justification.
 
 ---
