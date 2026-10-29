@@ -13,7 +13,7 @@
   "nav": {
     "home": "Koti",
     "lobby": "Lobby",
-    "play": "Pelaa",
+    "play": "Musisoi",
     "login": "Kirjaudu sisään",
     "logout": "Kirjaudu ulos",
     "session": "Sessio: {{id}}",
@@ -106,7 +106,11 @@
   },
   "launchpad": {
     "loading": "Ladataan…",
-    "syncing": "Synkronoidaan partnerin kanssa… {{seconds}} s"
+    "syncing": "Synkronoidaan partnerin kanssa… {{seconds}} s",
+    "split": "PUOLITUS ½",
+    "vol": "VOIMA",
+    "lp": "SUODIN",
+    "stu": "ÄNKYTYS"
   },
   "policies": {
     "close": "Sulje",

@@ -106,7 +106,11 @@
   },
   "launchpad": {
     "loading": "加载中…",
-    "syncing": "正在与伙伴同步… {{seconds}} 秒"
+    "syncing": "正在与伙伴同步… {{seconds}} 秒",
+    "split": "分割 ½",
+    "vol": "音量",
+    "lp": "滤波",
+    "stu": "顿音"
   },
   "policies": {
     "close": "关闭",

@@ -95,12 +95,12 @@ export default function LaunchpadView({ socket, activeSession }) {
       <div className={`grid-wrapper${ready ? ' ready' : ''}`}>
         <div id="loop-bar"><div id="loop-bar-fill" /></div>
         <div id="transport-controls">
-          <button type="button" id="split-btn" className="transport-btn">SPLIT ½</button>
+          <button type="button" id="split-btn" className="transport-btn">{t('launchpad.split')}</button>
         </div>
 
         <div className="grid-with-knobs">
           <div className="knob-col-wrap">
-            <span className="knob-col-label">VOL</span>
+            <span className="knob-col-label">{t('launchpad.vol')}</span>
             <div className="knob-col" id="vol-knobs" />
           </div>
 
@@ -111,12 +111,12 @@ export default function LaunchpadView({ socket, activeSession }) {
           </div>
 
           <div className="knob-col-wrap">
-            <span className="knob-col-label">LP</span>
+            <span className="knob-col-label">{t('launchpad.lp')}</span>
             <div className="knob-col" id="filter-knobs" />
           </div>
 
           <div className="knob-col-wrap">
-            <span className="knob-col-label">STU</span>
+            <span className="knob-col-label">{t('launchpad.stu')}</span>
             <div className="knob-col" id="stutter-btns" />
           </div>
         </div>
