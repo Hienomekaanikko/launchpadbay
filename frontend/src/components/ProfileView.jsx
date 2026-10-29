@@ -52,7 +52,7 @@ function FriendsButton({ open, onClick }) {
   )
 }
 
-function FriendsPanel({ friends, incoming, unread, onChatClick, onAcceptClick, onRejectClick, onRemoveClick }) {
+function FriendsPanel({ friends, incoming, unread, onProfileClick, onChatClick, onAcceptClick, onRejectClick, onRemoveClick }) {
   const { t } = useTranslation()
   return (
     <div className="flex flex-col gap-1">
@@ -67,7 +67,7 @@ function FriendsPanel({ friends, incoming, unread, onChatClick, onAcceptClick, o
       <div>{t('profile.friends')}</div>
       {friends.length === 0
         ? <div className="text-white/60 text-xs text-center py-2 font-sans">{t('profile.noFriends')}</div>
-        : friends.map((friend) => <UserRow key={friend.username} {...friend} unread={unread.includes(friend.username)} onChatClick={onChatClick} onRemoveClick={onRemoveClick} />)}
+        : friends.map((friend) => <UserRow key={friend.username} {...friend} unread={unread.includes(friend.username)} onProfileClick={onProfileClick} onChatClick={onChatClick} onRemoveClick={onRemoveClick} />)}
     </div>
   )
 }
@@ -95,7 +95,7 @@ function ProfileDetails({ profile, onEditClick }) {
 }
 
 // friends: [{ username, online }], incoming: [username]
-export default function ProfileView({ token, inSession, friends, incoming, unread, onChatClick, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen, onAccountDeleted }) {
+export default function ProfileView({ token, inSession, friends, incoming, unread, onProfileClick, onChatClick, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen, onAccountDeleted }) {
   const { t } = useTranslation()
   const [profile, setProfile] = useState(null)
   const [error, setError] = useState('')
@@ -135,6 +135,7 @@ export default function ProfileView({ token, inSession, friends, incoming, unrea
                             friends={friends}
                             incoming={incoming}
                             unread={unread}
+                            onProfileClick={onProfileClick}
                             onChatClick={onChatClick}
                             onAcceptClick={onAcceptClick}
                             onRejectClick={onRejectClick}

@@ -40,6 +40,19 @@ export default async function profileRoutes(fastify) {
 		}
 	})
 
+	// Another user's public profile: never their email or id
+	fastify.get('/users/:username', { onRequest: [fastify.authenticate] }, async (request, reply) => {
+		const user = await prisma.users.findUnique({ where: { username: String(request.params.username) } })
+		if (!user) {
+			return reply.code(404).send({ error: 'User not found' })
+		}
+		return {
+			username: user.username,
+			avatar: user.avatar ? avatarUrl(user.avatar) : DEFAULT_AVATAR_URL,
+			createdAt: user.created_at,
+		}
+	})
+
 	fastify.patch('/profile', { onRequest: [fastify.authenticate] }, async (request, reply) => {
 		const { email } = request.body ?? {}
 		if (typeof email !== 'string' || email.length > 255 || !EMAIL_PATTERN.test(email)) {

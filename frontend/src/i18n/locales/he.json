@@ -84,7 +84,14 @@
     "add": "הוסף את {{username}} כחבר",
     "chatWith": "צ'אט עם {{username}}",
     "chatWithUnread": "צ'אט עם {{username}} (הודעות שלא נקראו)",
-    "remove": "הסר את {{username}} מהחברים"
+    "remove": "הסר את {{username}} מהחברים",
+    "addFriend": "הוסף לחברים",
+    "acceptRequest": "אשר בקשת חברות",
+    "requestSent": "הבקשה נשלחה",
+    "removeFriend": "הסר מחברים",
+    "chat": "צ'אט",
+    "online": "מחובר",
+    "offline": "לא מחובר"
   },
   "session": {
     "join": "הצטרף",

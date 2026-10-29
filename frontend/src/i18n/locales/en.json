@@ -84,7 +84,14 @@
     "add": "Add {{username}} as a friend",
     "chatWith": "Chat with {{username}}",
     "chatWithUnread": "Chat with {{username}} (unread messages)",
-    "remove": "Remove {{username}} from friends"
+    "remove": "Remove {{username}} from friends",
+    "addFriend": "Add friend",
+    "acceptRequest": "Accept friend request",
+    "requestSent": "Request sent",
+    "removeFriend": "Remove friend",
+    "chat": "Chat",
+    "online": "Online",
+    "offline": "Offline"
   },
   "session": {
     "join": "JOIN",

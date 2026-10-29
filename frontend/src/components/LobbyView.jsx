@@ -11,7 +11,7 @@ import { MAX_MESSAGE_CHARS } from '../useChat.js'
 import useStickToBottom from '../useStickToBottom.js'
 
 // canAddFriend(username) decides whether a row gets the add-friend button
-function PlayersOnline({ online, unread, onChatClick, canAddFriend, onAddFriendClick }) {
+function PlayersOnline({ online, unread, onProfileClick, onChatClick, canAddFriend, onAddFriendClick }) {
   const { t } = useTranslation()
   // someone who wrote to us and then left stays listed until we've read it
   const onlineOnly = online.filter((user) => user.online || unread.includes(user.username))
@@ -24,6 +24,7 @@ function PlayersOnline({ online, unread, onChatClick, canAddFriend, onAddFriendC
               key={user.username}
               {...user}
               unread={unread.includes(user.username)}
+              onProfileClick={onProfileClick}
               onChatClick={onChatClick}
               onAddFriendClick={canAddFriend(user.username) ? onAddFriendClick : undefined}
             />
@@ -70,7 +71,7 @@ function SessionChat({ messages, onSendMessage }) {
   )
 }
 
-export default function LobbyView({ online, unread, canAddFriend, onAddFriendClick, activeSession, sessions, onJoinClick, onCancelClick, onChatClick, sessionMessages, onSendSessionMessage }) {
+export default function LobbyView({ online, unread, canAddFriend, onAddFriendClick, activeSession, sessions, onJoinClick, onCancelClick, onProfileClick, onChatClick, sessionMessages, onSendSessionMessage }) {
   const { t } = useTranslation()
   const [tab, setTab] = useState('online')
 
@@ -81,7 +82,7 @@ export default function LobbyView({ online, unread, canAddFriend, onAddFriendCli
         <NavButton onClick={() => setTab('sessions')} className={tab === 'sessions' ? 'bg-white/30' : 'after:content-none'}>{activeSession ? t('lobby.sessionChat') : t('lobby.sessions')}</NavButton>
       </div>
       {tab === 'online'
-        ? <PlayersOnline online={online} unread={unread} onChatClick={onChatClick} canAddFriend={canAddFriend} onAddFriendClick={onAddFriendClick} />
+        ? <PlayersOnline online={online} unread={unread} onProfileClick={onProfileClick} onChatClick={onChatClick} canAddFriend={canAddFriend} onAddFriendClick={onAddFriendClick} />
         : activeSession
           ? <SessionChat messages={sessionMessages} onSendMessage={onSendSessionMessage} />
           : <SessionsList sessions={sessions} onJoinClick={onJoinClick} onCancelClick={onCancelClick} />}

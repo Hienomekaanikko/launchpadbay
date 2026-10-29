@@ -84,7 +84,14 @@
     "add": "Lisää {{username}} kaveriksi",
     "chatWith": "Keskustele käyttäjän {{username}} kanssa",
     "chatWithUnread": "Keskustele käyttäjän {{username}} kanssa (lukemattomia viestejä)",
-    "remove": "Poista {{username}} kavereista"
+    "remove": "Poista {{username}} kavereista",
+    "addFriend": "Lisää kaveriksi",
+    "acceptRequest": "Hyväksy kaveripyyntö",
+    "requestSent": "Pyyntö lähetetty",
+    "removeFriend": "Poista kavereista",
+    "chat": "Keskustele",
+    "online": "Paikalla",
+    "offline": "Poissa"
   },
   "session": {
     "join": "LIITY",
