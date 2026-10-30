@@ -44,21 +44,21 @@ export default function UserProfilePopup({ token, userId, online, friendStatus, 
       <div className="flex w-full justify-end">
         <CloseButton onClick={onClose}>x</CloseButton>
       </div>
-      {error && <p className="text-error text-xs font-sans text-center">{error}</p>}
-      {!error && !user && <p className="text-black text-xs font-sans text-center">{t('common.loading')}</p>}
+      {error && <p className="text-error text-xs text-center">{error}</p>}
+      {!error && !user && <p className="text-black text-xs text-center">{t('common.loading')}</p>}
       {user && (
         <>
           <div className="flex items-center gap-4">
             <img src={user.avatar} alt="" className="block w-16 h-16 rounded-full object-cover" />
             <div className="flex flex-col gap-1 min-w-0">
-              <h2 className="text-black text-sm font-medium font-sans break-all">{user.username}</h2>
-              <span className="flex items-center gap-2 text-black/60 text-xs font-sans">
+              <h2 className="text-black text-sm font-medium break-all">{user.username}</h2>
+              <span className="flex items-center gap-2 text-black/60 text-xs">
                 <span className={`w-2 h-2 rounded-full ${online ? 'bg-online' : 'bg-black/30'}`} aria-hidden="true" />
                 {online ? t('friends.online') : t('friends.offline')}
               </span>
             </div>
           </div>
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 text-xs font-sans">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 text-xs">
             <dt className="text-black/60">{t('profile.memberSince')}</dt>
             <dd className="text-black">{new Date(user.createdAt).toLocaleDateString()}</dd>
           </dl>

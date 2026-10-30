@@ -66,7 +66,7 @@ function FriendsPanel({ friends, incoming, unread, onProfileClick, onChatClick, 
       )}
       <div>{t('profile.friends')}</div>
       {friends.length === 0
-        ? <div className="text-white/60 text-xs text-center py-2 font-sans">{t('profile.noFriends')}</div>
+        ? <div className="text-white/60 text-xs text-center py-2">{t('profile.noFriends')}</div>
         : friends.map((friend) => <UserRow key={friend.id} {...friend} unread={unread.includes(friend.id)} onProfileClick={onProfileClick} onChatClick={onChatClick} onRemoveClick={onRemoveClick} />)}
     </div>
   )
@@ -81,7 +81,7 @@ function ProfileDetails({ profile, onEditClick }) {
   ]
   return (
     <div className="flex flex-col gap-3">
-      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm font-sans">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
         {rows.map(([label, value]) => (
           <div key={label} className="contents">
             <dt className="text-white/60">{label}</dt>

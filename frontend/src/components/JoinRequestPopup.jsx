@@ -7,7 +7,7 @@ export default function JoinRequestPopup({ username, onAcceptClick, onRejectClic
   const { t } = useTranslation()
   return (
     <Modal className="z-30">
-      <div className="text-white text-sm font-sans text-center">
+      <div className="text-white text-sm">
         {t('session.wantsToJoin', { username })}
       </div>
       <div className="flex gap-2">

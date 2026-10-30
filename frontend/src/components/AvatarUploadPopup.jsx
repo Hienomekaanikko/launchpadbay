@@ -29,7 +29,7 @@ export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
   return createPortal(
     <Modal className="z-30 w-[min(90vw,20rem)] gap-3">
       <div className="flex w-full items-center justify-between">
-        <h2 className="text-black text-sm font-medium tracking-nav font-sans">
+        <h2 className="text-black text-sm font-medium tracking-nav">
           {t('profile.changeAvatar')}
         </h2>
         <CloseButton onClick={onClose}>x</CloseButton>
@@ -39,10 +39,10 @@ export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
         accept="image/png,image/jpeg,image/webp"
         onChange={handleFileSelected}
         disabled={uploading}
-        className="w-full text-xs text-black/80 font-sans file:me-2"
+        className="w-full text-xs text-black/80 file:me-2"
       />
-      {uploading && <p className="text-black/60 text-xs font-sans">{t('profile.uploading')}</p>}
-      {error && <p className="text-error text-xs font-sans">{error}</p>}
+      {uploading && <p className="text-black/60 text-xs">{t('profile.uploading')}</p>}
+      {error && <p className="text-error text-xs">{error}</p>}
     </Modal>,
     document.body,
   )

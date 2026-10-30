@@ -8,9 +8,9 @@ import Input from './Input.jsx'
 import FormButton from './FormButton.jsx'
 
 const sectionClasses = 'flex w-full flex-col gap-2'
-const headingClasses = 'text-black text-xs font-medium tracking-nav font-sans'
-const noteClasses = 'text-black/60 text-xs font-sans'
-const errorClasses = 'text-error text-xs font-sans'
+const headingClasses = 'text-black text-xs font-medium tracking-nav'
+const noteClasses = 'text-black/60 text-xs'
+const errorClasses = 'text-error text-xs'
 
 function Status({ error, success }) {
   if (error) return <p className={errorClasses}>{error}</p>
@@ -136,7 +136,7 @@ export default function EditProfilePopup({ token, profile, inSession, onProfileC
   return createPortal(
     <Modal className="z-30 w-[min(90vw,22rem)] max-h-[90vh] overflow-y-auto items-stretch gap-5">
       <div className="flex w-full items-center justify-between">
-        <h2 className="text-black text-sm font-medium tracking-nav font-sans">{t('profile.edit')}</h2>
+        <h2 className="text-black text-sm font-medium tracking-nav">{t('profile.edit')}</h2>
         <CloseButton onClick={onClose}>x</CloseButton>
       </div>
       <EmailForm token={token} profile={profile} onProfileChange={onProfileChange} />
