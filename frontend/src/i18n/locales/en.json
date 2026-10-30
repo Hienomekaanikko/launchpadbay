@@ -28,7 +28,11 @@
     "password": "Password",
     "login": "Login",
     "loginWithGithub": "Login With GitHub",
-    "notRegisteredYet": "Not Registered Yet?"
+    "notRegisteredYet": "Not Registered Yet?",
+    "invalidCredentials": "Invalid username or password",
+    "githubLoginCancelled": "GitHub login cancelled",
+    "githubLoginFailed": "GitHub login failed",
+    "githubLoginExpired": "GitHub login expired, please try again"
   },
   "register": {
     "username": "Set username",
@@ -38,7 +42,15 @@
     "submit": "Submit",
     "passwordMismatch": "Passwords do not match",
     "success": "Registration successful!",
-    "continue": "Continue!"
+    "continue": "Continue!",
+    "alreadyTaken": "Username or email already taken.",
+    "invalidUsername": "Username must be {{min}}-{{max}} characters long and contain only letters, numbers, '_' or '-'",
+    "invalidEmail": "Enter a valid email address",
+    "passwordTooShort": "Password must be at least {{min}} characters",
+    "passwordTooLong": "Password must not exceed {{max}} bytes",
+    "passwordRequireLetter": "Password must contain at least one letter",
+    "passwordRequireDigit": "Password must contain at least one number",
+    "passwordRequireSpecial": "Password must contain at least one special character"
   },
   "lobby": {
     "online": "Online",
@@ -68,7 +80,16 @@
     "deleteConfirmUsername": "This permanently deletes your account, friends and messages. Type your username to confirm.",
     "deletePermanently": "Delete permanently",
     "leaveSessionToDelete": "Leave your session to delete your account.",
-    "deleteConfirmLabel": "Confirm deletion"
+    "deleteConfirmLabel": "Confirm deletion",
+    "userNotFound": "User not found",
+    "emailTaken": "Email already taken",
+    "passwordIncorrect": "Password is incorrect",
+    "currentPasswordIncorrect": "Current password is incorrect",
+    "usernameMismatch": "Username does not match",
+    "githubOnlyAccount": "This account signs in with GitHub and has no password",
+    "leaveSessionBeforeDelete": "Leave your session before deleting your account",
+    "noFileUploaded": "No file uploaded",
+    "invalidAvatarType": "Only JPEG, PNG, or WebP allowed"
   },
   "chat": {
     "sayHi": "Say hi to {{name}}!",
@@ -108,9 +129,9 @@
     "gone": "Closed",
     "alreadyInSession": "In a session"
   },
-  "alreadyOpen":{
-  	"alreadyOpenNotice": "LaunchpadBay is already open in another tab.",
-  	"closeAndReload": "Close it, then reload this page."
+  "alreadyOpen": {
+    "alreadyOpenNotice": "LaunchpadBay is already open in another tab.",
+    "closeAndReload": "Close it, then reload this page."
   },
   "launchpad": {
     "loading": "Loading…",
@@ -152,5 +173,10 @@
         }
       ]
     }
+  },
+  "serverErrors": {
+    "invalidRequestBody": "Invalid request",
+    "unauthorized": "Your session has expired, please log in again.",
+    "generic": "Something went wrong. Please try again"
   }
 }

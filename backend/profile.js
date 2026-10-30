@@ -33,7 +33,7 @@ export default async function profileRoutes(fastify) {
 	fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, reply) => {
 		const user = await prisma.users.findUnique({ where: { id: request.user.id } })
 		if (!user) {
-			return reply.code(404).send({ error: 'User not found' })
+			return reply.code(404).send({ error: 'user_not_found' })
 		}
 		return {
 			id: user.id,
@@ -49,7 +49,7 @@ export default async function profileRoutes(fastify) {
 	fastify.get('/users/:id', { onRequest: [fastify.authenticate] }, async (request, reply) => {
 		const user = await prisma.users.findUnique({ where: { id: String(request.params.id) } })
 		if (!user) {
-			return reply.code(404).send({ error: 'User not found' })
+			return reply.code(404).send({ error: 'user_not_found' })
 		}
 		return {
 			id: user.id,
@@ -69,7 +69,7 @@ export default async function profileRoutes(fastify) {
 			return { email: updated.email }
 		} catch (err) {
 			if (err.code === 'P2002') {
-				return reply.code(409).send({ error: 'Email already taken' })
+				return reply.code(409).send({ error: 'email_taken' })
 			}
 			throw err
 		}
@@ -79,10 +79,10 @@ export default async function profileRoutes(fastify) {
 		const { currentPassword, newPassword } = request.body ?? {}
 		const user = await prisma.users.findUnique({ where: { id: request.user.id } })
 		if (!user) {
-			return reply.code(404).send({ error: 'User not found' })
+			return reply.code(404).send({ error: 'user_not_found' })
 		}
 		if (!user.password_hash) {
-			return reply.code(400).send({ error: 'This account signs in with GitHub and has no password' })
+			return reply.code(400).send({ error: 'github_only_account' })
 		}
 
 		const parsedPassword = validateNewPassword(newPassword)
@@ -106,7 +106,7 @@ export default async function profileRoutes(fastify) {
 		const { password, username } = request.body ?? {}
 		const user = await prisma.users.findUnique({ where: { id: request.user.id } })
 		if (!user) {
-			return reply.code(404).send({ error: 'User not found' })
+			return reply.code(404).send({ error: 'user_not_found' })
 		}
 
 		const typedUsername = trimUsername(username)
@@ -115,10 +115,10 @@ export default async function profileRoutes(fastify) {
 			: isBoundedString(typedUsername, USERNAME_LOOKUP_MAX_LENGTH) && typedUsername === user.username
 
 		if (!confirmed) {
-			return reply.code(403).send({ error: user.password_hash ? 'Password is incorrect' : 'Username does not match' })
+			return reply.code(403).send({ error: user.password_hash ? 'password_incorrect' : 'username_mismatch' })
 		}
 		if (getSessionByUserId(user.id)) {
-			return reply.code(409).send({ error: 'Leave your session before deleting your account' })
+			return reply.code(409).send({ error: 'leave_session_before_delete' })
 		}
 
 		await prisma.users.delete({ where: { id: user.id } })
@@ -140,12 +140,12 @@ export default async function profileRoutes(fastify) {
 	fastify.post('/profile/avatar', { onRequest: [fastify.authenticate] }, async (request, reply) => {
 		const upload = await request.file()
 		if (!upload) {
-			return reply.code(400).send({ error: 'No file uploaded' })
+			return reply.code(400).send({ error: 'no_file_uploaded' })
 		}
 
 		// Re-checked here because the client's accept attribute is only a hint
 		if (!ALLOWED_AVATAR_TYPES.includes(upload.mimetype)) {
-			return reply.code(400).send({ error: 'Only JPEG, PNG, or WebP allowed' })
+			return reply.code(400).send({ error: 'invalid_avatar_type' })
 		}
 
 		const filename = `${request.user.id}.${extensionFor(upload.mimetype)}`

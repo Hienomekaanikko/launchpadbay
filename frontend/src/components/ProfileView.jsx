@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { translateServerError } from '../i18n/serverErrors.js'
 import { fetchProfile } from '../auth.js'
 import NavButton from './NavButton.jsx'
 import Icon from './Icon.jsx'
@@ -106,7 +107,7 @@ export default function ProfileView({ token, inSession, friends, incoming, unrea
     let cancelled = false
     fetchProfile(token)
       .then((data) => { if (!cancelled) setProfile(data) })
-      .catch((err) => { if (!cancelled) setError(err.message) })
+      .catch((err) => { if (!cancelled) setError(translateServerError(t, err)) })
     return () => { cancelled = true }
   }, [token])
 

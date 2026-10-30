@@ -54,13 +54,13 @@ export default async function githubAuth(fastify) {
 
 		// error could be user clicked "Cancel" on GitHub or similar
 		if (error) {
-			return redirectToFrontend(reply, { error: 'GitHub login cancelled' })
+			return redirectToFrontend(reply, { error: 'github_login_cancelled' })
 		}
 		if (!state || state !== expectedState) {
-			return redirectToFrontend(reply, { error: 'GitHub login expired, please try again' })
+			return redirectToFrontend(reply, { error: 'github_login_expired' })
 		}
 		if (!githubAuthCode) {
-			return redirectToFrontend(reply, { error: 'GitHub login failed' })
+			return redirectToFrontend(reply, { error: 'github_login_failed' })
 		}
 
 		// Exchange that code for a GitHub access token
@@ -80,7 +80,7 @@ export default async function githubAuth(fastify) {
 		const githubTokenPayload = await githubTokenResponse.json()
 		const githubAccessToken = githubTokenPayload.access_token
 		if (!githubAccessToken) {
-			return redirectToFrontend(reply, { error: 'GitHub login failed' })
+			return redirectToFrontend(reply, { error: 'github_login_failed' })
 		}
 
 		// Load the GitHub profile with that token
@@ -93,7 +93,7 @@ export default async function githubAuth(fastify) {
 		})
 		const githubUser = await githubUserResponse.json()
 		if (!githubUser.id) {
-			return redirectToFrontend(reply, { error: 'GitHub login failed' })
+			return redirectToFrontend(reply, { error: 'github_login_failed' })
 		}
 
 		const githubId = String(githubUser.id)

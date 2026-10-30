@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
+import { translateServerError } from '../i18n/serverErrors.js'
 import Modal from './Modal.jsx'
 import CloseButton from './CloseButton.jsx'
 import { uploadAvatar } from '../auth.js'
@@ -21,7 +22,7 @@ export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
       onAvatarChange(avatar)
       onClose()
     } catch (err) {
-      setError(err.message)
+      setError(translateServerError(t, err))
       setUploading(false)
     }
   }

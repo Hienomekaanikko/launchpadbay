@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { translateServerError } from '../i18n/serverErrors.js'
 import { register } from '../auth.js'
 import Modal from './Modal.jsx'
 import CloseButton from './CloseButton.jsx'
@@ -38,7 +39,7 @@ export default function RegisterView({ setRegisterView }) {
       await register(username, email, password)
       setSubmitted(true)
     } catch (err) {
-      setError(err.message)
+      setError(translateServerError(t, err))
     }
   }
 

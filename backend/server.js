@@ -100,7 +100,7 @@ fastify.decorate('authenticate', async function (request, reply) {
     try {
         await request.jwtVerify()
     } catch (err) {
-        reply.code(401).send({ error: 'Unauthorized' })
+        reply.code(401).send({ error: 'unauthorized' })
     }
 })
 
@@ -296,7 +296,7 @@ fastify.post('/register', async (request, reply) => {
       return { id: user.id, username: user.username }
     } catch (err) {
       if (err.code === 'P2002') {
-        return reply.code(409).send({ error: 'Username or email already taken' })
+        return reply.code(409).send({ error: 'already_taken' })
       }
       throw err
     }
@@ -311,12 +311,12 @@ fastify.post('/login', async (request, reply) => {
 
     const user = await prisma.users.findUnique({ where: { email } })
     if (!user || !user.password_hash) { // GitHub-only accounts have no password
-      return reply.code(401).send({ error: 'Invalid email or password' })
+      return reply.code(401).send({ error: 'invalid_credentials' })
     }
 
     const valid = await bcrypt.compare(password, user.password_hash)
     if (!valid) {
-      return reply.code(401).send({ error: 'Invalid email or password' })
+      return reply.code(401).send({ error: 'invalid_credentials' })
     }
 
     const token = fastify.jwt.sign({ id: user.id, username: user.username })
