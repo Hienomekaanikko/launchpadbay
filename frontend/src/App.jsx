@@ -27,17 +27,18 @@ function App() {
   const [showLogin, setShowLogin] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [token, setToken] = useState(() => localStorage.getItem('token'));
+  const [userId, setUserId] = useState(() => localStorage.getItem('userId'));
   const [username, setUsername] = useState(() => localStorage.getItem('username'));
   const [lobbyMode, setLobbyMode] = useState(false);
   const [profileMode, setProfileMode] = useState(false);
-  const [viewedUser, setViewedUser] = useState(null) // username whose profile popup is open
+  const [viewedUser, setViewedUser] = useState(null) // { id, username } whose profile popup is open
   const loggedIn = Boolean(token)
   const { socket, reconnecting } = useSocket(token)
   const closeCode = useCloseCode(socket)
-  const onlineUsers = usePresence(socket).filter((user) => user.username !== username)
+  const onlineUsers = usePresence(socket).filter((user) => user.id !== userId)
   const join = useSessionJoin(socket)
   const { activeSession } = join
-  const chat = useChat(socket, username, activeSession)
+  const chat = useChat(socket, userId, activeSession)
   // our join request and its rejection are local state, so server updates to the list can't overwrite them
   const sessions = useSessions(socket).map((session) => {
     if (session.id === join.pendingSessionId) return { ...session, status: 'pending' }
@@ -47,12 +48,9 @@ function App() {
   // only show who we're playing with while they're actually still in the session
   const partner = sessions.find((session) => session.id === activeSession)?.current > 1 ? join.partner : null
   const friendsState = useFriends(token)
-  const friendsWithStatus = friendsState.friends.map((friend) => ({
-    username: friend,
-    online: onlineUsers.some((user) => user.username === friend && user.online),
-  }))
-  const isOnline = (other) => onlineUsers.some((user) => user.username === other && user.online)
-  const chatRecipientOnline = isOnline(chat.activeChat)
+  const isOnline = (id) => onlineUsers.some((user) => user.id === id && user.online)
+  const friendsWithStatus = friendsState.friends.map((friend) => ({ ...friend, online: isOnline(friend.id) }))
+  const chatRecipientOnline = isOnline(chat.activeChat?.id)
   const [openPolicy, setOpenPolicy] = useState(null)
 
   useEffect(() => {
@@ -69,22 +67,25 @@ function App() {
     if (activeSession) setPlayMode(true)
   }, [activeSession])
 
-  const handleLoggedIn = (newToken, newUsername) => {
+  const handleLoggedIn = (newToken, newUserId, newUsername) => {
     localStorage.setItem('token', newToken)
+    localStorage.setItem('userId', newUserId)
     localStorage.setItem('username', newUsername)
     setToken(newToken)
+    setUserId(newUserId)
     setUsername(newUsername)
   }
 
-  // OAuth callback lands here with #token=...&username=... (or #error=...) from the backend redirect
+  // OAuth callback lands here with #token=...&id=...&username=... (or #error=...) from the backend redirect
   useEffect(() => {
     const params = new URLSearchParams(window.location.hash.slice(1))
     const oauthToken = params.get('token')
+    const oauthUserId = params.get('id')
     const oauthUsername = params.get('username')
     const oauthError = params.get('error')
 
-    if (oauthToken && oauthUsername) {
-      handleLoggedIn(oauthToken, oauthUsername)
+    if (oauthToken && oauthUserId && oauthUsername) {
+      handleLoggedIn(oauthToken, oauthUserId, oauthUsername)
     } else if (oauthError) {
       setLoginError(oauthError)
       setShowLogin(true)
@@ -102,8 +103,10 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem('token')
+    localStorage.removeItem('userId')
     localStorage.removeItem('username')
     setToken(null)
+    setUserId(null)
     setUsername(null)
     setProfileMode(false)
     setLobbyMode(false)
@@ -114,6 +117,12 @@ function App() {
   useEffect(() => {
     if (closeCode === 4001) handleLogout()
   }, [closeCode])
+
+  // logged in before user ids were stored: log in again to get one.
+  // Reads localStorage, since the OAuth effect above may have just logged us in
+  useEffect(() => {
+    if (localStorage.getItem('token') && !localStorage.getItem('userId')) handleLogout()
+  }, [])
 
   // logged in, Play also hosts a new session that shows up in everyone's lobby.
   // The backend drops a pending join request on create, so we drop ours too
@@ -138,20 +147,22 @@ function App() {
     join.acceptRequest()
   }
 
+  const inList = (list, id) => list.some((user) => user.id === id)
+
   // hide the add button for existing friends and requests we've already sent
-  const canAddFriend = (other) =>
-    !friendsState.friends.includes(other) && !friendsState.outgoing.includes(other)
+  const canAddFriend = (id) =>
+    !inList(friendsState.friends, id) && !inList(friendsState.outgoing, id)
 
   // if they already sent us a request, adding them just accepts it
   const handleAddFriendClick = (other) => {
-    if (friendsState.incoming.includes(other)) friendsState.accept(other)
+    if (inList(friendsState.incoming, other.id)) friendsState.accept(other)
     else friendsState.add(other)
   }
 
-  const friendStatusOf = (other) => {
-    if (friendsState.friends.includes(other)) return 'friend'
-    if (friendsState.incoming.includes(other)) return 'incoming'
-    if (friendsState.outgoing.includes(other)) return 'outgoing'
+  const friendStatusOf = (id) => {
+    if (inList(friendsState.friends, id)) return 'friend'
+    if (inList(friendsState.incoming, id)) return 'incoming'
+    if (inList(friendsState.outgoing, id)) return 'outgoing'
     return 'none'
   }
 
@@ -240,9 +251,9 @@ function App() {
         {loggedIn && viewedUser && (
           <UserProfilePopup
             token={token}
-            username={viewedUser}
-            online={isOnline(viewedUser)}
-            friendStatus={friendStatusOf(viewedUser)}
+            userId={viewedUser.id}
+            online={isOnline(viewedUser.id)}
+            friendStatus={friendStatusOf(viewedUser.id)}
             onAddFriendClick={handleAddFriendClick}
             onRemoveClick={friendsState.remove}
             onChatClick={handleProfileChatClick}
@@ -251,11 +262,11 @@ function App() {
         )}
         {chat.activeChat && (
           <ChatWindow
-            recipient={chat.activeChat}
+            recipient={chat.activeChat.username}
             recipientOnline={chatRecipientOnline}
-            messages={chat.conversations[chat.activeChat] || []}
+            messages={chat.conversations[chat.activeChat.id] || []}
             error={chat.error}
-            onSendMessage={(text) => chat.sendPrivate(chat.activeChat, text)}
+            onSendMessage={(text) => chat.sendPrivate(chat.activeChat.id, text)}
             onClose={chat.closeChat}
           />
         )}

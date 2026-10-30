@@ -143,6 +143,6 @@ export default async function githubAuth(fastify) {
 
 		// Mint our app JWT (same as password login) and hand it to the frontend
 		const jwt = fastify.jwt.sign({ id: user.id, username: user.username })
-		return redirectToFrontend(reply, { token: jwt, username: user.username })
+		return redirectToFrontend(reply, { token: jwt, id: user.id, username: user.username })
 	})
 }

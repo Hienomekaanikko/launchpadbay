@@ -40,13 +40,14 @@ export default async function profileRoutes(fastify) {
 		}
 	})
 
-	// Another user's public profile: never their email or id
-	fastify.get('/users/:username', { onRequest: [fastify.authenticate] }, async (request, reply) => {
-		const user = await prisma.users.findUnique({ where: { username: String(request.params.username) } })
+	// Another user's public profile: never their email
+	fastify.get('/users/:id', { onRequest: [fastify.authenticate] }, async (request, reply) => {
+		const user = await prisma.users.findUnique({ where: { id: String(request.params.id) } })
 		if (!user) {
 			return reply.code(404).send({ error: 'User not found' })
 		}
 		return {
+			id: user.id,
 			username: user.username,
 			avatar: user.avatar ? avatarUrl(user.avatar) : DEFAULT_AVATAR_URL,
 			createdAt: user.created_at,
@@ -122,7 +123,7 @@ export default async function profileRoutes(fastify) {
 			removeEntry(user.id, entry)
 			entry.socket.close(1000, 'Account deleted')
 		}
-		broadcastEvent({ type: 'user_deleted', username: user.username })
+		broadcastEvent({ type: 'user_deleted', id: user.id })
 		return { ok: true }
 	})
 

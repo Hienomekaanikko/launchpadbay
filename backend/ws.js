@@ -74,7 +74,7 @@ export function removeEntry(userId, entry) {
             return   // They did return, forget about their disconnect!
         }
         // They did not return, and are definitely gone now. Alert the others
-        broadcastEvent({ type: 'user_disconnected', username: entry.username })
+        broadcastEvent({ type: 'user_disconnected', id: userId })
 
         // and let go of whatever they were doing (e.g. their running session)
         for (const handler of graceExpiredHandlers) {

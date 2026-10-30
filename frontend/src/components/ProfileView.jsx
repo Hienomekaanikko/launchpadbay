@@ -59,15 +59,15 @@ function FriendsPanel({ friends, incoming, unread, onProfileClick, onChatClick, 
       {incoming.length > 0 && (
         <>
           <div>{t('profile.requests')}</div>
-          {incoming.map((username) => (
-            <FriendRequestRow key={username} username={username} onAcceptClick={onAcceptClick} onRejectClick={onRejectClick} />
+          {incoming.map((user) => (
+            <FriendRequestRow key={user.id} {...user} onAcceptClick={onAcceptClick} onRejectClick={onRejectClick} />
           ))}
         </>
       )}
       <div>{t('profile.friends')}</div>
       {friends.length === 0
         ? <div className="text-white/60 text-xs text-center py-2 font-sans">{t('profile.noFriends')}</div>
-        : friends.map((friend) => <UserRow key={friend.username} {...friend} unread={unread.includes(friend.username)} onProfileClick={onProfileClick} onChatClick={onChatClick} onRemoveClick={onRemoveClick} />)}
+        : friends.map((friend) => <UserRow key={friend.id} {...friend} unread={unread.includes(friend.id)} onProfileClick={onProfileClick} onChatClick={onChatClick} onRemoveClick={onRemoveClick} />)}
     </div>
   )
 }
@@ -94,7 +94,7 @@ function ProfileDetails({ profile, onEditClick }) {
   )
 }
 
-// friends: [{ username, online }], incoming: [username]
+// friends: [{ id, username, online }], incoming: [{ id, username }]
 export default function ProfileView({ token, inSession, friends, incoming, unread, onProfileClick, onChatClick, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen, onAccountDeleted }) {
   const { t } = useTranslation()
   const [profile, setProfile] = useState(null)

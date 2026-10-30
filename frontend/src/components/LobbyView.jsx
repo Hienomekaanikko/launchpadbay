@@ -10,23 +10,23 @@ import SessionRow from './SessionRow.jsx'
 import { MAX_MESSAGE_CHARS } from '../useChat.js'
 import useStickToBottom from '../useStickToBottom.js'
 
-// canAddFriend(username) decides whether a row gets the add-friend button
+// canAddFriend(id) decides whether a row gets the add-friend button
 function PlayersOnline({ online, unread, onProfileClick, onChatClick, canAddFriend, onAddFriendClick }) {
   const { t } = useTranslation()
   // someone who wrote to us and then left stays listed until we've read it
-  const onlineOnly = online.filter((user) => user.online || unread.includes(user.username))
+  const onlineOnly = online.filter((user) => user.online || unread.includes(user.id))
   return (
     <div className="flex flex-col gap-1">
       {onlineOnly.length === 0
         ? <div className="text-white/60 text-xs text-center py-2 font-sans">{t('lobby.noOneOnline')}</div>
         : onlineOnly.map((user) => (
             <UserRow
-              key={user.username}
+              key={user.id}
               {...user}
-              unread={unread.includes(user.username)}
+              unread={unread.includes(user.id)}
               onProfileClick={onProfileClick}
               onChatClick={onChatClick}
-              onAddFriendClick={canAddFriend(user.username) ? onAddFriendClick : undefined}
+              onAddFriendClick={canAddFriend(user.id) ? onAddFriendClick : undefined}
             />
           ))}
     </div>

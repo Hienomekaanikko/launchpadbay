@@ -160,7 +160,7 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     // Announce new connection to everyone already connected (except the new client).
     // Skip on reconnect: other clients already see this client as connected
     if (!previous) {
-        broadcastEvent({ type: 'user_connected', username: entry.username })
+        broadcastEvent({ type: 'user_connected', id: jwtPayload.id, username: entry.username })
     }
 
     wsConnectionRegistry.set(jwtPayload.id, entry)
@@ -237,7 +237,8 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     // Initial snapshots (online users + active sessions) are sent synchronously,
     // before any live events, so the client starts from a consistent state
     try {
-        const users = [...wsConnectionRegistry.values()].map(({ username }) => ({
+        const users = [...wsConnectionRegistry].map(([id, { username }]) => ({
+            id,
             username,
             online: true
         }))
@@ -315,7 +316,7 @@ fastify.post('/login', async (request, reply) => {
     }
 
     const token = fastify.jwt.sign({ id: user.id, username: user.username })
-    return { token, username: user.username }
+    return { token, id: user.id, username: user.username }
 })
 
 fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {

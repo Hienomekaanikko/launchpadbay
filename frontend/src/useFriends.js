@@ -9,7 +9,7 @@ import {
 
 const EMPTY = { friends: [], incoming: [], outgoing: [] }
 
-// Keeps the logged-in user's friends and pending requests (all as usernames).
+// Keeps the logged-in user's friends and pending requests (all as { id, username }).
 // REST only: refetches on login, on refresh(), and after each of our own actions.
 export default function useFriends(token) {
   const [lists, setLists] = useState(EMPTY)
@@ -32,9 +32,10 @@ export default function useFriends(token) {
     return () => { cancelled = true }
   }, [token])
 
-  // runs an API call, then refetches so every list stays in sync with the server
-  const act = (apiCall, label) => (username) =>
-    apiCall(token, username)
+  // runs an API call for the given user ({ id, username }), then refetches so every
+  // list stays in sync with the server
+  const act = (apiCall, label) => (user) =>
+    apiCall(token, user.id)
       .catch((err) => console.error(`Failed to ${label}:`, err))
       .finally(refresh)
 
