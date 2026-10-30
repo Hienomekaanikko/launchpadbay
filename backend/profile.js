@@ -14,9 +14,14 @@ import {
 	extensionFor,
 	removeUserAvatars,
 } from './avatars.js'
-
-export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const MIN_PASSWORD_LENGTH = 8
+import {
+	USERNAME_LOOKUP_MAX_LENGTH,
+	validateEmail,
+	validateNewPassword,
+	isPasswordInput,
+	trimUsername,
+	isBoundedString
+} from './validation.js'
 
 export default async function profileRoutes(fastify) {
 	const { prisma } = fastify
@@ -55,12 +60,12 @@ export default async function profileRoutes(fastify) {
 	})
 
 	fastify.patch('/profile', { onRequest: [fastify.authenticate] }, async (request, reply) => {
-		const { email } = request.body ?? {}
-		if (typeof email !== 'string' || email.length > 255 || !EMAIL_PATTERN.test(email)) {
-			return reply.code(400).send({ error: 'Invalid email address' })
+		const email = validateEmail(request.body?.email)
+		if (email.error) {
+			return reply.code(400).send({ error: email.error, params: email.params })
 		}
 		try {
-			const updated = await prisma.users.update({ where: { id: request.user.id }, data: { email } })
+			const updated = await prisma.users.update({ where: { id: request.user.id }, data: { email: email.value } })
 			return { email: updated.email }
 		} catch (err) {
 			if (err.code === 'P2002') {
@@ -79,16 +84,18 @@ export default async function profileRoutes(fastify) {
 		if (!user.password_hash) {
 			return reply.code(400).send({ error: 'This account signs in with GitHub and has no password' })
 		}
-		if (typeof newPassword !== 'string' || newPassword.length < MIN_PASSWORD_LENGTH) {
-			return reply.code(400).send({ error: `New password must be at least ${MIN_PASSWORD_LENGTH} characters` })
+
+		const parsedPassword = validateNewPassword(newPassword)
+		if (parsedPassword.error) {
+			return reply.code(400).send({ error: parsedPassword.error, params: parsedPassword.params })
 		}
-		if (typeof currentPassword !== 'string' || !(await bcrypt.compare(currentPassword, user.password_hash))) {
-			return reply.code(403).send({ error: 'Current password is incorrect' })
+		if (!isPasswordInput(currentPassword) || !(await bcrypt.compare(currentPassword, user.password_hash))) {
+			return reply.code(403).send({ error: 'current_password_incorrect' })
 		}
 
 		await prisma.users.update({
 			where: { id: user.id },
-			data: { password_hash: await bcrypt.hash(newPassword, 10) },
+			data: { password_hash: await bcrypt.hash(parsedPassword.value, 10) },
 		})
 		return { ok: true }
 	})
@@ -102,9 +109,11 @@ export default async function profileRoutes(fastify) {
 			return reply.code(404).send({ error: 'User not found' })
 		}
 
+		const typedUsername = trimUsername(username)
 		const confirmed = user.password_hash
-			? typeof password === 'string' && await bcrypt.compare(password, user.password_hash)
-			: username === user.username
+			? isPasswordInput(password) && await bcrypt.compare(password, user.password_hash)
+			: isBoundedString(typedUsername, USERNAME_LOOKUP_MAX_LENGTH) && typedUsername === user.username
+
 		if (!confirmed) {
 			return reply.code(403).send({ error: user.password_hash ? 'Password is incorrect' : 'Username does not match' })
 		}
