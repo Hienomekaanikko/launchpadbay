@@ -272,7 +272,7 @@ function App() {
         )}
         {closeCode === 1008 && <AlreadyOpenNotice />}
         {reconnecting && (
-          <div role="status" className="fixed top-24 left-1/2 z-40 -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-white text-xs font-sans">
+          <div role="status" className="fixed top-24 left-1/2 z-40 -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-white text-xs">
             {t('common.reconnecting')}
           </div>
         )}

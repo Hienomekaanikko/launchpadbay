@@ -3,7 +3,7 @@ export default function MessageBubble({ text, fromMe }) {
     <div dir="ltr" className={`flex ${fromMe ? 'justify-end' : 'justify-start'}`}>
       <div
         dir="auto"
-        className={`px-3 py-2 rounded-[10px] text-sm font-sans max-w-[75%]
+        className={`px-3 py-2 rounded-[10px] text-sm max-w-[75%]
           ${fromMe ? 'bg-brand/50 text-black' : 'bg-white/10 text-white'}`}
       >
         {text}

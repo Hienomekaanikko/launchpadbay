@@ -35,12 +35,12 @@ export default function ChatWindow({ recipient, recipientOnline, messages, error
   return (
     <GlassPanel className="fixed bottom-25 end-12.5 w-[clamp(16rem,22vw,24rem)] max-w-[calc(100vw-4.125rem)] z-30 h-96 max-h-[calc(100vh-12rem)] flex flex-col gap-3 p-4">
       <CloseButton onClick={onClose}>x</CloseButton>
-      <div className="text-white text-sm font-medium font-sans">{recipient}</div>
+      <div className="text-white text-sm font-medium">{recipient}</div>
       <div ref={listRef} onScroll={onScroll} className="flex-1 overflow-y-auto flex flex-col gap-2">
         {messages.length === 0
-          ? <div className="text-white text-xs text-center py-2 font-sans">{t('chat.sayHi', { name: recipient })}</div>
+          ? <div className="text-white text-xs text-center py-2">{t('chat.sayHi', { name: recipient })}</div>
           : messages.map((message) => <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}
-        {errorText && <div className="text-white/60 text-xs text-center py-2 font-sans">{errorText}</div>}
+        {errorText && <div className="text-white/60 text-xs text-center py-2">{errorText}</div>}
       </div>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <Input className="flex-1 min-w-0" maxLength={MAX_MESSAGE_CHARS} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('common.messagePlaceholder')} />

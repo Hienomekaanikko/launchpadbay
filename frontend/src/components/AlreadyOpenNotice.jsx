@@ -8,7 +8,7 @@ export default function AlreadyOpenNotice() {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
       <Modal className="max-w-sm text-center">
-        <p className="text-white text-sm font-sans">
+        <p className="text-white text-sm">
           {t('alreadyOpen.alreadyOpenNotice')}<br />
           {t('alreadyOpen.closeAndReload')}
         </p>

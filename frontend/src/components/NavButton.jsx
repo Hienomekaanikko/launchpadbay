@@ -6,7 +6,7 @@ const baseClasses = [
   'border-t border-t-white/18',
   'border-b border-b-white/8',
   'rounded-[10px]',
-  'text-white text-sm font-medium tracking-nav font-sans',
+  'text-white text-sm font-medium tracking-nav',
   'py-2.5 px-7',
   'cursor-pointer',
   'backdrop-blur-[15px]',
