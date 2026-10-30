@@ -24,6 +24,7 @@
   },
   "login": {
     "username": "שם משתמש",
+    "email": "אימייל",
     "password": "סיסמה",
     "login": "התחברות",
     "loginWithGithub": "התחברות עם GitHub",

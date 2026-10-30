@@ -36,7 +36,7 @@ import { handleChatMessage } from './chat.js'
 import githubAuth from './authGithub.js'
 import friends from './friends.js'
 import { registerMetrics } from './metrics.js'
-import profileRoutes from './profile.js'
+import profileRoutes, { EMAIL_PATTERN } from './profile.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -278,6 +278,9 @@ fastify.get('/themes', async () => {
 
 fastify.post('/register', async (request, reply) => {
     const { username, email, password } = request.body
+    if (typeof email !== 'string' || email.length > 255 || !EMAIL_PATTERN.test(email)) {
+      return reply.code(400).send({ error: 'Invalid email address' })
+    }
 
     const password_hash = await bcrypt.hash(password, 10)
 
@@ -299,16 +302,16 @@ fastify.post('/register', async (request, reply) => {
 })
 
 fastify.post('/login', async (request, reply) => {
-    const { username, password } = request.body
+    const { email, password } = request.body
 
-    const user = await prisma.users.findUnique({ where: { username } })
+    const user = await prisma.users.findUnique({ where: { email } })
     if (!user || !user.password_hash) { // GitHub-only accounts have no password
-      return reply.code(401).send({ error: 'Invalid username or password' })
+      return reply.code(401).send({ error: 'Invalid email or password' })
     }
 
     const valid = await bcrypt.compare(password, user.password_hash)
     if (!valid) {
-      return reply.code(401).send({ error: 'Invalid username or password' })
+      return reply.code(401).send({ error: 'Invalid email or password' })
     }
 
     const token = fastify.jwt.sign({ id: user.id, username: user.username })

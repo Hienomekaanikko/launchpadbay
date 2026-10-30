@@ -15,8 +15,8 @@ export function register(username, email, password) {
   return post('/register', { username, email, password })
 }
 
-export function login(username, password) {
-  return post('/login', { username, password })
+export function login(email, password) {
+  return post('/login', { email, password })
 }
 async function requestWithToken(method, path, token, body) {
   const headers = { Authorization: `Bearer ${token}` }

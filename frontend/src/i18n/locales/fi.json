@@ -24,6 +24,7 @@
   },
   "login": {
     "username": "Nimi",
+    "email": "Sähköposti",
     "password": "Salasana",
     "login": "Kirjaudu sisään",
     "loginWithGithub": "GitHub-sisäänkirjautuminen",

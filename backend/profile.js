@@ -15,7 +15,7 @@ import {
 	removeUserAvatars,
 } from './avatars.js'
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const MIN_PASSWORD_LENGTH = 8
 
 export default async function profileRoutes(fastify) {
