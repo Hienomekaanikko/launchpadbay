@@ -62,7 +62,7 @@ function SessionChat({ messages, onSendMessage }) {
         {messages.length === 0
           ? <div className="text-white/60 text-xs text-center py-2 font-sans">{t('lobby.noMessages')}</div>
           : messages.map((message) => message.system
-              ? <div key={message.id} className="text-white/60 text-xs text-center py-1 font-sans">{t(`session.${message.system}`, { username: message.username })}</div>
+              ? <div key={message.id} className="text-white/60 text-xs text-center py-1">{t(`session.${message.system}`, { username: message.username })}</div>
               : <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}
       </div>
       <form onSubmit={handleSubmit} className="flex gap-2">
