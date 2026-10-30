@@ -32,11 +32,15 @@ import {
     handleSessionAction,
     leaveSessionAndBroadcastUpdate
 } from './sessions.js'
+import {
+    validateRegistrationInput,
+    validateLoginInput
+} from './validation.js'
 import { handleChatMessage } from './chat.js'
 import githubAuth from './authGithub.js'
 import friends from './friends.js'
 import { registerMetrics } from './metrics.js'
-import profileRoutes, { EMAIL_PATTERN } from './profile.js'
+import profileRoutes from './profile.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -278,20 +282,16 @@ fastify.get('/themes', async () => {
 })
 
 fastify.post('/register', async (request, reply) => {
-    const { username, email, password } = request.body
-    if (typeof email !== 'string' || email.length > 255 || !EMAIL_PATTERN.test(email)) {
-      return reply.code(400).send({ error: 'Invalid email address' })
+    const parsed = validateRegistrationInput(request.body)
+    if (parsed.error) {
+      return reply.code(400).send({ error: parsed.error, params: parsed.params })
     }
+    const { username, email, password } = parsed.credentials
 
     const password_hash = await bcrypt.hash(password, 10)
-
     try {
       const user = await prisma.users.create({
-				data: {
-					username,
-					email,
-					password_hash,
-				}
+        data: { username, email, password_hash }
       })
       return { id: user.id, username: user.username }
     } catch (err) {
@@ -303,7 +303,11 @@ fastify.post('/register', async (request, reply) => {
 })
 
 fastify.post('/login', async (request, reply) => {
-    const { email, password } = request.body
+    const parsed = validateLoginInput(request.body)
+    if (parsed.error) {
+        return reply.code(400).send({ error: parsed.error, params: parsed.params })
+    }
+    const { email, password } = parsed.credentials
 
     const user = await prisma.users.findUnique({ where: { email } })
     if (!user || !user.password_hash) { // GitHub-only accounts have no password
