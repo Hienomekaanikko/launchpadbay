@@ -276,6 +276,12 @@ function App() {
             {t('common.reconnecting')}
           </div>
         )}
+        {/* someone joined or left our session; the reconnecting notice takes the spot if both are up */}
+        {chat.sessionNotice && !reconnecting && (
+          <div role="status" className="fixed top-24 left-1/2 z-40 -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-white text-xs font-sans">
+            {t(`session.${chat.sessionNotice.system}`, { username: chat.sessionNotice.username })}
+          </div>
+        )}
       </main>
       <footer className="flex-wrap gap-6 px-4 py-6">
         <button
