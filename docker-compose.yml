@@ -5,7 +5,7 @@ services:
     env_file:
       - ./.env
     ports:
-      - "3307:3306"
+      - "127.0.0.1:3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -21,7 +21,7 @@ services:
     env_file:
       - ./.env
     environment:
-      DATABASE_URL: "mysql://dj:greatestdj@mysql:3306/launchpadbay"
+      DATABASE_URL: "mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}"
     volumes:
       - ./backend/uploads:/app/uploads
       - ./certs/backend.pem:/run/tls/backend.pem:ro
