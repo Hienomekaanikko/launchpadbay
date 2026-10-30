@@ -29,7 +29,7 @@
     "login": "התחברות",
     "loginWithGithub": "התחברות עם GitHub",
     "notRegisteredYet": "עדיין לא רשום?",
-    "invalidCredentials": "שם משתמש או סיסמה שגויים",
+    "invalidCredentials": "אימייל או סיסמה שגויים",
     "githubLoginCancelled": "ההתחברות ל-GitHub בוטלה",
     "githubLoginFailed": "ההתחברות ל-GitHub נכשלה",
     "githubLoginExpired": "תוקף ההתחברות ל-GitHub פג, נסה שוב"
