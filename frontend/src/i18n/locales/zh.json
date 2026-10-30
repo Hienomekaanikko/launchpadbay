@@ -28,7 +28,11 @@
     "password": "密码",
     "login": "登录",
     "loginWithGithub": "使用 GitHub 登录",
-    "notRegisteredYet": "还没有账号？"
+    "notRegisteredYet": "还没有账号？",
+    "invalidCredentials": "用户名或密码无效",
+    "githubLoginCancelled": "GitHub 登录已取消",
+    "githubLoginFailed": "GitHub 登录失败",
+    "githubLoginExpired": "GitHub 登录已过期，请重试"
   },
   "register": {
     "username": "设置用户名",
@@ -38,7 +42,15 @@
     "submit": "提交",
     "passwordMismatch": "两次密码不一致",
     "success": "注册成功！",
-    "continue": "继续！"
+    "continue": "继续！",
+    "alreadyTaken": "用户名或邮箱已被使用。",
+    "invalidUsername": "用户名长度必须为 {{min}}–{{max}} 个字符，且只能包含字母、数字、'_' 或 '-'",
+    "invalidEmail": "请输入有效的邮箱地址",
+    "passwordTooShort": "密码长度至少为 {{min}} 个字符",
+    "passwordTooLong": "密码不得超过 {{max}} 字节",
+    "passwordRequireLetter": "密码必须至少包含一个字母",
+    "passwordRequireDigit": "密码必须至少包含一个数字",
+    "passwordRequireSpecial": "密码必须至少包含一个特殊字符"
   },
   "lobby": {
     "online": "在线",
@@ -68,7 +80,16 @@
     "deleteConfirmUsername": "这将永久删除你的账户、好友和消息。请输入用户名确认。",
     "deletePermanently": "永久删除",
     "leaveSessionToDelete": "请先离开会话再删除账户。",
-    "deleteConfirmLabel": "确认删除"
+    "deleteConfirmLabel": "确认删除",
+    "userNotFound": "未找到用户",
+    "emailTaken": "邮箱已被使用",
+    "passwordIncorrect": "密码不正确",
+    "currentPasswordIncorrect": "当前密码不正确",
+    "usernameMismatch": "用户名不匹配",
+    "githubOnlyAccount": "此账号通过 GitHub 登录，没有密码",
+    "leaveSessionBeforeDelete": "删除账号前请先退出会话",
+    "noFileUploaded": "未上传文件",
+    "invalidAvatarType": "仅允许 JPEG、PNG 或 WebP 格式"
   },
   "chat": {
     "sayHi": "跟 {{name}} 打个招呼吧！",
@@ -152,5 +173,10 @@
         }
       ]
     }
+  },
+  "serverErrors": {
+    "invalidRequestBody": "无效请求",
+    "unauthorized": "会话已过期，请重新登录。",
+    "generic": "出了点问题，请重试。"
   }
 }

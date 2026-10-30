@@ -28,7 +28,11 @@
     "password": "Salasana",
     "login": "Kirjaudu sisään",
     "loginWithGithub": "GitHub-sisäänkirjautuminen",
-    "notRegisteredYet": "Luo käyttäjätunnus"
+    "notRegisteredYet": "Luo käyttäjätunnus",
+    "invalidCredentials": "Virheellinen käyttäjänimi tai salasana",
+    "githubLoginCancelled": "GitHub-kirjautuminen peruutettiin",
+    "githubLoginFailed": "GitHub-kirjautuminen epäonnistui",
+    "githubLoginExpired": "GitHub-kirjautuminen vanheni, yritä uudelleen"
   },
   "register": {
     "username": "Aseta käyttäjänimi",
@@ -38,7 +42,15 @@
     "submit": "Lähetä",
     "passwordMismatch": "Salasanat eivät täsmää",
     "success": "Rekisteröinti onnistui!",
-    "continue": "Jatka!"
+    "continue": "Jatka!",
+    "alreadyTaken": "Käyttäjänimi tai sähköposti on jo käytössä",
+    "invalidUsername": "Käyttäjänimen on oltava {{min}}–{{max}} merkkiä pitkä ja sisällettävä vain kirjaimia, numeroita, '_' tai '-'",
+    "invalidEmail": "Anna kelvollinen sähköpostiosoite",
+    "passwordTooShort": "Salasanan on oltava vähintään {{min}} merkkiä",
+    "passwordTooLong": "Salasana saa olla enintään {{max}} tavua",
+    "passwordRequireLetter": "Salasanassa on oltava vähintään yksi kirjain",
+    "passwordRequireDigit": "Salasanassa on oltava vähintään yksi numero",
+    "passwordRequireSpecial": "Salasanassa on oltava vähintään yksi erikoismerkki"
   },
   "lobby": {
     "online": "Paikalla",
@@ -68,7 +80,16 @@
     "deleteConfirmUsername": "Tämä poistaa tilisi, kaverisi ja viestisi pysyvästi. Vahvista kirjoittamalla käyttäjänimesi.",
     "deletePermanently": "Poista pysyvästi",
     "leaveSessionToDelete": "Poistu sessiosta poistaaksesi tilin.",
-    "deleteConfirmLabel": "Vahvista poisto"
+    "deleteConfirmLabel": "Vahvista poisto",
+    "userNotFound": "Käyttäjää ei löytynyt",
+    "emailTaken": "Sähköposti on jo käytössä",
+    "passwordIncorrect": "Salasana on väärin",
+    "currentPasswordIncorrect": "Nykyinen salasana on väärin",
+    "usernameMismatch": "Käyttäjänimi ei täsmää",
+    "githubOnlyAccount": "Tämä tili kirjautuu sisään GitHubilla, eikä sillä ole salasanaa",
+    "leaveSessionBeforeDelete": "Poistu sessiosta ennen tilin poistamista",
+    "noFileUploaded": "Tiedostoa ei lähetetty",
+    "invalidAvatarType": "Vain JPEG-, PNG- tai WebP-kuvat ovat sallittuja"
   },
   "chat": {
     "sayHi": "Sano hei käyttäjälle {{name}}!",
@@ -152,5 +173,10 @@
         }
       ]
     }
+  },
+  "serverErrors": {
+    "invalidRequestBody": "Virheellinen pyyntö",
+    "unauthorized": "Istuntosi on vanhentunut, kirjaudu uudelleen.",
+    "generic": "Jokin meni pieleen. Yritä uudelleen"
   }
 }

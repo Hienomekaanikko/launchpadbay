@@ -28,7 +28,11 @@
     "password": "סיסמה",
     "login": "התחברות",
     "loginWithGithub": "התחברות עם GitHub",
-    "notRegisteredYet": "עדיין לא רשום?"
+    "notRegisteredYet": "עדיין לא רשום?",
+    "invalidCredentials": "שם משתמש או סיסמה שגויים",
+    "githubLoginCancelled": "ההתחברות ל-GitHub בוטלה",
+    "githubLoginFailed": "ההתחברות ל-GitHub נכשלה",
+    "githubLoginExpired": "תוקף ההתחברות ל-GitHub פג, נסה שוב"
   },
   "register": {
     "username": "בחר שם משתמש",
@@ -38,7 +42,15 @@
     "submit": "שלח",
     "passwordMismatch": "הסיסמאות אינן תואמות",
     "success": "ההרשמה הצליחה!",
-    "continue": "המשך!"
+    "continue": "המשך!",
+    "alreadyTaken": "שם המשתמש או האימייל כבר בשימוש",
+    "invalidUsername": "שם המשתמש חייב להיות באורך {{min}}–{{max}} תווים ולהכיל רק אותיות, ספרות, '_' או '-'",
+    "invalidEmail": "הזן כתובת אימייל תקינה",
+    "passwordTooShort": "הסיסמה חייבת להכיל לפחות {{min}} תווים",
+    "passwordTooLong": "הסיסמה יכולה להכיל עד {{max}} בייטס",
+    "passwordRequireLetter": "הסיסמה חייבת להכיל לפחות אות אחת",
+    "passwordRequireDigit": "הסיסמה חייבת להכיל לפחות ספרה אחת",
+    "passwordRequireSpecial": "הסיסמה חייבת להכיל לפחות תו מיוחד אחד"
   },
   "lobby": {
     "online": "מחוברים",
@@ -68,7 +80,16 @@
     "deleteConfirmUsername": "פעולה זו מוחקת לצמיתות את החשבון, החברים וההודעות שלך. הקלד את שם המשתמש שלך לאישור.",
     "deletePermanently": "מחק לצמיתות",
     "leaveSessionToDelete": "צא מהסשן כדי למחוק את החשבון.",
-    "deleteConfirmLabel": "אישור מחיקה"
+    "deleteConfirmLabel": "אישור מחיקה",
+    "userNotFound": "המשתמש לא נמצא",
+    "emailTaken": "האימייל כבר בשימוש",
+    "passwordIncorrect": "הסיסמה שגויה",
+    "currentPasswordIncorrect": "הסיסמה הנוכחית שגויה",
+    "usernameMismatch": "שם המשתמש אינו תואם",
+    "githubOnlyAccount": "החשבון הזה מתחבר באמצעות GitHub ואין לו סיסמה",
+    "leaveSessionBeforeDelete": "צא מהסשן לפני מחיקת החשבון",
+    "noFileUploaded": "לא הועלה שום קובץ",
+    "invalidAvatarType": "רק תמונות JPEG, PNG או WebP מותרות"
   },
   "chat": {
     "sayHi": "תגיד שלום ל־{{name}}!",
@@ -152,5 +173,10 @@
         }
       ]
     }
+  },
+  "serverErrors": {
+    "invalidRequestBody": "בקשה לא תקינה",
+    "unauthorized": "תוקף הסשן פג, התחבר מחדש.",
+    "generic": "משהו השתבש. נסה שוב."
   }
 }
