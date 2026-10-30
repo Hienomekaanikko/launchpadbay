@@ -47,7 +47,7 @@
     "invalidUsername": "שם המשתמש חייב להיות באורך {{min}}–{{max}} תווים ולהכיל רק אותיות, ספרות, '_' או '-'",
     "invalidEmail": "הזן כתובת אימייל תקינה",
     "passwordTooShort": "הסיסמה חייבת להכיל לפחות {{min}} תווים",
-    "passwordTooLong": "הסיסמה יכולה להכיל עד {{max}} בייטס",
+    "passwordTooLong": "הסיסמה יכולה להכיל עד {{max}} בייטים",
     "passwordRequireLetter": "הסיסמה חייבת להכיל לפחות אות אחת",
     "passwordRequireDigit": "הסיסמה חייבת להכיל לפחות ספרה אחת",
     "passwordRequireSpecial": "הסיסמה חייבת להכיל לפחות תו מיוחד אחד"
