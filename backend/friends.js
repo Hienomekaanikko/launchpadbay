@@ -14,26 +14,26 @@ export default async function friends(fastify) {
         })
     }
 
-    function findUserByName(username) {
-        return prisma.users.findUnique({ where: { username: String(username) } })
+    function findUser(id) {
+        return prisma.users.findUnique({ where: { id: String(id) } })
     }
 
-    // Returns the caller's friends and pending requests, as usernames.
-    // Shape: { friends: [username], incoming: [username], outgoing: [username] }
+    // Returns the caller's friends and pending requests, as user refs.
+    // Shape: { friends: [{ id, username }], incoming: [...], outgoing: [...] }
     fastify.get('/friends', { onRequest: [fastify.authenticate] }, async (request) => {
         const me = request.user.id
         const rows = await prisma.friendships.findMany({
             where: { OR: [{ requester_id: me }, { addressee_id: me }] },
             include: {
-                requester: { select: { username: true } },
-                addressee: { select: { username: true } },
+                requester: { select: { id: true, username: true } },
+                addressee: { select: { id: true, username: true } },
             }
         })
 
         const result = { friends: [], incoming: [], outgoing: [] }
         for (const row of rows) {
             const sentByMe = row.requester_id === me
-            const other = sentByMe ? row.addressee.username : row.requester.username
+            const other = sentByMe ? row.addressee : row.requester
             if (row.status === 'accepted') result.friends.push(other)
             else if (sentByMe) result.outgoing.push(other)
             else result.incoming.push(other)
@@ -44,7 +44,7 @@ export default async function friends(fastify) {
     // Sends a friend request. If the other user already requested us, accepts theirs instead.
     fastify.post('/friends/requests', { onRequest: [fastify.authenticate] }, async (request, reply) => {
         const me = request.user.id
-        const other = await findUserByName(request.body?.username)
+        const other = await findUser(request.body?.id)
         if (!other) {
             return reply.code(404).send({ error: 'User not found' })
         }
@@ -71,9 +71,9 @@ export default async function friends(fastify) {
         return { status: 'pending' }
     })
 
-    // Accepts a pending request that :username sent to the caller
-    fastify.post('/friends/requests/:username/accept', { onRequest: [fastify.authenticate] }, async (request, reply) => {
-        const other = await findUserByName(request.params.username)
+    // Accepts a pending request that :id sent to the caller
+    fastify.post('/friends/requests/:id/accept', { onRequest: [fastify.authenticate] }, async (request, reply) => {
+        const other = await findUser(request.params.id)
         if (!other) {
             return reply.code(404).send({ error: 'User not found' })
         }
@@ -87,9 +87,9 @@ export default async function friends(fastify) {
         return { status: 'accepted' }
     })
 
-    // Rejects a pending request that :username sent to the caller
-    fastify.delete('/friends/requests/:username', { onRequest: [fastify.authenticate] }, async (request, reply) => {
-        const other = await findUserByName(request.params.username)
+    // Rejects a pending request that :id sent to the caller
+    fastify.delete('/friends/requests/:id', { onRequest: [fastify.authenticate] }, async (request, reply) => {
+        const other = await findUser(request.params.id)
         if (!other) {
             return reply.code(404).send({ error: 'User not found' })
         }
@@ -103,9 +103,9 @@ export default async function friends(fastify) {
     })
 
     // Removes a friend, whichever of the two sent the original request
-    fastify.delete('/friends/:username', { onRequest: [fastify.authenticate] }, async (request, reply) => {
+    fastify.delete('/friends/:id', { onRequest: [fastify.authenticate] }, async (request, reply) => {
         const me = request.user.id
-        const other = await findUserByName(request.params.username)
+        const other = await findUser(request.params.id)
         if (!other) {
             return reply.code(404).send({ error: 'User not found' })
         }

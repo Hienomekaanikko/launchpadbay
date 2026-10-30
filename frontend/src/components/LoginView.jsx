@@ -20,7 +20,7 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
 
     try {
       const result = await login(email, password)
-      onLoggedIn(result.token, result.username)
+      onLoggedIn(result.token, result.id, result.username)
       setShowLogin(false)
     } catch (err) {
       setError(err.message)

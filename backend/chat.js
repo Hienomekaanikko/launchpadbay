@@ -29,7 +29,7 @@ export async function handleChatMessage(msg, { userId, username, socket, prisma 
         const payload = {
             type: 'session_chat',
             sessionId: session.id,
-            from: username,
+            from: userId,
             text,
             id: randomUUID()
         }
@@ -39,13 +39,14 @@ export async function handleChatMessage(msg, { userId, username, socket, prisma 
         return
     }
 
-    if (typeof msg.to !== 'string' || msg.to === username) {
+    // 'msg.to' is the recipient's user id
+    if (typeof msg.to !== 'string' || msg.to === userId) {
         send(socket, { type: 'error', reason: 'no_such_user', to: msg.to })
         return
     }
 
     const recipient = await prisma.users.findUnique({
-        where: { username: msg.to },
+        where: { id: msg.to },
         select: { id: true, username: true }
     })
     if (!recipient) {
@@ -65,8 +66,8 @@ export async function handleChatMessage(msg, { userId, username, socket, prisma 
 
     const payload = {
         type: 'chat_message',
-        from: username,
-        to: recipient.username, // for the recipient to route message to the correct conversation
+        from: { id: userId, username },
+        to: recipient, // { id, username }: lets the sender label the conversation
         text,
         id: saved.id,
         clientId: msg.clientId, // useful for optimistic reconciliation on sender's side

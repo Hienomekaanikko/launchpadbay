@@ -35,9 +35,9 @@ export function fetchProfile(token) {
   return requestWithToken('GET', '/profile', token)
 }
 
-// another user's public profile: { username, avatar, createdAt }
-export function fetchUser(token, username) {
-  return requestWithToken('GET', `/users/${encodeURIComponent(username)}`, token)
+// another user's public profile: { id, username, avatar, createdAt }
+export function fetchUser(token, id) {
+  return requestWithToken('GET', `/users/${encodeURIComponent(id)}`, token)
 }
 
 // changes: { email }
@@ -68,23 +68,23 @@ export async function uploadAvatar(token, file) {
   return data
 }
 
-// { friends: [username], incoming: [username], outgoing: [username] }
+// { friends: [{ id, username }], incoming: [...], outgoing: [...] }
 export function fetchFriends(token) {
   return requestWithToken('GET', '/friends', token)
 }
 
-export function sendFriendRequest(token, username) {
-  return requestWithToken('POST', '/friends/requests', token, { username })
+export function sendFriendRequest(token, id) {
+  return requestWithToken('POST', '/friends/requests', token, { id })
 }
 
-export function acceptFriendRequest(token, username) {
-  return requestWithToken('POST', `/friends/requests/${encodeURIComponent(username)}/accept`, token)
+export function acceptFriendRequest(token, id) {
+  return requestWithToken('POST', `/friends/requests/${encodeURIComponent(id)}/accept`, token)
 }
 
-export function rejectFriendRequest(token, username) {
-  return requestWithToken('DELETE', `/friends/requests/${encodeURIComponent(username)}`, token)
+export function rejectFriendRequest(token, id) {
+  return requestWithToken('DELETE', `/friends/requests/${encodeURIComponent(id)}`, token)
 }
 
-export function removeFriend(token, username) {
-  return requestWithToken('DELETE', `/friends/${encodeURIComponent(username)}`, token)
+export function removeFriend(token, id) {
+  return requestWithToken('DELETE', `/friends/${encodeURIComponent(id)}`, token)
 }
