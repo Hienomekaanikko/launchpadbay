@@ -29,7 +29,7 @@
     "login": "登录",
     "loginWithGithub": "使用 GitHub 登录",
     "notRegisteredYet": "还没有账号？",
-    "invalidCredentials": "用户名或密码无效",
+    "invalidCredentials": "邮箱或密码无效",
     "githubLoginCancelled": "GitHub 登录已取消",
     "githubLoginFailed": "GitHub 登录失败",
     "githubLoginExpired": "GitHub 登录已过期，请重试"

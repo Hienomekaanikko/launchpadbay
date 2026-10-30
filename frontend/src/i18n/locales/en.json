@@ -29,7 +29,7 @@
     "login": "Login",
     "loginWithGithub": "Login With GitHub",
     "notRegisteredYet": "Not Registered Yet?",
-    "invalidCredentials": "Invalid username or password",
+    "invalidCredentials": "Invalid email or password",
     "githubLoginCancelled": "GitHub login cancelled",
     "githubLoginFailed": "GitHub login failed",
     "githubLoginExpired": "GitHub login expired, please try again"
