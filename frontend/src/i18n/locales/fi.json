@@ -89,7 +89,8 @@
     "githubOnlyAccount": "Tämä tili kirjautuu sisään GitHubilla, eikä sillä ole salasanaa",
     "leaveSessionBeforeDelete": "Poistu sessiosta ennen tilin poistamista",
     "noFileUploaded": "Tiedostoa ei lähetetty",
-    "invalidAvatarType": "Vain JPEG-, PNG- tai WebP-kuvat ovat sallittuja"
+    "invalidAvatarType": "Vain JPEG-, PNG- tai WebP-kuvat ovat sallittuja",
+    "fileTooLarge": "Tiedosto on liian suuri. Enimmäiskoko on 2 Mt."
   },
   "chat": {
     "sayHi": "Sano hei käyttäjälle {{name}}!",
@@ -176,6 +177,7 @@
   },
   "serverErrors": {
     "invalidRequestBody": "Virheellinen pyyntö",
+    "internalError": "Palvelimella tapahtui virhe. Yritä myöhemmin uudelleen.",
     "unauthorized": "Istuntosi on vanhentunut, kirjaudu uudelleen.",
     "generic": "Jokin meni pieleen. Yritä uudelleen"
   }

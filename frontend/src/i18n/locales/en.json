@@ -89,7 +89,8 @@
     "githubOnlyAccount": "This account signs in with GitHub and has no password",
     "leaveSessionBeforeDelete": "Leave your session before deleting your account",
     "noFileUploaded": "No file uploaded",
-    "invalidAvatarType": "Only JPEG, PNG, or WebP allowed"
+    "invalidAvatarType": "Only JPEG, PNG, or WebP allowed",
+    "fileTooLarge": "File is too large. Maximum size is 2MB."
   },
   "chat": {
     "sayHi": "Say hi to {{name}}!",
@@ -176,6 +177,7 @@
   },
   "serverErrors": {
     "invalidRequestBody": "Invalid request",
+    "internalError": "A server error occurred. Please try again later.",
     "unauthorized": "Your session has expired, please log in again.",
     "generic": "Something went wrong. Please try again"
   }

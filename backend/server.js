@@ -52,6 +52,31 @@ const fastify = Fastify({
     }
 })
 
+// Intercepts framework limits and unhandled server crashes, preventing database/
+// Prisma details from leaking while standardizing 500 error responses
+fastify.setErrorHandler((error, request, reply) => {
+    if (reply.sent) {
+        return
+    }
+    const statusCode = error.statusCode ?? 500
+
+    // Catch the 413 file size error explicitly.
+    // FST_REQ_FILE_TOO_LARGE is a @fastify/multipart (upload plugin) error code
+    if (statusCode === 413 || error.code === 'FST_REQ_FILE_TOO_LARGE') {
+        return reply.code(413).send({ error: 'file_too_large' })
+    }
+
+    // Keep thrown 4xx responses machine-readable without exposing messages.
+    if (statusCode < 500) {
+        return reply.code(statusCode).send({ error: 'invalid_request_body' })
+    }
+
+    // Catch all unhandled 5xx crashes (Prisma / database / runtime details
+    // that should never be exposed)
+    request.log.error({ err: error }, 'Unhandled request error')
+    return reply.code(500).send({ error: 'internal_error' })
+})
+
 registerMetrics(fastify)
 
 const adapter = new PrismaMariaDb({

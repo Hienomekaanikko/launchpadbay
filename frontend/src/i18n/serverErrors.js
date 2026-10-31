@@ -25,9 +25,11 @@ const SERVER_ERROR_KEYS = {
   leave_session_before_delete: 'profile.leaveSessionBeforeDelete',
   no_file_uploaded: 'profile.noFileUploaded',
   invalid_avatar_type: 'profile.invalidAvatarType',
+  file_too_large: 'profile.fileTooLarge',
 
   // other server related errors
   invalid_request_body: 'serverErrors.invalidRequestBody',
+  internal_error: 'serverErrors.internalError',
   unauthorized: 'serverErrors.unauthorized'
 }
 

@@ -89,7 +89,8 @@
     "githubOnlyAccount": "החשבון הזה מתחבר באמצעות GitHub ואין לו סיסמה",
     "leaveSessionBeforeDelete": "צא מהסשן לפני מחיקת החשבון",
     "noFileUploaded": "לא הועלה שום קובץ",
-    "invalidAvatarType": "רק תמונות JPEG, PNG או WebP מותרות"
+    "invalidAvatarType": "רק תמונות JPEG, PNG או WebP מותרות",
+    "fileTooLarge": "הקובץ גדול מדי. הגודל המרבי הוא 2 MB."
   },
   "chat": {
     "sayHi": "תגיד שלום ל־{{name}}!",
@@ -176,6 +177,7 @@
   },
   "serverErrors": {
     "invalidRequestBody": "בקשה לא תקינה",
+    "internalError": "אירעה שגיאה בשרת. אנא נסה שוב מאוחר יותר.",
     "unauthorized": "תוקף הסשן פג, התחבר מחדש.",
     "generic": "משהו השתבש. נסה שוב."
   }
