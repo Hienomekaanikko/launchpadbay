@@ -5,7 +5,7 @@ const baseClasses = [
   'bg-black/25',
   'rounded-[8px]',
   'text-white/70 text-xs',
-  'tracking-nav font-sans',
+  'tracking-nav',
   'whitespace-nowrap',
   'px-3 py-1.5',
   'cursor-pointer',

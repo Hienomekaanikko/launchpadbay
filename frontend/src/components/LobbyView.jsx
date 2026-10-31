@@ -18,7 +18,7 @@ function PlayersOnline({ online, unread, onProfileClick, onChatClick, canAddFrie
   return (
     <div className="flex flex-col gap-1">
       {onlineOnly.length === 0
-        ? <div className="text-white/60 text-xs text-center py-2 font-sans">{t('lobby.noOneOnline')}</div>
+        ? <div className="text-white/60 text-xs text-center py-2">{t('lobby.noOneOnline')}</div>
         : onlineOnly.map((user) => (
             <UserRow
               key={user.id}
@@ -38,7 +38,7 @@ function SessionsList({ sessions, onJoinClick, onCancelClick }) {
   return (
     <div className="flex flex-col gap-1">
       {sessions.length === 0
-        ? <div className="text-white/60 text-xs text-center py-2 font-sans">{t('lobby.noSessions')}</div>
+        ? <div className="text-white/60 text-xs text-center py-2">{t('lobby.noSessions')}</div>
         : sessions.map((session) => <SessionRow key={session.id} {...session} onJoinClick={onJoinClick} onCancelClick={onCancelClick} />)}
     </div>
   )
@@ -60,7 +60,7 @@ function SessionChat({ messages, onSendMessage }) {
     <div className="flex flex-col gap-2">
       <div ref={listRef} onScroll={onScroll} className="h-[30vh] min-h-24 max-h-48 overflow-y-auto flex flex-col gap-2">
         {messages.length === 0
-          ? <div className="text-white/60 text-xs text-center py-2 font-sans">{t('lobby.noMessages')}</div>
+          ? <div className="text-white/60 text-xs text-center py-2">{t('lobby.noMessages')}</div>
           : messages.map((message) => message.system
               ? <div key={message.id} className="text-white/60 text-xs text-center py-1">{t(`session.${message.system}`, { username: message.username })}</div>
               : <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}

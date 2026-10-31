@@ -5,7 +5,7 @@ const baseClasses = [
   'border-t border-t-white/18',
   'border-b border-b-white/8',
   'rounded-[8px]',
-  'text-white text-sm font-sans',
+  'text-white text-sm',
   'py-2.5 px-3.5',
   'backdrop-blur-[10px]',
   'shadow-input',
