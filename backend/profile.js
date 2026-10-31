@@ -27,7 +27,7 @@ export default async function profileRoutes(fastify) {
 	const { prisma } = fastify
 
 	await fastify.register(multipart, {
-		limits: { fileSize: 2 * 1024 * 1024 },
+		limits: { fileSize: 2 * 1024 * 1024 }, // keep nginx client_max_body_size above this
 	})
 
 	fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, reply) => {
