@@ -61,7 +61,9 @@ function SessionChat({ messages, onSendMessage }) {
       <div ref={listRef} onScroll={onScroll} className="h-[30vh] min-h-24 max-h-48 overflow-y-auto flex flex-col gap-2">
         {messages.length === 0
           ? <div className="text-white/60 text-xs text-center py-2">{t('lobby.noMessages')}</div>
-          : messages.map((message) => <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}
+          : messages.map((message) => message.system
+              ? <div key={message.id} className="text-white/60 text-xs text-center py-1">{t(`session.${message.system}`, { username: message.username })}</div>
+              : <MessageBubble key={message.id} text={message.text} fromMe={message.fromMe} />)}
       </div>
       <form onSubmit={handleSubmit} className="flex gap-2">
         <Input className="flex-1 min-w-0" maxLength={MAX_MESSAGE_CHARS} value={draft} onChange={(e) => setDraft(e.target.value)} placeholder={t('common.messagePlaceholder')} />
