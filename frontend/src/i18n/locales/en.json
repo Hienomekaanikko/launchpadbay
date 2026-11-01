@@ -102,6 +102,8 @@
     "requestJoin": "Request to join {{id}}",
     "cancelJoin": "Cancel join request for {{id}}",
     "wantsToJoin": "{{username}} wants to join your session",
+    "joined": "{{username}} joined the session",
+    "left": "{{username}} left the session",
     "rejected": "Declined",
     "rejectionFull": "Full",
     "busy": "Busy, retry",

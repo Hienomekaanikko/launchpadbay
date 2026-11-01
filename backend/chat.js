@@ -33,7 +33,7 @@ export async function handleChatMessage(msg, { userId, username, socket, prisma 
             text,
             id: randomUUID()
         }
-        for (const playerId of session.players) {
+        for (const playerId of session.players.keys()) {
             sendToUser(playerId, payload)
         }
         return

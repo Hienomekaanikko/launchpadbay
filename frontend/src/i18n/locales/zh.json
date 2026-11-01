@@ -102,6 +102,8 @@
     "requestJoin": "请求加入 {{id}}",
     "cancelJoin": "取消加入 {{id}} 的请求",
     "wantsToJoin": "{{username}} 想加入你的会话",
+    "joined": "{{username}} 加入了会话",
+    "left": "{{username}} 离开了会话",
     "rejected": "已拒绝",
     "rejectionFull": "已满",
     "busy": "忙碌，请重试",

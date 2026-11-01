@@ -102,6 +102,8 @@
     "requestJoin": "בקשה להצטרף ל־{{id}}",
     "cancelJoin": "בטל בקשת הצטרפות ל־{{id}}",
     "wantsToJoin": "{{username}} רוצה להצטרף לסשן שלך",
+    "joined": "{{username}} הצטרף לסשן",
+    "left": "{{username}} עזב את הסשן",
     "rejected": "נדחה",
     "rejectionFull": "מלא",
     "busy": "עסוק, נסה שוב",

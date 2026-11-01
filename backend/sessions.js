@@ -1,20 +1,23 @@
-import { send, sendToUser, broadcastEvent, wsConnectionRegistry } from './ws.js'
+import { randomUUID } from 'node:crypto'
+import { send, sendToUser, broadcastEvent } from './ws.js'
 
 // registry of live sessions, where:
 // key = 'sessionId',
 // value = session data, shape: { id, hostId, players, max, pending }
+// 'players' maps each player's userId to their username, so their name is still
+// known after their connection is gone (e.g. to announce that they left)
 // 'pending' holds: { id, name } of the requesting user, or otherwise it is null
 const sessionRegistry = new Map()
 
 // used to give each session a short, unique id
 let sessionCounter = 0
 
-function createSession(creatorId) {
+function createSession(creatorId, creatorName) {
     const id = `session${++sessionCounter}`
     const session = {
         id,
         hostId: creatorId,
-        players: new Set([creatorId]),
+        players: new Map([[creatorId, creatorName]]),
         max: 2,
         pending: null
     }
@@ -28,7 +31,7 @@ function createSession(creatorId) {
 // that case that user is notified of their active session).
 // Broadcasts to all users a notification for the new session, so that their
 // session lobbyview could get updated
-export function handleSessionCreate(_msg, { userId, socket }) {
+export function handleSessionCreate(_msg, { userId, username, socket }) {
     // clean up user's pending request if there is one, before creating a new session
     giveUpPendingRequest(userId)
 
@@ -36,7 +39,7 @@ export function handleSessionCreate(_msg, { userId, socket }) {
     if (session) {
         send(socket, { type: 'session_created', session: toSessionView(session) })
     } else {
-        session = createSession(userId)
+        session = createSession(userId, username)
         broadcastEvent({ type: 'session_created', session: toSessionView(session) })
     }
     // tell this client which session is theirs, so its UI can mark it as active
@@ -95,16 +98,24 @@ export function handleSessionAccept(msg, { userId, socket }) {
     }
 
     // integrate accepted player to the session
-    const acceptedId = session.pending.id
-    session.players.add(acceptedId)
+    const { id: acceptedId, name: acceptedName } = session.pending
+    session.players.set(acceptedId, acceptedName)
     session.pending = null
 
     // notify the requester, with the host's name so they know who they're playing with
     sendToUser(acceptedId, {
         type: 'session_accepted',
         sessionId: session.id,
-        host: wsConnectionRegistry.get(session.hostId)?.username
+        host: session.players.get(session.hostId)
     })
+
+    // and tell the players already in the session who joined, for their session chat
+    sendToPlayers(session, {
+        type: 'session_joined',
+        sessionId: session.id,
+        username: acceptedName,
+        id: randomUUID()
+    }, acceptedId)
 
     // update the whole lobby
     broadcastEvent({ type: 'session_updated', session: toSessionView(session) })
@@ -153,7 +164,7 @@ export function handleSessionAction(msg, { userId, socket }) {
         return
     }
 
-    for (const playerId of session.players) {
+    for (const playerId of session.players.keys()) {
         sendToUser(playerId, {
             type: 'session_action',
             sessionId: session.id,
@@ -173,6 +184,7 @@ function leaveSession(userId) {
         return null
     }
 
+    const username = session.players.get(userId)
     session.players.delete(userId)
 
     // last player out closes the session
@@ -191,8 +203,16 @@ function leaveSession(userId) {
     // the host is leaving, but somebody else is still playing; promote them to
     // host, so the session keeps a valid host for future join requests
     if (session.hostId === userId) {
-        session.hostId = [...session.players][0]
+        session.hostId = [...session.players.keys()][0]
     }
+
+    // let the remaining players know, in their session chat
+    sendToPlayers(session, {
+        type: 'session_left',
+        sessionId: session.id,
+        username,
+        id: randomUUID()
+    })
     return { status: 'updated', session: toSessionView(session) }
 }
 
@@ -215,11 +235,11 @@ export function sendSessionState(socket, userId) {
     const session = getSessionByUserId(userId)
     if (session) {
         // check if they had a partner as well, allowing the header to display it
-        const partnerId = [...session.players].find((id) => id !== userId)
+        const partnerId = [...session.players.keys()].find((id) => id !== userId)
         send(socket, {
             type: 'session_active',
             sessionId: session.id,
-            partner: partnerId ? wsConnectionRegistry.get(partnerId)?.username ?? null : null
+            partner: partnerId ? session.players.get(partnerId) : null
         })
         // check if they had a pending join request before refreshing, to avoid
         // losing it
@@ -260,6 +280,15 @@ function giveUpPendingRequest(userId) {
         sessionId: session.id,
         from: { id: from.id, name: from.name }
     })
+}
+
+// sends a payload to every player of a session, optionally skipping one of them
+function sendToPlayers(session, payload, exceptId) {
+    for (const playerId of session.players.keys()) {
+        if (playerId !== exceptId) {
+            sendToUser(playerId, payload)
+        }
+    }
 }
 
 // find the session a user is currently in (if any)

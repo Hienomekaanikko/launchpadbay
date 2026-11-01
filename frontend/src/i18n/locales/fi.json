@@ -102,6 +102,8 @@
     "requestJoin": "Pyydä liittyä sessioon {{id}}",
     "cancelJoin": "Peruuta liittymispyyntö sessioon {{id}}",
     "wantsToJoin": "{{username}} haluaa liittyä sessioosi",
+    "joined": "{{username}} liittyi sessioon",
+    "left": "{{username}} poistui sessiosta",
     "rejected": "Hylätty",
     "rejectionFull": "Täynnä",
     "busy": "Varattu, yritä uudelleen",
