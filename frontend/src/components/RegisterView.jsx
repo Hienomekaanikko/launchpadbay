@@ -29,25 +29,27 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [openPolicy, setOpenPolicy] = useState(null)
-  const [error, setError] = useState('')
+  const [clientError, setClientError] = useState('')
+  const [serverError, setServerError] = useState(null)
   const [submitted, setSubmitted] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
+    setClientError('')
+    setServerError(null)
 
     if (!username.trim() || !email.trim() || !password || !confirmPassword) {
-      setError(t('common.fieldsRequired'))
+      setClientError('common.fieldsRequired')
       return
     }
 
     if (!acceptedTerms) {
-      setError(t('register.termsRequired'))
+      setClientError('register.termsRequired')
       return
     }
 
     if (password !== confirmPassword) {
-      setError(t('register.passwordMismatch'))
+      setClientError('register.passwordMismatch')
       return
     }
 
@@ -55,7 +57,7 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
       await register(username, email, password)
       setSubmitted(true)
     } catch (err) {
-      setError(translateServerError(t, err))
+      setServerError(err)
     }
   }
 
@@ -105,12 +107,12 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
               </button>
             </span>
           </label>
-          {error && (
+          {(clientError || serverError) && (
             <div
               role="alert"
               className="w-full rounded-md border px-3 py-2 text-sm text-center normal-case text-red-800"
             >
-              {error}
+              {clientError ? t(clientError) : translateServerError(t, serverError)}
             </div>
           )}
           <NavButton className="w-full" type="submit">{t('register.submit')}</NavButton>

@@ -11,15 +11,17 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
   const [registerView, setRegisterView] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [clientError, setClientError] = useState('')
+  const [serverError, setServerError] = useState(initialError || null)
   const { t } = useTranslation()
-  const [error, setError] = useState(() => initialError ? translateServerError(t, initialError) : '')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
+    setClientError('')
+    setServerError(null)
 
     if (!email.trim() || !password) {
-      setError(t('common.fieldsRequired'))
+      setClientError('common.fieldsRequired')
       return
     }
 
@@ -28,7 +30,7 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
       onLoggedIn(result.token, result.id, result.username)
       setShowLogin(false)
     } catch (err) {
-      setError(translateServerError(t, err))
+      setServerError(err)
     }
   }
 
@@ -49,12 +51,12 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
             <label htmlFor="login-password" className={labelClass}>{t('login.password')}</label>
             <Input id="login-password" className={fieldClass} type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
-          {error && (
+          {(clientError || serverError) && (
             <div
               role="alert"
               className="w-full rounded-md border px-3 py-2 text-sm text-center normal-case text-red-800"
             >
-              {error}
+              {clientError ? t(clientError) : translateServerError(t, serverError)}
             </div>
           )}
           <NavButton className="w-full" type="submit">{t('login.login')}</NavButton>
