@@ -125,6 +125,27 @@ export function stopHeartbeat() {
     pendingLeaves.clear()
 }
 
+// Token bucket: holds up to 'burst' tokens, refilled at 'perSecond' tokens per
+// second. Each message takes one token; with an empty bucket, take() returns false.
+// This allows short bursts, while capping the long-term average rate.
+export function createRateLimiter(perSecond, burst) {
+    let tokens = burst
+    let last = Date.now()
+
+    return {
+        take() {
+            const now = Date.now()
+            tokens = Math.min(burst, tokens + (now - last) / 1000 * perSecond)
+            last = now
+            if (tokens < 1) {
+                return false
+            }
+            tokens -= 1
+            return true
+        }
+    }
+}
+
 // helper function serializing and sending a JSON payload to a socket
 export const send = (socket, payload) => {
     socket.send(JSON.stringify(payload))

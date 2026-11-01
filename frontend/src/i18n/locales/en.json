@@ -101,7 +101,8 @@
       "noSuchUser": "{{name}} doesn't exist anymore, message not sent",
       "messageTooLong": "Message too long, not sent",
       "emptyMessage": "Empty message, not sent",
-      "notSent": "Message not sent"
+      "notSent": "Message not sent",
+      "rateLimited": "Slow down, message not sent"
     }
   },
   "friends": {
@@ -131,7 +132,8 @@
     "rejectionFull": "Full",
     "busy": "Busy, retry",
     "gone": "Closed",
-    "alreadyInSession": "In a session"
+    "alreadyInSession": "In a session",
+    "slowDown": "Slow down, some messages were not sent"
   },
   "alreadyOpen": {
     "alreadyOpenNotice": "LaunchpadBay is already open in another tab.",
@@ -182,6 +184,7 @@
     "invalidRequestBody": "Invalid request",
     "internalError": "A server error occurred. Please try again later.",
     "unauthorized": "Your session has expired, please log in again.",
-    "generic": "Something went wrong. Please try again"
+    "generic": "Something went wrong. Please try again",
+    "tooManyAttempts": "Too many attempts, wait a minute and try again"
   }
 }

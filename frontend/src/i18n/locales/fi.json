@@ -101,7 +101,8 @@
       "noSuchUser": "{{name}} ei ole enää olemassa, viestiä ei lähetetty",
       "messageTooLong": "Viesti on liian pitkä, ei lähetetty",
       "emptyMessage": "Tyhjä viesti, ei lähetetty",
-      "notSent": "Viestiä ei lähetetty"
+      "notSent": "Viestiä ei lähetetty",
+      "rateLimited": "Hidasta, viestiä ei lähetetty"
     }
   },
   "friends": {
@@ -131,7 +132,8 @@
     "rejectionFull": "Täynnä",
     "busy": "Varattu, yritä uudelleen",
     "gone": "Suljettu",
-    "alreadyInSession": "Jo sessiossa"
+    "alreadyInSession": "Jo sessiossa",
+    "slowDown": "Hidasta, osaa viesteistä ei lähetetty"
   },
   "alreadyOpen": {
     "alreadyOpenNotice": "LaunchpadBay on jo auki toisessa välilehdessä.",
@@ -182,6 +184,7 @@
     "invalidRequestBody": "Virheellinen pyyntö",
     "internalError": "Palvelimella tapahtui virhe. Yritä myöhemmin uudelleen.",
     "unauthorized": "Istuntosi on vanhentunut, kirjaudu uudelleen.",
-    "generic": "Jokin meni pieleen. Yritä uudelleen"
+    "generic": "Jokin meni pieleen. Yritä uudelleen",
+    "tooManyAttempts": "Liian monta yritystä, odota minuutti ja yritä uudelleen"
   }
 }

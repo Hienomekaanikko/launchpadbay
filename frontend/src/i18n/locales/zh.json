@@ -101,7 +101,8 @@
       "noSuchUser": "{{name}} 已不存在，消息未发送",
       "messageTooLong": "消息过长，未发送",
       "emptyMessage": "消息为空，未发送",
-      "notSent": "消息未发送"
+      "notSent": "消息未发送",
+      "rateLimited": "请放慢速度，消息未发送"
     }
   },
   "friends": {
@@ -131,7 +132,8 @@
     "rejectionFull": "已满",
     "busy": "忙碌，请重试",
     "gone": "已关闭",
-    "alreadyInSession": "已在会话中"
+    "alreadyInSession": "已在会话中",
+    "slowDown": "请放慢速度，部分消息未发送"
   },
   "alreadyOpen": {
     "alreadyOpenNotice": "LaunchpadBay 已在另一个标签页中打开。",
@@ -182,6 +184,7 @@
     "invalidRequestBody": "无效请求",
     "internalError": "服务器内部错误，请稍后重试。",
     "unauthorized": "会话已过期，请重新登录。",
-    "generic": "出了点问题，请重试。"
+    "generic": "出了点问题，请重试。",
+    "tooManyAttempts": "尝试次数过多，请等待一分钟后重试"
   }
 }

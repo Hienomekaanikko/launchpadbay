@@ -10,11 +10,13 @@ import cors from '@fastify/cors'
 import jwt from '@fastify/jwt'
 import bcrypt from 'bcrypt'
 import websocket from '@fastify/websocket'
+import rateLimit from '@fastify/rate-limit'
 import {
     MAX_WS_BYTES_PER_FRAME,
     wsConnectionRegistry,
     broadcastEvent,
     cancelPendingLeave,
+    createRateLimiter,
     onGraceExpired,
     removeEntry,
     stopHeartbeat,
@@ -44,6 +46,17 @@ import profileRoutes from './profile.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+// WebSocket rate limits, per socket: sustained messages per second, and how many
+// can come in one burst. Fast launchpad play sends ~10-15 actions per second.
+const WS_MSGS_PER_SECOND = 20
+const WS_MSGS_BURST = 40
+const WS_CHAT_PER_SECOND = 5
+const WS_CHAT_BURST = 10
+const RATE_LIMIT_NOTICE_MS = 1000
+
+// login / register attempts per IP; each one costs a bcrypt hash
+const AUTH_ATTEMPTS_PER_MINUTE = 10
+
 const fastify = Fastify({
     logger: true,
     https: {
@@ -64,6 +77,11 @@ fastify.setErrorHandler((error, request, reply) => {
     // FST_REQ_FILE_TOO_LARGE is a @fastify/multipart (upload plugin) error code
     if (statusCode === 413 || error.code === 'FST_REQ_FILE_TOO_LARGE') {
         return reply.code(413).send({ error: 'file_too_large' })
+    }
+
+    // @fastify/rate-limit throws its 429 here too; keep its code instead of the generic one below
+    if (statusCode === 429) {
+        return reply.code(429).send({ error: 'rate_limited' })
     }
 
     // Keep thrown 4xx responses machine-readable without exposing messages.
@@ -116,6 +134,17 @@ await fastify.register(jwt, {
   })
 
 await fastify.register(githubAuth)
+
+// Only routes that opt in (config.rateLimit) are limited.
+// Behind nginx every request comes from the nginx container, so the client's
+// address is read from the X-Real-IP header nginx sets
+await fastify.register(rateLimit, {
+    global: false,
+    keyGenerator: (request) => request.headers['x-real-ip'] ?? request.ip,
+    errorResponseBuilder: () => ({ statusCode: 429, error: 'rate_limited' })
+})
+
+const authRateLimit = { rateLimit: { max: AUTH_ATTEMPTS_PER_MINUTE, timeWindow: '1 minute' } }
 
 await fastify.register(websocket, {
     options: { maxPayload: MAX_WS_BYTES_PER_FRAME }
@@ -209,22 +238,40 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     // "first come, first served" basis.
     let queue = Promise.resolve()
 
-    async function handleMessage(raw) {
-        let msg
+    // Per-socket rate limits: one for all messages, and a stricter one for chat.
+    // Each also remembers when it last told the client about it, so a flood
+    // doesn't get a flood of errors back.
+    const limits = {
+        all:  { bucket: createRateLimiter(WS_MSGS_PER_SECOND, WS_MSGS_BURST), lastNotice: 0 },
+        chat: { bucket: createRateLimiter(WS_CHAT_PER_SECOND, WS_CHAT_BURST), lastNotice: 0 }
+    }
 
-        try {
-            msg = JSON.parse(raw.toString())
-        } catch {
-            request.log.warn({ userId: jwtPayload.id }, 'ws: invalid JSON')
-            send(socket, { type: 'error', reason: 'bad_json' })
-            return
-        }
-        // the "?." syntax avoids errors if 'msg' is null / undefined
-        if (typeof msg?.type !== 'string') {
-            send(socket, { type: 'error', reason: 'bad_type' })
-            return
+    // returns true if the message fits within the limits, otherwise tells the
+    // client (at most once per second per limit) and returns false
+    function withinLimits(msg) {
+        const isChat = msg.type === 'chat_message' || msg.type === 'session_chat'
+        let limit
+        if (!limits.all.bucket.take()) {
+            limit = limits.all
+        } else if (isChat && !limits.chat.bucket.take()) {
+            limit = limits.chat
+        } else {
+            return true
         }
 
+        const now = Date.now()
+        if (now - limit.lastNotice >= RATE_LIMIT_NOTICE_MS) {
+            limit.lastNotice = now
+            const notice = { type: 'error', reason: 'rate_limited' }
+            // lets the frontend show the error in the right chat
+            if (msg.type === 'chat_message') notice.to = msg.to
+            if (msg.type === 'session_chat') notice.chat = 'session'
+            send(socket, notice)
+        }
+        return false
+    }
+
+    async function handleMessage(msg) {
         const handler = wsHandlers[msg.type]
         if (!handler) {
             send(socket, { type: 'error', reason: 'unknown_message' })
@@ -249,8 +296,29 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     // it to be executed, via handleMessage(), as soon as the task before it
     // finishes. JavaScript's built-in garbage collector automatically notices
     // when a task is not needed anymore, and cleans it out of memory.
+    // Parsing and rate limiting happen before queueing, so a flood of messages
+    // can't grow the queue without bounds.
     socket.on('message', (raw) => {
-        queue = queue.then(() => handleMessage(raw))
+        let msg
+
+        try {
+            msg = JSON.parse(raw.toString())
+        } catch {
+            request.log.warn({ userId: jwtPayload.id }, 'ws: invalid JSON')
+            send(socket, { type: 'error', reason: 'bad_json' })
+            return
+        }
+        // the "?." syntax avoids errors if 'msg' is null / undefined
+        if (typeof msg?.type !== 'string') {
+            send(socket, { type: 'error', reason: 'bad_type' })
+            return
+        }
+
+        if (!withinLimits(msg)) {
+            return
+        }
+
+        queue = queue.then(() => handleMessage(msg))
     })
 
     const handleDisconnect = () => {
@@ -306,7 +374,7 @@ fastify.get('/themes', async () => {
     })
 })
 
-fastify.post('/register', async (request, reply) => {
+fastify.post('/register', { config: authRateLimit }, async (request, reply) => {
     const parsed = validateRegistrationInput(request.body)
     if (parsed.error) {
       return reply.code(400).send({ error: parsed.error, params: parsed.params })
@@ -327,7 +395,7 @@ fastify.post('/register', async (request, reply) => {
     }
 })
 
-fastify.post('/login', async (request, reply) => {
+fastify.post('/login', { config: authRateLimit }, async (request, reply) => {
     const parsed = validateLoginInput(request.body)
     if (parsed.error) {
         return reply.code(400).send({ error: parsed.error, params: parsed.params })

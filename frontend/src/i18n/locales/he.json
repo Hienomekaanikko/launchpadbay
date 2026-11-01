@@ -101,7 +101,8 @@
       "noSuchUser": "{{name}} כבר לא קיים, ההודעה לא נשלחה",
       "messageTooLong": "ההודעה ארוכה מדי, לא נשלחה",
       "emptyMessage": "הודעה ריקה, לא נשלחה",
-      "notSent": "ההודעה לא נשלחה"
+      "notSent": "ההודעה לא נשלחה",
+      "rateLimited": "לאט יותר, ההודעה לא נשלחה"
     }
   },
   "friends": {
@@ -131,7 +132,8 @@
     "rejectionFull": "מלא",
     "busy": "עסוק, נסה שוב",
     "gone": "נסגר",
-    "alreadyInSession": "בסשן"
+    "alreadyInSession": "בסשן",
+    "slowDown": "לאט יותר, חלק מההודעות לא נשלחו"
   },
   "alreadyOpen": {
     "alreadyOpenNotice": "LaunchpadBay כבר פתוח בלשונית אחרת.",
@@ -182,6 +184,7 @@
     "invalidRequestBody": "בקשה לא תקינה",
     "internalError": "אירעה שגיאה בשרת. אנא נסה שוב מאוחר יותר.",
     "unauthorized": "תוקף הסשן פג, התחבר מחדש.",
-    "generic": "משהו השתבש. נסה שוב."
+    "generic": "משהו השתבש. נסה שוב.",
+    "tooManyAttempts": "יותר מדי ניסיונות, המתן דקה ונסה שוב"
   }
 }
