@@ -14,11 +14,14 @@ const baseClasses = [
   'transition-all duration-200',
   'hover:bg-white/16 hover:shadow-nav-hover',
   'active:scale-[0.96]',
+].join(' ')
+
+const activeClasses = [
   "after:content-[''] after:absolute after:left-1/2 after:-bottom-1.5 after:-translate-x-1/2",
   'after:w-[90%] after:h-0.5 after:rounded-full after:bg-brand',
   'after:shadow-glow-brand',
 ].join(' ')
 
-export default function NavButton({ className = '', ...props }) {
-  return <button className={twMerge(baseClasses, className)} {...props} />
+export default function NavButton({ active = false, className = '', ...props }) {
+  return <button className={twMerge(baseClasses, active && activeClasses, className)} {...props} />
 }
