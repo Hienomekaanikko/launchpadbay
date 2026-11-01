@@ -32,11 +32,15 @@ import {
     handleSessionAction,
     leaveSessionAndBroadcastUpdate
 } from './sessions.js'
+import {
+    validateRegistrationInput,
+    validateLoginInput
+} from './validation.js'
 import { handleChatMessage } from './chat.js'
 import githubAuth from './authGithub.js'
 import friends from './friends.js'
 import { registerMetrics } from './metrics.js'
-import profileRoutes, { EMAIL_PATTERN } from './profile.js'
+import profileRoutes from './profile.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -46,6 +50,31 @@ const fastify = Fastify({
         key: readFileSync('/run/tls/backend-key.pem'),
         cert: readFileSync('/run/tls/backend.pem')
     }
+})
+
+// Intercepts framework limits and unhandled server crashes, preventing database/
+// Prisma details from leaking while standardizing 500 error responses
+fastify.setErrorHandler((error, request, reply) => {
+    if (reply.sent) {
+        return
+    }
+    const statusCode = error.statusCode ?? 500
+
+    // Catch the 413 file size error explicitly.
+    // FST_REQ_FILE_TOO_LARGE is a @fastify/multipart (upload plugin) error code
+    if (statusCode === 413 || error.code === 'FST_REQ_FILE_TOO_LARGE') {
+        return reply.code(413).send({ error: 'file_too_large' })
+    }
+
+    // Keep thrown 4xx responses machine-readable without exposing messages.
+    if (statusCode < 500) {
+        return reply.code(statusCode).send({ error: 'invalid_request_body' })
+    }
+
+    // Catch all unhandled 5xx crashes (Prisma / database / runtime details
+    // that should never be exposed)
+    request.log.error({ err: error }, 'Unhandled request error')
+    return reply.code(500).send({ error: 'internal_error' })
 })
 
 registerMetrics(fastify)
@@ -96,7 +125,7 @@ fastify.decorate('authenticate', async function (request, reply) {
     try {
         await request.jwtVerify()
     } catch (err) {
-        reply.code(401).send({ error: 'Unauthorized' })
+        reply.code(401).send({ error: 'unauthorized' })
     }
 })
 
@@ -278,41 +307,41 @@ fastify.get('/themes', async () => {
 })
 
 fastify.post('/register', async (request, reply) => {
-    const { username, email, password } = request.body
-    if (typeof email !== 'string' || email.length > 255 || !EMAIL_PATTERN.test(email)) {
-      return reply.code(400).send({ error: 'Invalid email address' })
+    const parsed = validateRegistrationInput(request.body)
+    if (parsed.error) {
+      return reply.code(400).send({ error: parsed.error, params: parsed.params })
     }
+    const { username, email, password } = parsed.credentials
 
     const password_hash = await bcrypt.hash(password, 10)
-
     try {
       const user = await prisma.users.create({
-				data: {
-					username,
-					email,
-					password_hash,
-				}
+        data: { username, email, password_hash }
       })
       return { id: user.id, username: user.username }
     } catch (err) {
       if (err.code === 'P2002') {
-        return reply.code(409).send({ error: 'Username or email already taken' })
+        return reply.code(409).send({ error: 'already_taken' })
       }
       throw err
     }
 })
 
 fastify.post('/login', async (request, reply) => {
-    const { email, password } = request.body
+    const parsed = validateLoginInput(request.body)
+    if (parsed.error) {
+        return reply.code(400).send({ error: parsed.error, params: parsed.params })
+    }
+    const { email, password } = parsed.credentials
 
     const user = await prisma.users.findUnique({ where: { email } })
     if (!user || !user.password_hash) { // GitHub-only accounts have no password
-      return reply.code(401).send({ error: 'Invalid email or password' })
+      return reply.code(401).send({ error: 'invalid_credentials' })
     }
 
     const valid = await bcrypt.compare(password, user.password_hash)
     if (!valid) {
-      return reply.code(401).send({ error: 'Invalid email or password' })
+      return reply.code(401).send({ error: 'invalid_credentials' })
     }
 
     const token = fastify.jwt.sign({ id: user.id, username: user.username })

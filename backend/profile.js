@@ -1,7 +1,5 @@
 import path from 'node:path'
-import { createWriteStream } from 'node:fs'
-import { unlink } from 'node:fs/promises'
-import { pipeline } from 'node:stream/promises'
+import { unlink, writeFile } from 'node:fs/promises'
 import multipart from '@fastify/multipart'
 import bcrypt from 'bcrypt'
 import { getSessionByUserId } from './sessions.js'
@@ -11,24 +9,30 @@ import {
 	ALLOWED_AVATAR_TYPES,
 	DEFAULT_AVATAR_URL,
 	avatarUrl,
+	detectAvatarType,
 	extensionFor,
 	removeUserAvatars,
 } from './avatars.js'
-
-export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const MIN_PASSWORD_LENGTH = 8
+import {
+	USERNAME_LOOKUP_MAX_LENGTH,
+	validateEmail,
+	validateNewPassword,
+	isPasswordInput,
+	trimUsername,
+	isBoundedString
+} from './validation.js'
 
 export default async function profileRoutes(fastify) {
 	const { prisma } = fastify
 
 	await fastify.register(multipart, {
-		limits: { fileSize: 2 * 1024 * 1024 },
+		limits: { fileSize: 2 * 1024 * 1024 }, // keep nginx client_max_body_size above this
 	})
 
 	fastify.get('/profile', { onRequest: [fastify.authenticate] }, async (request, reply) => {
 		const user = await prisma.users.findUnique({ where: { id: request.user.id } })
 		if (!user) {
-			return reply.code(404).send({ error: 'User not found' })
+			return reply.code(404).send({ error: 'user_not_found' })
 		}
 		return {
 			id: user.id,
@@ -44,7 +48,7 @@ export default async function profileRoutes(fastify) {
 	fastify.get('/users/:id', { onRequest: [fastify.authenticate] }, async (request, reply) => {
 		const user = await prisma.users.findUnique({ where: { id: String(request.params.id) } })
 		if (!user) {
-			return reply.code(404).send({ error: 'User not found' })
+			return reply.code(404).send({ error: 'user_not_found' })
 		}
 		return {
 			id: user.id,
@@ -55,16 +59,16 @@ export default async function profileRoutes(fastify) {
 	})
 
 	fastify.patch('/profile', { onRequest: [fastify.authenticate] }, async (request, reply) => {
-		const { email } = request.body ?? {}
-		if (typeof email !== 'string' || email.length > 255 || !EMAIL_PATTERN.test(email)) {
-			return reply.code(400).send({ error: 'Invalid email address' })
+		const email = validateEmail(request.body?.email)
+		if (email.error) {
+			return reply.code(400).send({ error: email.error, params: email.params })
 		}
 		try {
-			const updated = await prisma.users.update({ where: { id: request.user.id }, data: { email } })
+			const updated = await prisma.users.update({ where: { id: request.user.id }, data: { email: email.value } })
 			return { email: updated.email }
 		} catch (err) {
 			if (err.code === 'P2002') {
-				return reply.code(409).send({ error: 'Email already taken' })
+				return reply.code(409).send({ error: 'email_taken' })
 			}
 			throw err
 		}
@@ -74,21 +78,23 @@ export default async function profileRoutes(fastify) {
 		const { currentPassword, newPassword } = request.body ?? {}
 		const user = await prisma.users.findUnique({ where: { id: request.user.id } })
 		if (!user) {
-			return reply.code(404).send({ error: 'User not found' })
+			return reply.code(404).send({ error: 'user_not_found' })
 		}
 		if (!user.password_hash) {
-			return reply.code(400).send({ error: 'This account signs in with GitHub and has no password' })
+			return reply.code(400).send({ error: 'github_only_account' })
 		}
-		if (typeof newPassword !== 'string' || newPassword.length < MIN_PASSWORD_LENGTH) {
-			return reply.code(400).send({ error: `New password must be at least ${MIN_PASSWORD_LENGTH} characters` })
+
+		if (!isPasswordInput(currentPassword) || !(await bcrypt.compare(currentPassword, user.password_hash))) {
+			return reply.code(403).send({ error: 'current_password_incorrect' })
 		}
-		if (typeof currentPassword !== 'string' || !(await bcrypt.compare(currentPassword, user.password_hash))) {
-			return reply.code(403).send({ error: 'Current password is incorrect' })
+		const parsedPassword = validateNewPassword(newPassword)
+		if (parsedPassword.error) {
+			return reply.code(400).send({ error: parsedPassword.error, params: parsedPassword.params })
 		}
 
 		await prisma.users.update({
 			where: { id: user.id },
-			data: { password_hash: await bcrypt.hash(newPassword, 10) },
+			data: { password_hash: await bcrypt.hash(parsedPassword.value, 10) },
 		})
 		return { ok: true }
 	})
@@ -99,17 +105,19 @@ export default async function profileRoutes(fastify) {
 		const { password, username } = request.body ?? {}
 		const user = await prisma.users.findUnique({ where: { id: request.user.id } })
 		if (!user) {
-			return reply.code(404).send({ error: 'User not found' })
+			return reply.code(404).send({ error: 'user_not_found' })
 		}
 
+		const typedUsername = trimUsername(username)
 		const confirmed = user.password_hash
-			? typeof password === 'string' && await bcrypt.compare(password, user.password_hash)
-			: username === user.username
+			? isPasswordInput(password) && await bcrypt.compare(password, user.password_hash)
+			: isBoundedString(typedUsername, USERNAME_LOOKUP_MAX_LENGTH) && typedUsername === user.username
+
 		if (!confirmed) {
-			return reply.code(403).send({ error: user.password_hash ? 'Password is incorrect' : 'Username does not match' })
+			return reply.code(403).send({ error: user.password_hash ? 'password_incorrect' : 'username_mismatch' })
 		}
 		if (getSessionByUserId(user.id)) {
-			return reply.code(409).send({ error: 'Leave your session before deleting your account' })
+			return reply.code(409).send({ error: 'leave_session_before_delete' })
 		}
 
 		await prisma.users.delete({ where: { id: user.id } })
@@ -131,17 +139,27 @@ export default async function profileRoutes(fastify) {
 	fastify.post('/profile/avatar', { onRequest: [fastify.authenticate] }, async (request, reply) => {
 		const upload = await request.file()
 		if (!upload) {
-			return reply.code(400).send({ error: 'No file uploaded' })
+			return reply.code(400).send({ error: 'no_file_uploaded' })
 		}
 
 		// Re-checked here because the client's accept attribute is only a hint
 		if (!ALLOWED_AVATAR_TYPES.includes(upload.mimetype)) {
-			return reply.code(400).send({ error: 'Only JPEG, PNG, or WebP allowed' })
+			return reply.code(400).send({ error: 'invalid_avatar_type' })
 		}
 
-		const filename = `${request.user.id}.${extensionFor(upload.mimetype)}`
+		// Read stream into buffer to inspect bytes and save file safely
+		const buffer = await upload.toBuffer()
+		const detectedType = detectAvatarType(buffer)
+
+		// Ensure file has valid magic bytes and matches the claimed MIME type
+		if (!detectedType || detectedType !== upload.mimetype) {
+			return reply.code(400).send({ error: 'invalid_avatar_content' })
+		}
+
+		// Write buffer to disk; stream is consumed by toBuffer(), so writeFile() is used
+		const filename = `${request.user.id}.${extensionFor(detectedType)}`
 		await removeUserAvatars(request.user.id)
-		await pipeline(upload.file, createWriteStream(path.join(AVATAR_DIR, filename)))
+		await writeFile(path.join(AVATAR_DIR, filename), buffer)
 
 		await prisma.users.update({
 			where: { id: request.user.id },

@@ -1,3 +1,15 @@
+// Wraps server response errors into a custom Error object, attaching code,
+// params and status for easy i18n translation.
+// example of error object returned:
+// code: "password_too_short" ------- params: { min: 8 } ------- status: 400
+function apiError(data, status) {
+  const error = new Error(data.error ?? 'api_error')
+  error.code = data.error
+  error.params = data.params
+  error.status = status
+  return error
+}
+
 // Auth requests against the backend, proxied at /api/ (nginx in prod, Vite's
 // dev server proxy locally) — same pattern as launchpad/themes.js.
 async function post(path, body) {
@@ -7,7 +19,7 @@ async function post(path, body) {
     body: JSON.stringify(body),
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || `Request failed: ${res.status}`)
+  if (!res.ok) throw apiError(data, res.status)
   return data
 }
 
@@ -27,7 +39,7 @@ async function requestWithToken(method, path, token, body) {
     body: body === undefined ? undefined : JSON.stringify(body),
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || `Request failed: ${res.status}`)
+  if (!res.ok) throw apiError(data, res.status)
   return data
 }
 
@@ -64,7 +76,7 @@ export async function uploadAvatar(token, file) {
     body,
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || `Upload failed: ${res.status}`)
+  if (!res.ok) throw apiError(data, res.status)
   return data
 }
 

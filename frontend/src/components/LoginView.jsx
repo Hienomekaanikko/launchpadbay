@@ -6,13 +6,14 @@ import CloseButton from './CloseButton.jsx'
 import Input from './Input.jsx'
 import FormButton from './FormButton.jsx'
 import { useTranslation } from 'react-i18next'
+import { translateServerError } from '../i18n/serverErrors.js'
 
 export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' }) {
   const [registerView, setRegisterView] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState(initialError)
   const { t } = useTranslation()
+  const [error, setError] = useState(() => initialError ? translateServerError(t, initialError) : '')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -23,7 +24,7 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
       onLoggedIn(result.token, result.id, result.username)
       setShowLogin(false)
     } catch (err) {
-      setError(err.message)
+      setError(translateServerError(t, err))
     }
   }
 

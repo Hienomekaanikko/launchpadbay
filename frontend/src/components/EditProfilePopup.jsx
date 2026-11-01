@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
+import { translateServerError } from '../i18n/serverErrors.js'
 import { updateProfile, changePassword, deleteAccount } from '../auth.js'
 import Modal from './Modal.jsx'
 import CloseButton from './CloseButton.jsx'
@@ -33,7 +34,7 @@ function EmailForm({ token, profile, onProfileChange }) {
       onProfileChange({ email: result.email })
       setSaved(true)
     } catch (err) {
-      setError(err.message)
+      setError(translateServerError(t, err))
     }
   }
 
@@ -71,7 +72,7 @@ function PasswordForm({ token }) {
       setConfirm('')
       setSaved(true)
     } catch (err) {
-      setError(err.message)
+      setError(translateServerError(t, err))
     }
   }
 
@@ -104,7 +105,7 @@ function DeleteSection({ token, profile, inSession, onAccountDeleted }) {
       await deleteAccount(token, profile.hasPassword ? { password: value } : { username: value })
       onAccountDeleted()
     } catch (err) {
-      setError(err.message)
+      setError(translateServerError(t, err))
     }
   }
 
