@@ -84,12 +84,12 @@ export default async function profileRoutes(fastify) {
 			return reply.code(400).send({ error: 'github_only_account' })
 		}
 
+		if (!isPasswordInput(currentPassword) || !(await bcrypt.compare(currentPassword, user.password_hash))) {
+			return reply.code(403).send({ error: 'current_password_incorrect' })
+		}
 		const parsedPassword = validateNewPassword(newPassword)
 		if (parsedPassword.error) {
 			return reply.code(400).send({ error: parsedPassword.error, params: parsedPassword.params })
-		}
-		if (!isPasswordInput(currentPassword) || !(await bcrypt.compare(currentPassword, user.password_hash))) {
-			return reply.code(403).send({ error: 'current_password_incorrect' })
 		}
 
 		await prisma.users.update({
