@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { login } from '../auth.js'
 import RegisterView from './RegisterView.jsx'
 import Modal from './Modal.jsx'
-import CloseButton from './CloseButton.jsx'
 import Input from './Input.jsx'
 import NavButton from './NavButton.jsx'
 import { useTranslation } from 'react-i18next'
@@ -33,9 +32,7 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
 
   return (
     <>
-      {!registerView && <Modal as="form" className="z-10 w-[min(90vw,24rem)] items-stretch gap-0 bg-surface/30 text-white uppercase" onSubmit={handleSubmit}>
-        <CloseButton className="normal-case" onClick={() => setShowLogin(false)}>x</CloseButton>
-
+      {!registerView && <Modal as="form" className="z-10 w-[min(90vw,24rem)] items-stretch gap-0 bg-surface/30 text-white uppercase" onClose={() => setShowLogin(false)} onSubmit={handleSubmit}>
         <h1 className="text-center text-xl font-semibold mb-6">{t('login.login')}</h1>
 
         <div className="flex flex-col gap-4">
@@ -76,7 +73,7 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
           </button>
         </div>
       </Modal>}
-      {registerView && <RegisterView setRegisterView={setRegisterView} />}
+      {registerView && <RegisterView setRegisterView={setRegisterView} setShowLogin={setShowLogin} />}
     </>
   )
 }

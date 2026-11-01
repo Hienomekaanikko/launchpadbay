@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next'
 import { translateServerError } from '../i18n/serverErrors.js'
 import { register } from '../auth.js'
 import Modal from './Modal.jsx'
-import CloseButton from './CloseButton.jsx'
 import Input from './Input.jsx'
 import NavButton from './NavButton.jsx'
 
@@ -11,17 +10,17 @@ const modalClass = 'z-11 w-[min(90vw,24rem)] items-stretch gap-0 bg-surface/30 t
 const fieldClass = 'w-full normal-case'
 const labelClass = 'mb-2 text-sm font-medium inline-block uppercase'
 
-function ValidateRegister({ message, onContinue }) {
+function ValidateRegister({ message, onContinue, onDismiss }) {
   const { t } = useTranslation()
   return (
-    <Modal className={modalClass}>
+    <Modal className={modalClass} onClose={onDismiss}>
       <p className="text-center text-sm normal-case">{message}</p>
       <NavButton className="w-full" onClick={onContinue}>{t('register.continue')}</NavButton>
     </Modal>
   )
 }
 
-export default function RegisterView({ setRegisterView }) {
+export default function RegisterView({ setRegisterView, setShowLogin }) {
   const { t } = useTranslation()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -49,9 +48,7 @@ export default function RegisterView({ setRegisterView }) {
 
   return (
     <>
-      {!submitted && <Modal as="form" className={modalClass} onSubmit={handleSubmit}>
-        <CloseButton className="normal-case" onClick={() => setRegisterView(false)}>x</CloseButton>
-
+      {!submitted && <Modal as="form" className={modalClass} onClose={() => setShowLogin(false)} onSubmit={handleSubmit}>
         <h1 className="text-center text-xl font-semibold mb-6">{t('register.title')}</h1>
 
         <div className="flex flex-col gap-4">
@@ -85,7 +82,13 @@ export default function RegisterView({ setRegisterView }) {
           </button>
         </div>
       </Modal>}
-      {submitted && <ValidateRegister message={t('register.success')} onContinue={() => setRegisterView(false)} />}
+      {submitted && (
+        <ValidateRegister
+          message={t('register.success')}
+          onContinue={() => setRegisterView(false)}
+          onDismiss={() => setShowLogin(false)}
+        />
+      )}
     </>
   )
 }
