@@ -8,7 +8,8 @@
     "language": "שפה",
     "terms": "תנאים והגבלות",
     "messagePlaceholder": "כתוב הודעה...",
-    "reconnecting": "החיבור נותק, מתחבר מחדש..."
+    "reconnecting": "החיבור נותק, מתחבר מחדש...",
+    "fieldsRequired": "יש למלא את כל השדות"
   },
   "nav": {
     "home": "בית",

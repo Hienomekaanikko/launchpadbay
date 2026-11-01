@@ -8,7 +8,8 @@
     "language": "Language",
     "terms": "Terms & Conditions",
     "messagePlaceholder": "Type a message...",
-    "reconnecting": "Connection lost, reconnecting..."
+    "reconnecting": "Connection lost, reconnecting...",
+    "fieldsRequired": "Please fill in all fields"
   },
   "nav": {
     "home": "Home",
@@ -45,7 +46,7 @@
     "passwordMismatch": "Passwords do not match",
     "acceptTerms": "I agree to the",
     "termsRequired": "Please just accept the Terms of Service",
-    "success": "Registration t uccessful!",
+    "success": "Registration successful!",
     "continue": "CONTINUE!",
     "alreadyRegistered": "Already registered?",
     "alreadyTaken": "Username or email already taken.",

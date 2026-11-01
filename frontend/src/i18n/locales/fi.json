@@ -8,7 +8,8 @@
     "language": "Kieli",
     "terms": "Käyttöehdot",
     "messagePlaceholder": "Kirjoita viesti...",
-    "reconnecting": "Yhteys katkesi, yhdistetään uudelleen..."
+    "reconnecting": "Yhteys katkesi, yhdistetään uudelleen...",
+    "fieldsRequired": "Täytä kaikki kentät"
   },
   "nav": {
     "home": "Koti",

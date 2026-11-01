@@ -18,6 +18,11 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
     e.preventDefault()
     setError('')
 
+    if (!email.trim() || !password) {
+      setError(t('common.fieldsRequired'))
+      return
+    }
+
     try {
       const result = await login(email, password)
       onLoggedIn(result.token, result.id, result.username)
@@ -38,13 +43,20 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
         <div className="flex flex-col gap-4">
           <div>
             <label htmlFor="login-email" className={labelClass}>{t('login.email')}</label>
-            <Input id="login-email" className={fieldClass} type="email" placeholder="name@launchpad.bay" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input id="login-email" className={fieldClass} type="email" placeholder="name@launchpad.bay" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
             <label htmlFor="login-password" className={labelClass}>{t('login.password')}</label>
-            <Input id="login-password" className={fieldClass} type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <Input id="login-password" className={fieldClass} type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
-          {error && <div className="text-xs text-center max-w-55 self-center normal-case">{error}</div>}
+          {error && (
+            <div
+              role="alert"
+              className="w-full rounded-md border px-3 py-2 text-sm text-center normal-case text-red-800"
+            >
+              {error}
+            </div>
+          )}
           <NavButton className="w-full" type="submit">{t('login.login')}</NavButton>
         </div>
 

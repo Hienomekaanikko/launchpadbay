@@ -36,6 +36,11 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
     e.preventDefault()
     setError('')
 
+    if (!username.trim() || !email.trim() || !password || !confirmPassword) {
+      setError(t('common.fieldsRequired'))
+      return
+    }
+
     if (!acceptedTerms) {
       setError(t('register.termsRequired'))
       return
@@ -67,19 +72,19 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
         <div className="flex flex-col gap-4">
           <div>
             <label htmlFor="register-username" className={labelClass}>{t('register.username')}</label>
-            <Input id="register-username" className={fieldClass} type="text" placeholder="username" value={username} onChange={(e) => setUsername(e.target.value)} required />
+            <Input id="register-username" className={fieldClass} type="text" placeholder="username" value={username} onChange={(e) => setUsername(e.target.value)} />
           </div>
           <div>
             <label htmlFor="register-email" className={labelClass}>{t('register.email')}</label>
-            <Input id="register-email" className={fieldClass} type="email" placeholder="name@launchpad.bay" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            <Input id="register-email" className={fieldClass} type="email" placeholder="name@launchpad.bay" value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
             <label htmlFor="register-password" className={labelClass}>{t('register.password')}</label>
-            <Input id="register-password" className={fieldClass} type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
+            <Input id="register-password" className={fieldClass} type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           <div>
             <label htmlFor="register-confirm" className={labelClass}>{t('register.confirmPassword')}</label>
-            <Input id="register-confirm" className={fieldClass} type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+            <Input id="register-confirm" className={fieldClass} type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
           </div>
           <label htmlFor="register-terms" className="flex items-start gap-2 text-sm font-medium normal-case cursor-pointer">
             <input
@@ -103,7 +108,7 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
           {error && (
             <div
               role="alert"
-              className="w-full rounded-md border px-3 py-2 text-error text-sm text-center uppercase text-red-800"
+              className="w-full rounded-md border px-3 py-2 text-sm text-center normal-case text-red-800"
             >
               {error}
             </div>
