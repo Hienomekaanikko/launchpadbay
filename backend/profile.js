@@ -1,7 +1,5 @@
 import path from 'node:path'
-import { createWriteStream } from 'node:fs'
-import { unlink } from 'node:fs/promises'
-import { pipeline } from 'node:stream/promises'
+import { unlink, writeFile } from 'node:fs/promises'
 import multipart from '@fastify/multipart'
 import bcrypt from 'bcrypt'
 import { getSessionByUserId } from './sessions.js'
@@ -11,6 +9,7 @@ import {
 	ALLOWED_AVATAR_TYPES,
 	DEFAULT_AVATAR_URL,
 	avatarUrl,
+	detectAvatarType,
 	extensionFor,
 	removeUserAvatars,
 } from './avatars.js'
@@ -148,9 +147,19 @@ export default async function profileRoutes(fastify) {
 			return reply.code(400).send({ error: 'invalid_avatar_type' })
 		}
 
-		const filename = `${request.user.id}.${extensionFor(upload.mimetype)}`
+		// Read stream into buffer to inspect bytes and save file safely
+		const buffer = await upload.toBuffer()
+		const detectedType = detectAvatarType(buffer)
+
+		// Ensure file has valid magic bytes and matches the claimed MIME type
+		if (!detectedType || detectedType !== upload.mimetype) {
+			return reply.code(400).send({ error: 'invalid_avatar_content' })
+		}
+
+		// Write buffer to disk; stream is consumed by toBuffer(), so writeFile() is used
+		const filename = `${request.user.id}.${extensionFor(detectedType)}`
 		await removeUserAvatars(request.user.id)
-		await pipeline(upload.file, createWriteStream(path.join(AVATAR_DIR, filename)))
+		await writeFile(path.join(AVATAR_DIR, filename), buffer)
 
 		await prisma.users.update({
 			where: { id: request.user.id },

@@ -90,6 +90,7 @@
     "leaveSessionBeforeDelete": "Leave your session before deleting your account",
     "noFileUploaded": "No file uploaded",
     "invalidAvatarType": "Only JPEG, PNG, or WebP allowed",
+    "invalidAvatarContent": "File is not a valid JPEG, PNG, or WebP image.",
     "fileTooLarge": "File is too large. Maximum size is 2MB."
   },
   "chat": {

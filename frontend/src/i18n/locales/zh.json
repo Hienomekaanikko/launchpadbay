@@ -90,6 +90,7 @@
     "leaveSessionBeforeDelete": "删除账号前请先退出会话",
     "noFileUploaded": "未上传文件",
     "invalidAvatarType": "仅允许 JPEG、PNG 或 WebP 格式",
+    "invalidAvatarContent": "文件不是有效的 JPEG、PNG 或 WebP 图像。",
     "fileTooLarge": "文件过大。最大大小为 2 MB。"
   },
   "chat": {

@@ -90,6 +90,7 @@
     "leaveSessionBeforeDelete": "Poistu sessiosta ennen tilin poistamista",
     "noFileUploaded": "Tiedostoa ei lähetetty",
     "invalidAvatarType": "Vain JPEG-, PNG- tai WebP-kuvat ovat sallittuja",
+    "invalidAvatarContent": "Tiedosto ei ole kelvollinen JPEG-, PNG- tai WebP-kuva.",
     "fileTooLarge": "Tiedosto on liian suuri. Enimmäiskoko on 2 Mt."
   },
   "chat": {

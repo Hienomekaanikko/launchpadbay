@@ -90,6 +90,7 @@
     "leaveSessionBeforeDelete": "צא מהסשן לפני מחיקת החשבון",
     "noFileUploaded": "לא הועלה שום קובץ",
     "invalidAvatarType": "רק תמונות JPEG, PNG או WebP מותרות",
+    "invalidAvatarContent": "הקובץ אינו תמונת JPEG, PNG או WebP תקינה.",
     "fileTooLarge": "הקובץ גדול מדי. הגודל המרבי הוא 2 MB."
   },
   "chat": {
