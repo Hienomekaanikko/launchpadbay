@@ -10,7 +10,7 @@ const baseClasses = [
   'backdrop-blur-[10px]',
   'shadow-input',
   'transition-all duration-200',
-  "placeholder:text-white placeholder:[text-shadow:0_0_8px_rgba(255,255,255,0.4)]",
+  "placeholder:text-[rgba(240,240,255,0.7)] placeholder:[text-shadow:0_0_8px_rgba(255,255,255,0.2)]",
   'focus:outline-none focus:bg-black/35 focus:shadow-input-focus',
   'disabled:opacity-50 disabled:cursor-not-allowed',
 ].join(' ')
