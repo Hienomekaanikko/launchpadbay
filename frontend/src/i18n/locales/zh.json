@@ -43,6 +43,8 @@
     "confirmPassword": "确认密码",
     "submit": "提交",
     "passwordMismatch": "两次密码不一致",
+    "acceptTerms": "我同意",
+    "termsRequired": "请先同意服务条款",
     "success": "注册成功！",
     "continue": "继续！",
     "alreadyRegistered": "已有账号？",

@@ -43,6 +43,8 @@
     "confirmPassword": "Vahvista salasana",
     "submit": "LÄHETÄ",
     "passwordMismatch": "Salasanat eivät täsmää",
+    "acceptTerms": "Hyväksyn",
+    "termsRequired": "Hyväksy käyttöehdot jatkaaksesi",
     "success": "Rekisteröinti onnistui!",
     "continue": "JATKA!",
     "alreadyRegistered": "Onko sinulla jo tili?",

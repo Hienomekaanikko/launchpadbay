@@ -43,6 +43,8 @@
     "confirmPassword": "Confirm password",
     "submit": "SUBMIT",
     "passwordMismatch": "Passwords do not match",
+    "acceptTerms": "I agree to the",
+    "termsRequired": "Please accept the Terms of Service",
     "success": "Registration successful!",
     "continue": "CONTINUE!",
     "alreadyRegistered": "Already registered?",

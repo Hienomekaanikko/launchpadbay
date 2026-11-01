@@ -56,10 +56,15 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
 
         {/* Full page navigation, not fetch: OAuth needs the browser to follow redirects to GitHub and back */}
         <NavButton
-          className="w-full"
+          className="w-full relative inline-flex items-center justify-center"         
           type="button"
           onClick={() => { window.location.href = '/api/auth/github' }}
         >
+        <img
+        src="https://www.svgrepo.com/show/512317/github-142.svg" 
+        alt=""
+        className="absolute left-5 h-[18px] w-[18px]"
+        />
           {t('login.loginWithGithub')}
         </NavButton>
 

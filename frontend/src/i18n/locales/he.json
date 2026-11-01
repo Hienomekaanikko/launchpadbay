@@ -43,6 +43,8 @@
     "confirmPassword": "אימות סיסמה",
     "submit": "שלח",
     "passwordMismatch": "הסיסמאות אינן תואמות",
+    "acceptTerms": "אני מסכים/ה ל",
+    "termsRequired": "יש לאשר את תנאי השימוש",
     "success": "ההרשמה הצליחה!",
     "continue": "המשך!",
     "alreadyRegistered": "כבר רשום?",

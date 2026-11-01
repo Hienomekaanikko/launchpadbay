@@ -5,6 +5,7 @@ import { register } from '../auth.js'
 import Modal from './Modal.jsx'
 import Input from './Input.jsx'
 import NavButton from './NavButton.jsx'
+import PolicyDialog from './PoliciesDialog.jsx'
 
 const modalClass = 'z-11 w-[min(90vw,24rem)] items-stretch gap-0 bg-surface/30 text-white uppercase'
 const fieldClass = 'w-full normal-case'
@@ -26,12 +27,19 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
+  const [openPolicy, setOpenPolicy] = useState(null)
   const [error, setError] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (!acceptedTerms) {
+      setError(t('register.termsRequired'))
+      return
+    }
 
     if (password !== confirmPassword) {
       setError(t('register.passwordMismatch'))
@@ -46,9 +54,14 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
     }
   }
 
+  const dismissAuth = () => {
+    if (openPolicy) return
+    setShowLogin(false)
+  }
+
   return (
     <>
-      {!submitted && <Modal as="form" className={modalClass} onClose={() => setShowLogin(false)} onSubmit={handleSubmit}>
+      {!submitted && <Modal as="form" className={modalClass} onClose={dismissAuth} onSubmit={handleSubmit}>
         <h1 className="text-center text-xl font-semibold mb-6">{t('register.title')}</h1>
 
         <div className="flex flex-col gap-4">
@@ -68,6 +81,26 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
             <label htmlFor="register-confirm" className={labelClass}>{t('register.confirmPassword')}</label>
             <Input id="register-confirm" className={fieldClass} type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
           </div>
+          <label htmlFor="register-terms" className="flex items-start gap-2 text-sm font-medium normal-case cursor-pointer">
+            <input
+              id="register-terms"
+              type="checkbox"
+              className="mt-1 size-4 shrink-0 accent-brand"
+              checked={acceptedTerms}
+              onChange={(e) => setAcceptedTerms(e.target.checked)}
+              required
+            />
+            <span>
+              {t('register.acceptTerms')}{' '}
+              <button
+                type="button"
+                className="underline font-medium cursor-pointer bg-transparent border-0 p-0 text-inherit"
+                onClick={() => setOpenPolicy('service')}
+              >
+                {t('policies.service.title')}
+              </button>
+            </span>
+          </label>
           {error && <div className="text-error text-xs text-center max-w-55 self-center normal-case">{error}</div>}
           <NavButton className="w-full" type="submit">{t('register.submit')}</NavButton>
         </div>
@@ -87,6 +120,12 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
           message={t('register.success')}
           onContinue={() => setRegisterView(false)}
           onDismiss={() => setShowLogin(false)}
+        />
+      )}
+      {openPolicy && (
+        <PolicyDialog
+          kind={openPolicy}
+          onClose={() => setOpenPolicy(null)}
         />
       )}
     </>
