@@ -110,14 +110,30 @@ export default async function githubAuth(fastify) {
 				},
 			})
 
+			// A unique-constraint error (P2002) has two possible causes: another login callback
+			// for this same GitHub account created the user a moment ago (then use that user),
+			// or a local account already has this name or email (then suffix the name, skip the email)
+			const createdMeanwhile = () => prisma.users.findUnique({ where: { github_id: githubId } })
 			try {
 				user = await createUser(githubUser.login, githubUser.email ?? null)	// null if private on GitHub
 			} catch (err) {
 				if (err.code !== 'P2002') {
 					throw err
 				}
-				// Name or email already used by a local account: suffix the name, skip the email
-				user = await createUser(`${githubUser.login}-${githubId}`, null)
+				user = await createdMeanwhile()
+				if (!user) {
+					try {
+						user = await createUser(`${githubUser.login}-${githubId}`, null)
+					} catch (retryErr) {
+						if (retryErr.code !== 'P2002') {
+							throw retryErr
+						}
+						user = await createdMeanwhile()
+						if (!user) {
+							throw retryErr
+						}
+					}
+				}
 			}
 
 			if (githubUser.avatar_url) {

@@ -60,14 +60,44 @@ export default async function friends(fastify) {
             return reply.code(409).send({ error: 'Request already sent' })
         }
         if (existing) {
-            await prisma.friendships.update({
-                where: { requester_id_addressee_id: { requester_id: other.id, addressee_id: me } },
+            // updateMany, not update: their request may have been rejected or removed
+            // since we looked, and then there is no row left to accept
+            const { count } = await prisma.friendships.updateMany({
+                where: { requester_id: other.id, addressee_id: me, status: 'pending' },
                 data: { status: 'accepted' }
             })
+            if (count === 0) {
+                return reply.code(404).send({ error: 'Friend request not found' })
+            }
             return { status: 'accepted' }
         }
 
-        await prisma.friendships.create({ data: { requester_id: me, addressee_id: other.id } })
+        try {
+            await prisma.friendships.create({ data: { requester_id: me, addressee_id: other.id } })
+        } catch (err) {
+            if (err.code === 'P2002') { // the same request sent twice at once (e.g. a double click)
+                return reply.code(409).send({ error: 'Request already sent' })
+            }
+            throw err
+        }
+
+        // If the other user added us at the same moment, both checks above saw nothing and
+        // there is now one row per direction. Both requests resolve it the same way: keep the
+        // row whose requester id sorts first, as an accepted friendship, and drop the other.
+        const reverse = await prisma.friendships.findUnique({
+            where: { requester_id_addressee_id: { requester_id: other.id, addressee_id: me } }
+        })
+        if (reverse) {
+            const [first, second] = [me, other.id].sort()
+            await prisma.$transaction([
+                prisma.friendships.deleteMany({ where: { requester_id: second, addressee_id: first } }),
+                prisma.friendships.updateMany({
+                    where: { requester_id: first, addressee_id: second },
+                    data: { status: 'accepted' }
+                })
+            ])
+            return { status: 'accepted' }
+        }
         return { status: 'pending' }
     })
 

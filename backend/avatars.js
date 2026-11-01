@@ -54,3 +54,18 @@ export async function removeUserAvatars(userId) {
 			.map((filename) => unlink(path.join(AVATAR_DIR, filename)).catch(() => {}))
 	)
 }
+
+// Per-user queue for avatar uploads: key = userId, value = the promise of the
+// latest queued upload. The entry is dropped once that user's queue is empty
+const avatarLocks = new Map()
+
+export function withAvatarLock(userId, task) {
+	const previous = avatarLocks.get(userId) ?? Promise.resolve()
+	const current = previous.catch(() => {}).then(task)
+	avatarLocks.set(userId, current)
+	return current.finally(() => {
+		if (avatarLocks.get(userId) === current) {
+			avatarLocks.delete(userId)
+		}
+	})
+}

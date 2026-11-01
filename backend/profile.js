@@ -12,6 +12,7 @@ import {
 	detectAvatarType,
 	extensionFor,
 	removeUserAvatars,
+	withAvatarLock,
 } from './avatars.js'
 import {
 	USERNAME_LOOKUP_MAX_LENGTH,
@@ -121,9 +122,8 @@ export default async function profileRoutes(fastify) {
 		}
 
 		await prisma.users.delete({ where: { id: user.id } })
-		if (user.avatar) {
-			await unlink(path.join(AVATAR_DIR, user.avatar)).catch(() => {})
-		}
+		// every file of this user, not just the current one, so no orphans stay behind
+		await removeUserAvatars(user.id)
 
 		// unregister before closing, so the disconnect goes out before 'user_deleted'
 		const entry = wsConnectionRegistry.get(user.id)
@@ -156,14 +156,17 @@ export default async function profileRoutes(fastify) {
 			return reply.code(400).send({ error: 'invalid_avatar_content' })
 		}
 
-		// Write buffer to disk; stream is consumed by toBuffer(), so writeFile() is used
 		const filename = `${request.user.id}.${extensionFor(detectedType)}`
-		await removeUserAvatars(request.user.id)
-		await writeFile(path.join(AVATAR_DIR, filename), buffer)
-
-		await prisma.users.update({
-			where: { id: request.user.id },
-			data: { avatar: filename },
+		// one upload per user at a time: two at once (e.g. a png and a jpeg) would each
+		// delete the old files, both write theirs, and leave one behind as an orphan
+		await withAvatarLock(request.user.id, async () => {
+			await removeUserAvatars(request.user.id)
+			// stream is consumed by toBuffer(), so writeFile() is used
+			await writeFile(path.join(AVATAR_DIR, filename), buffer)
+			await prisma.users.update({
+				where: { id: request.user.id },
+				data: { avatar: filename },
+			})
 		})
 
 		return { avatar: avatarUrl(filename) }
