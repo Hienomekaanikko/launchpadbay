@@ -88,7 +88,6 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
               className="mt-1 size-4 shrink-0 accent-brand"
               checked={acceptedTerms}
               onChange={(e) => setAcceptedTerms(e.target.checked)}
-              required
             />
             <span>
               {t('register.acceptTerms')}{' '}
@@ -101,7 +100,14 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
               </button>
             </span>
           </label>
-          {error && <div className="text-error text-xs text-center max-w-55 self-center normal-case">{error}</div>}
+          {error && (
+            <div
+              role="alert"
+              className="w-full rounded-md border px-3 py-2 text-error text-sm text-center uppercase text-red-800"
+            >
+              {error}
+            </div>
+          )}
           <NavButton className="w-full" type="submit">{t('register.submit')}</NavButton>
         </div>
 
