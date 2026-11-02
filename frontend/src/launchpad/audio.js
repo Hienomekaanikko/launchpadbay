@@ -29,7 +29,9 @@ export function initAudio() {
 
 export function resumeAudio() {
     if (audioContext.state === 'suspended')
-      audioContext.resume()
+    audioContext.resume().catch(() => {
+      // The launchpad is closing anyway, so the failure needs no handling.
+    })
 }
 
 // Milliseconds from now until an AudioContext time, for UI timers.
