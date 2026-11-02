@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   fetchFriends,
   sendFriendRequest,
@@ -13,6 +13,9 @@ const EMPTY = { friends: [], incoming: [], outgoing: [] }
 // REST only: refetches on login, on refresh(), and after each of our own actions.
 export default function useFriends(token) {
   const [lists, setLists] = useState(EMPTY)
+  // ids of users with a friend action still on its way: a second click (e.g. a double
+  // click on 'add') is ignored until the first one is done, so no duplicate request is sent
+  const inFlight = useRef(new Set())
 
   const refresh = useCallback(() => {
     if (!token) return
@@ -34,10 +37,16 @@ export default function useFriends(token) {
 
   // runs an API call for the given user ({ id, username }), then refetches so every
   // list stays in sync with the server
-  const act = (apiCall, label) => (user) =>
-    apiCall(token, user.id)
+  const act = (apiCall, label) => (user) => {
+    if (inFlight.current.has(user.id)) return Promise.resolve()
+    inFlight.current.add(user.id)
+    return apiCall(token, user.id)
       .catch((err) => console.error(`Failed to ${label}:`, err))
-      .finally(refresh)
+      .finally(() => {
+        inFlight.current.delete(user.id)
+        refresh()
+      })
+  }
 
   return {
     ...lists,
