@@ -10,18 +10,6 @@ function apiError(data, status) {
   return error
 }
 
-// Mistakes a user can make in the UI (wrong password, taken name, ...) come back as
-// 200 with { error } so the browser console stays clean (see backend/server.js), so a
-// response is a failure when it isn't ok OR carries an error code. Their real status
-// is in the X-Error-Status header
-function isFailure(res, data) {
-  return !res.ok || data.error !== undefined
-}
-
-function failureStatus(res) {
-  return Number(res.headers.get('x-error-status')) || res.status
-}
-
 // Auth requests against the backend, proxied at /api/ (nginx in prod, Vite's
 // dev server proxy locally) — same pattern as launchpad/themes.js.
 async function post(path, body) {
@@ -31,7 +19,7 @@ async function post(path, body) {
     body: JSON.stringify(body),
   })
   const data = await res.json().catch(() => ({}))
-  if (isFailure(res, data)) throw apiError(data, failureStatus(res))
+  if (!res.ok) throw apiError(data, res.status)
   return data
 }
 
@@ -51,7 +39,7 @@ async function requestWithToken(method, path, token, body) {
     body: body === undefined ? undefined : JSON.stringify(body),
   })
   const data = await res.json().catch(() => ({}))
-  if (isFailure(res, data)) throw apiError(data, failureStatus(res))
+  if (!res.ok) throw apiError(data, res.status)
   return data
 }
 
@@ -85,7 +73,7 @@ export async function uploadAvatar(token, file) {
     body,
   })
   const data = await res.json().catch(() => ({}))
-  if (isFailure(res, data)) throw apiError(data, failureStatus(res))
+  if (!res.ok) throw apiError(data, res.status)
   return data
 }
 
