@@ -19,6 +19,7 @@ import JoinRequestPopup from './components/JoinRequestPopup.jsx'
 import UserProfilePopup from './components/UserProfilePopup.jsx'
 import PolicyDialog from './components/PoliciesDialog.jsx'
 import AlreadyOpenNotice from './components/AlreadyOpenNotice.jsx'
+import LanguageSwitcher from './components/LanguageSwitcher.jsx'
 
 function App() {
   const { t } = useTranslation()
@@ -294,6 +295,7 @@ function App() {
         )}
       </main>
       <footer className="flex-wrap gap-6 px-4 py-6">
+        <LanguageSwitcher/>
         <button
           type="button"
           onClick={() => setOpenPolicy('privacy')}

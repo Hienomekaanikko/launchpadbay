@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next'
-import LanguageSwitcher from './LanguageSwitcher.jsx'
 
 const buttonClasses = [
   'app-nav-action',
@@ -36,7 +35,6 @@ export default function AppNavbar({
           >
             {t('nav.home')}
           </NavbarButton>
-          <LanguageSwitcher />
           {sessionId && (
             <span className="app-navbar-session" title={`${t('nav.session', { id: sessionId })}${partner ? t('nav.withPartner', { partner }) : ''}`}>
               {t('nav.session', { id: sessionId })}
