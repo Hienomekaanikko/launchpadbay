@@ -80,8 +80,8 @@ export default function LobbyView({ online, unread, canAddFriend, onAddFriendCli
   return (
     <GlassPanel className="min-h-0 overflow-y-auto px-6 pt-6 bg-surface/30">
       <div className="flex gap-2 mb-3 justify-center">
-        <NavButton onClick={() => setTab('online')} className={tab === 'online' ? 'bg-white/30' : 'after:content-none'}>{t('lobby.online')}</NavButton>
-        <NavButton onClick={() => setTab('sessions')} className={tab === 'sessions' ? 'bg-white/30' : 'after:content-none'}>{activeSession ? t('lobby.sessionChat') : t('lobby.sessions')}</NavButton>
+        <NavButton active={tab === 'online'} onClick={() => setTab('online')} className={tab === 'online' ? 'bg-white/30' : undefined}>{t('lobby.online')}</NavButton>
+        <NavButton active={tab === 'sessions'} onClick={() => setTab('sessions')} className={tab === 'sessions' ? 'bg-white/30' : undefined}>{activeSession ? t('lobby.sessionChat') : t('lobby.sessions')}</NavButton>
       </div>
       {tab === 'online'
         ? <PlayersOnline online={online} unread={unread} onProfileClick={onProfileClick} onChatClick={onChatClick} canAddFriend={canAddFriend} onAddFriendClick={onAddFriendClick} />
