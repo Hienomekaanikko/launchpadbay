@@ -95,6 +95,43 @@ fastify.setErrorHandler((error, request, reply) => {
     return reply.code(500).send({ error: 'internal_error' })
 })
 
+// The subject requires a browser console without errors, and Chrome logs every 4xx
+// response as one. So the mistakes a user can make through the UI (wrong password,
+// taken name, ...) are answered with 200 and the error code in the body; the frontend
+// (auth.js) treats any { error } as a failure. Everything else, e.g. malformed request
+// bodies or a missing login token, keeps its real status. The original status goes in
+// the X-Error-Status header, so it's still visible when debugging
+const USER_ERRORS = new Set([
+    // login and registration
+    'invalid_credentials', 'already_taken', 'invalid_username', 'invalid_email',
+    'password_too_short', 'password_too_long', 'password_require_letter',
+    'password_require_digit', 'password_require_special', 'rate_limited',
+    // profile
+    'user_not_found', 'email_taken', 'username_taken', 'username_unchanged',
+    'password_incorrect', 'current_password_incorrect', 'username_mismatch',
+    'github_only_account', 'leave_session_before_rename', 'leave_session_before_delete',
+    'no_file_uploaded', 'invalid_avatar_type', 'invalid_avatar_content', 'file_too_large',
+    // friends
+    'cannot_add_self', 'friend_request_not_found',
+])
+
+fastify.addHook('onSend', async (request, reply, payload) => {
+    if (reply.statusCode < 400 || reply.statusCode >= 500 || typeof payload !== 'string') {
+        return payload
+    }
+    let code
+    try {
+        code = JSON.parse(payload).error
+    } catch {
+        return payload // not JSON
+    }
+    if (USER_ERRORS.has(code)) {
+        reply.header('x-error-status', reply.statusCode)
+        reply.code(200)
+    }
+    return payload
+})
+
 registerMetrics(fastify)
 
 const adapter = new PrismaMariaDb({

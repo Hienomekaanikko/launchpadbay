@@ -132,7 +132,9 @@
     "removeFriend": "Remove friend",
     "chat": "Chat",
     "online": "Online",
-    "offline": "Offline"
+    "offline": "Offline",
+    "cannotAddSelf": "You can't add yourself as a friend",
+    "requestNotFound": "That friend request no longer exists"
   },
   "session": {
     "join": "JOIN",

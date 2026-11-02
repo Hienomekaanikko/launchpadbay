@@ -132,7 +132,9 @@
     "removeFriend": "删除好友",
     "chat": "聊天",
     "online": "在线",
-    "offline": "离线"
+    "offline": "离线",
+    "cannotAddSelf": "不能添加自己为好友",
+    "requestNotFound": "该好友请求已不存在"
   },
   "session": {
     "join": "加入",

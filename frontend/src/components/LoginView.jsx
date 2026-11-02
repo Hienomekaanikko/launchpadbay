@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { login } from '../auth.js'
+import { checkEmail } from '../validation.js'
 import RegisterView from './RegisterView.jsx'
 import Modal from './Modal.jsx'
 import Input from './Input.jsx'
@@ -25,6 +26,12 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
       return
     }
 
+    // not even an email: the server would refuse it the same way, so don't send it
+    if (checkEmail(email)) {
+      setServerError({ code: 'invalid_credentials' })
+      return
+    }
+
     try {
       const result = await login(email, password)
       onLoggedIn(result.token, result.id, result.username)
@@ -39,7 +46,7 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
 
   return (
     <>
-      {!registerView && <Modal as="form" className="z-10 w-[min(90vw,24rem)] items-stretch gap-0 bg-surface/30 text-white uppercase" onClose={() => setShowLogin(false)} onSubmit={handleSubmit}>
+      {!registerView && <Modal as="form" noValidate className="z-10 w-[min(90vw,24rem)] items-stretch gap-0 bg-surface/30 text-white uppercase" onClose={() => setShowLogin(false)} onSubmit={handleSubmit}>
         <h1 className="text-center text-xl font-semibold mb-6">{t('login.login')}</h1>
 
         <div className="flex flex-col gap-4">

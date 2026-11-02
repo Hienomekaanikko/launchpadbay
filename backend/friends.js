@@ -46,18 +46,19 @@ export default async function friends(fastify) {
         const me = request.user.id
         const other = await findUser(request.body?.id)
         if (!other) {
-            return reply.code(404).send({ error: 'User not found' })
+            return reply.code(404).send({ error: 'user_not_found' })
         }
         if (other.id === me) {
-            return reply.code(400).send({ error: 'You cannot add yourself' })
+            return reply.code(400).send({ error: 'cannot_add_self' })
         }
 
+        // Already done (e.g. from another tab): not an error, just answer with the current state
         const existing = await findFriendship(me, other.id)
         if (existing?.status === 'accepted') {
-            return reply.code(409).send({ error: 'Already friends' })
+            return { status: 'accepted' }
         }
         if (existing?.requester_id === me) {
-            return reply.code(409).send({ error: 'Request already sent' })
+            return { status: 'pending' }
         }
         if (existing) {
             // updateMany, not update: their request may have been rejected or removed
@@ -67,7 +68,7 @@ export default async function friends(fastify) {
                 data: { status: 'accepted' }
             })
             if (count === 0) {
-                return reply.code(404).send({ error: 'Friend request not found' })
+                return reply.code(404).send({ error: 'friend_request_not_found' })
             }
             return { status: 'accepted' }
         }
@@ -76,7 +77,7 @@ export default async function friends(fastify) {
             await prisma.friendships.create({ data: { requester_id: me, addressee_id: other.id } })
         } catch (err) {
             if (err.code === 'P2002') { // the same request sent twice at once (e.g. a double click)
-                return reply.code(409).send({ error: 'Request already sent' })
+                return { status: 'pending' }
             }
             throw err
         }
@@ -105,30 +106,32 @@ export default async function friends(fastify) {
     fastify.post('/friends/requests/:id/accept', { onRequest: [fastify.authenticate] }, async (request, reply) => {
         const other = await findUser(request.params.id)
         if (!other) {
-            return reply.code(404).send({ error: 'User not found' })
+            return reply.code(404).send({ error: 'user_not_found' })
         }
         const { count } = await prisma.friendships.updateMany({
             where: { requester_id: other.id, addressee_id: request.user.id, status: 'pending' },
             data: { status: 'accepted' }
         })
         if (count === 0) {
-            return reply.code(404).send({ error: 'Friend request not found' })
+            // accepted already (e.g. from another tab) is fine; a request that's gone isn't
+            const existing = await findFriendship(request.user.id, other.id)
+            if (existing?.status !== 'accepted') {
+                return reply.code(404).send({ error: 'friend_request_not_found' })
+            }
         }
         return { status: 'accepted' }
     })
 
-    // Rejects a pending request that :id sent to the caller
+    // Rejects a pending request that :id sent to the caller. Like remove below, it succeeds
+    // when there's nothing left to delete, since the result is what the caller wanted
     fastify.delete('/friends/requests/:id', { onRequest: [fastify.authenticate] }, async (request, reply) => {
         const other = await findUser(request.params.id)
         if (!other) {
-            return reply.code(404).send({ error: 'User not found' })
+            return reply.code(404).send({ error: 'user_not_found' })
         }
-        const { count } = await prisma.friendships.deleteMany({
+        await prisma.friendships.deleteMany({
             where: { requester_id: other.id, addressee_id: request.user.id, status: 'pending' }
         })
-        if (count === 0) {
-            return reply.code(404).send({ error: 'Friend request not found' })
-        }
         return { ok: true }
     })
 
@@ -137,9 +140,9 @@ export default async function friends(fastify) {
         const me = request.user.id
         const other = await findUser(request.params.id)
         if (!other) {
-            return reply.code(404).send({ error: 'User not found' })
+            return reply.code(404).send({ error: 'user_not_found' })
         }
-        const { count } = await prisma.friendships.deleteMany({
+        await prisma.friendships.deleteMany({
             where: {
                 status: 'accepted',
                 OR: [
@@ -148,9 +151,6 @@ export default async function friends(fastify) {
                 ]
             }
         })
-        if (count === 0) {
-            return reply.code(404).send({ error: 'Friend not found' })
-        }
         return { ok: true }
     })
 }

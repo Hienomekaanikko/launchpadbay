@@ -51,12 +51,13 @@ export default function useFriends(token, socket) {
   }, [socket])
 
   // runs an API call for the given user ({ id, username }), then refetches so every
-  // list stays in sync with the server
-  const act = (apiCall, label) => (user) => {
+  // list stays in sync with the server. A failed call needs no message: it's almost always
+  // the other user acting first (e.g. removing the request), and the refetch shows the result
+  const act = (apiCall) => (user) => {
     if (inFlight.current.has(user.id)) return Promise.resolve()
     inFlight.current.add(user.id)
     return apiCall(token, user.id)
-      .catch((err) => console.error(`Failed to ${label}:`, err))
+      .catch(() => {})
       .finally(() => {
         inFlight.current.delete(user.id)
         refresh()
@@ -66,9 +67,9 @@ export default function useFriends(token, socket) {
   return {
     ...lists,
     refresh,
-    add: act(sendFriendRequest, 'send friend request'),
-    accept: act(acceptFriendRequest, 'accept friend request'),
-    reject: act(rejectFriendRequest, 'reject friend request'),
-    remove: act(removeFriend, 'remove friend'),
+    add: act(sendFriendRequest),
+    accept: act(acceptFriendRequest),
+    reject: act(rejectFriendRequest),
+    remove: act(removeFriend),
   }
 }

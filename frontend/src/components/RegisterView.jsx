@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { translateServerError } from '../i18n/serverErrors.js'
 import { register } from '../auth.js'
+import { checkUsername, checkEmail, checkNewPassword } from '../validation.js'
 import Modal from './Modal.jsx'
 import Input from './Input.jsx'
 import NavButton from './NavButton.jsx'
@@ -43,6 +44,13 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
       return
     }
 
+    // the server's own rules, checked here first; shown like the server's answer would be
+    const ruleError = checkUsername(username) || checkEmail(email) || checkNewPassword(password)
+    if (ruleError) {
+      setServerError(ruleError)
+      return
+    }
+
     if (!acceptedTerms) {
       setClientError('register.termsRequired')
       return
@@ -68,7 +76,7 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
 
   return (
     <>
-      {!submitted && <Modal as="form" className={modalClass} onClose={dismissAuth} onSubmit={handleSubmit}>
+      {!submitted && <Modal as="form" noValidate className={modalClass} onClose={dismissAuth} onSubmit={handleSubmit}>
         <h1 className="text-center text-xl font-semibold mb-6">{t('register.title')}</h1>
 
         <div className="flex flex-col gap-4">
