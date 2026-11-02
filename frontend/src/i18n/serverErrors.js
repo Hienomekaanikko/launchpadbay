@@ -26,6 +26,8 @@ const SERVER_ERROR_KEYS = {
   no_file_uploaded: 'profile.noFileUploaded',
   invalid_avatar_type: 'profile.invalidAvatarType',
   invalid_avatar_content: 'profile.invalidAvatarContent',
+  leave_session_before_rename: 'profile.leaveSessionToRename',
+  username_taken: 'profile.usernameTaken',
   file_too_large: 'profile.fileTooLarge',
 
   // other server related errors

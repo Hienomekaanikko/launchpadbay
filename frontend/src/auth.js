@@ -52,7 +52,7 @@ export function fetchUser(token, id) {
   return requestWithToken('GET', `/users/${encodeURIComponent(id)}`, token)
 }
 
-// changes: { email }
+// changes: any of { email, username }; an email change also needs currentPassword (password accounts)
 export function updateProfile(token, changes) {
   return requestWithToken('PATCH', '/profile', token, changes)
 }

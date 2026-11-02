@@ -9,7 +9,7 @@ import ProfileView from './components/ProfileView.jsx'
 import NavButton from './components/NavButton.jsx'
 import AppNavbar from './components/AppNavbar.jsx'
 import ChatWindow from './components/ChatWindow.jsx'
-import useSocket, { sendMessage, useCloseCode } from './useSocket.js'
+import useSocket, { onMessage, sendMessage, useCloseCode } from './useSocket.js'
 import usePresence from './usePresence.js'
 import useFriends from './useFriends.js'
 import useSessions from './useSessions.js'
@@ -47,7 +47,7 @@ function App() {
   })
   // only show who we're playing with while they're actually still in the session
   const partner = sessions.find((session) => session.id === activeSession)?.current > 1 ? join.partner : null
-  const friendsState = useFriends(token)
+  const friendsState = useFriends(token, socket)
   const isOnline = (id) => onlineUsers.some((user) => user.id === id && user.online)
   const friendsWithStatus = friendsState.friends.map((friend) => ({ ...friend, online: isOnline(friend.id) }))
   const chatRecipientOnline = isOnline(chat.activeChat?.id)
@@ -112,6 +112,16 @@ function App() {
     setLobbyMode(false)
     setViewedUser(null)
   }
+
+  // our own rename: keep the navbar and the stored name current
+  useEffect(() => {
+    if (!socket) return
+    return onMessage(socket, (msg) => {
+      if (msg.type !== 'user_renamed' || msg.id !== userId) return
+      localStorage.setItem('username', msg.username)
+      setUsername(msg.username)
+    })
+  }, [socket, userId])
 
   // the server refused our token (expired or invalid): reconnecting can't help, log out
   useEffect(() => {

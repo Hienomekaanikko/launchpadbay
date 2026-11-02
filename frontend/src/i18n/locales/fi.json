@@ -86,6 +86,13 @@
     "deleteConfirmUsername": "Tämä poistaa tilisi, kaverisi ja viestisi pysyvästi. Vahvista kirjoittamalla käyttäjänimesi.",
     "deletePermanently": "Poista pysyvästi",
     "leaveSessionToDelete": "Poistu sessiosta poistaaksesi tilin.",
+    "newUsername": "Uusi käyttäjänimi",
+    "newEmail": "Uusi sähköposti",
+    "confirmNewEmail": "Vahvista uusi sähköposti",
+    "emailMismatch": "Sähköpostit eivät täsmää",
+    "emailSaved": "Tallennettu. Kirjaudut nyt osoitteella {{email}}",
+    "usernameRules": "{{min}}–{{max}} merkkiä: kirjaimia, numeroita, _ ja -",
+    "leaveSessionToRename": "Poistu sessiosta vaihtaaksesi käyttäjänimesi.",
     "deleteConfirmLabel": "Vahvista poisto",
     "userNotFound": "Käyttäjää ei löytynyt",
     "emailTaken": "Sähköposti on jo käytössä",
@@ -97,7 +104,8 @@
     "noFileUploaded": "Tiedostoa ei lähetetty",
     "invalidAvatarType": "Vain JPEG-, PNG- tai WebP-kuvat ovat sallittuja",
     "invalidAvatarContent": "Tiedosto ei ole kelvollinen JPEG-, PNG- tai WebP-kuva.",
-    "fileTooLarge": "Tiedosto on liian suuri. Enimmäiskoko on 2 Mt."
+    "fileTooLarge": "Tiedosto on liian suuri. Enimmäiskoko on 2 Mt.",
+    "usernameTaken": "Käyttäjänimi on jo käytössä"
   },
   "chat": {
     "sayHi": "Sano hei käyttäjälle {{name}}!",

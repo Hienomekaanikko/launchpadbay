@@ -86,6 +86,13 @@
     "deleteConfirmUsername": "פעולה זו מוחקת לצמיתות את החשבון, החברים וההודעות שלך. הקלד את שם המשתמש שלך לאישור.",
     "deletePermanently": "מחק לצמיתות",
     "leaveSessionToDelete": "צא מהסשן כדי למחוק את החשבון.",
+    "newUsername": "שם משתמש חדש",
+    "newEmail": "אימייל חדש",
+    "confirmNewEmail": "אימות האימייל החדש",
+    "emailMismatch": "כתובות האימייל אינן תואמות",
+    "emailSaved": "נשמר. מעכשיו מתחברים עם {{email}}",
+    "usernameRules": "{{min}}–{{max}} תווים: אותיות, ספרות, _ ו־-",
+    "leaveSessionToRename": "צא מהסשן כדי לשנות את שם המשתמש שלך.",
     "deleteConfirmLabel": "אישור מחיקה",
     "userNotFound": "המשתמש לא נמצא",
     "emailTaken": "האימייל כבר בשימוש",
@@ -97,7 +104,8 @@
     "noFileUploaded": "לא הועלה שום קובץ",
     "invalidAvatarType": "רק תמונות JPEG, PNG או WebP מותרות",
     "invalidAvatarContent": "הקובץ אינו תמונת JPEG, PNG או WebP תקינה.",
-    "fileTooLarge": "הקובץ גדול מדי. הגודל המרבי הוא 2 MB."
+    "fileTooLarge": "הקובץ גדול מדי. הגודל המרבי הוא 2 MB.",
+    "usernameTaken": "שם המשתמש כבר תפוס"
   },
   "chat": {
     "sayHi": "תגיד שלום ל־{{name}}!",

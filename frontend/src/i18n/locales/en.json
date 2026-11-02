@@ -86,6 +86,13 @@
     "deleteConfirmUsername": "This permanently deletes your account, friends and messages. Type your username to confirm.",
     "deletePermanently": "Delete permanently",
     "leaveSessionToDelete": "Leave your session to delete your account.",
+    "newUsername": "New username",
+    "newEmail": "New email",
+    "confirmNewEmail": "Confirm new email",
+    "emailMismatch": "Emails don't match",
+    "emailSaved": "Saved. You now log in with {{email}}",
+    "usernameRules": "{{min}}–{{max}} characters: letters, numbers, _ and -",
+    "leaveSessionToRename": "Leave your session to change your username.",
     "deleteConfirmLabel": "Confirm deletion",
     "userNotFound": "User not found",
     "emailTaken": "Email already taken",
@@ -97,7 +104,8 @@
     "noFileUploaded": "No file uploaded",
     "invalidAvatarType": "Only JPEG, PNG, or WebP allowed",
     "invalidAvatarContent": "File is not a valid JPEG, PNG, or WebP image.",
-    "fileTooLarge": "File is too large. Maximum size is 2MB."
+    "fileTooLarge": "File is too large. Maximum size is 2MB.",
+    "usernameTaken": "Username already taken"
   },
   "chat": {
     "sayHi": "Say hi to {{name}}!",

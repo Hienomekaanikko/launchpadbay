@@ -197,6 +197,17 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
         return
     }
 
+    // The token proves who this is; the current name comes from the DB, since the
+    // name inside the token is out of date once the user renames themselves
+    const user = await prisma.users.findUnique({
+        where: { id: jwtPayload.id },
+        select: { username: true }
+    })
+    if (!user) { // account deleted, but the token still verifies
+        socket.close(4001, 'Unauthorized')
+        return
+    }
+
     // Check if the user already has an active socket connection
     const previous = wsConnectionRegistry.get(jwtPayload.id)
     if (previous) {
@@ -213,7 +224,7 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     // create a new entry, and insert it into the registry.
     // In case the user was already connected (i.e. with the 'previous' entry),
     // the registry's set() member function updates that user's entry
-    const entry = { username: jwtPayload.username, socket, isAlive: true, tabId }
+    const entry = { username: user.username, socket, isAlive: true, tabId }
 
     // Announce new connection to everyone already connected (except the new client).
     // Skip on reconnect: other clients already see this client as connected
@@ -282,7 +293,7 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
         try {
             await handler(msg, {
                 userId: jwtPayload.id,
-                username: jwtPayload.username,
+                username: entry.username, // kept up to date by a rename (PATCH /profile)
                 socket,
                 prisma
             })
@@ -345,7 +356,7 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
         sendSessionState(socket, jwtPayload.id)
     } catch (err) {
         request.log.error(err, `ws: failed to send initial snapshots ` +
-            `(userId=${jwtPayload.id}, username=${jwtPayload.username})`)
+            `(userId=${jwtPayload.id}, username=${entry.username})`)
     }
 })
 

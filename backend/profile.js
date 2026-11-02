@@ -18,6 +18,7 @@ import {
 	USERNAME_LOOKUP_MAX_LENGTH,
 	validateEmail,
 	validateNewPassword,
+	validateUsername,
 	isPasswordInput,
 	trimUsername,
 	isBoundedString
@@ -59,20 +60,72 @@ export default async function profileRoutes(fastify) {
 		}
 	})
 
+	// Changes any of { email, username }; fields left out stay as they are.
+	// Changing the email (it's the login) needs currentPassword on password accounts
 	fastify.patch('/profile', { onRequest: [fastify.authenticate] }, async (request, reply) => {
-		const email = validateEmail(request.body?.email)
-		if (email.error) {
-			return reply.code(400).send({ error: email.error, params: email.params })
+		const body = request.body ?? {}
+		const data = {}
+
+		if (body.email !== undefined) {
+			const email = validateEmail(body.email)
+			if (email.error) {
+				return reply.code(400).send({ error: email.error, params: email.params })
+			}
+			data.email = email.value
 		}
+		if (body.username !== undefined) {
+			const username = validateUsername(body.username)
+			if (username.error) {
+				return reply.code(400).send({ error: username.error, params: username.params })
+			}
+			// a session keeps its players' names; renaming mid-session would leave them stale
+			if (getSessionByUserId(request.user.id)) {
+				return reply.code(409).send({ error: 'leave_session_before_rename' })
+			}
+			data.username = username.value
+		}
+		if (Object.keys(data).length === 0) {
+			return reply.code(400).send({ error: 'invalid_request_body' })
+		}
+		if (data.email !== undefined) {
+			const user = await prisma.users.findUnique({ where: { id: request.user.id } })
+			if (!user) {
+				return reply.code(404).send({ error: 'user_not_found' })
+			}
+			// GitHub-only accounts have no password to ask for
+			if (user.password_hash && (!isPasswordInput(body.currentPassword)
+				|| !(await bcrypt.compare(body.currentPassword, user.password_hash)))) {
+				return reply.code(403).send({ error: 'current_password_incorrect' })
+			}
+		}
+
+		let updated
 		try {
-			const updated = await prisma.users.update({ where: { id: request.user.id }, data: { email: email.value } })
-			return { email: updated.email }
+			updated = await prisma.users.update({ where: { id: request.user.id }, data })
 		} catch (err) {
 			if (err.code === 'P2002') {
-				return reply.code(409).send({ error: 'email_taken' })
+				// the forms send one field at a time; with both, look for the field in the error details
+				const usernameTaken = data.username !== undefined
+					&& (data.email === undefined || JSON.stringify(err.meta ?? {}).includes('username'))
+				return reply.code(409).send({ error: usernameTaken ? 'username_taken' : 'email_taken' })
 			}
 			throw err
 		}
+
+		if (data.username) {
+			// the server's own copy of the name, used for chat 'from' and join requests
+			const entry = wsConnectionRegistry.get(updated.id)
+			if (entry) {
+				entry.username = updated.username
+			}
+			broadcastEvent({ type: 'user_renamed', id: updated.id, username: updated.username })
+		}
+
+		const changed = {}
+		for (const key of Object.keys(data)) {
+			changed[key] = updated[key]
+		}
+		return changed
 	})
 
 	fastify.put('/profile/password', { onRequest: [fastify.authenticate] }, async (request, reply) => {

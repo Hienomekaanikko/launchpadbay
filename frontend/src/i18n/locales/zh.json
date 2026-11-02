@@ -86,6 +86,13 @@
     "deleteConfirmUsername": "这将永久删除你的账户、好友和消息。请输入用户名确认。",
     "deletePermanently": "永久删除",
     "leaveSessionToDelete": "请先离开会话再删除账户。",
+    "newUsername": "新用户名",
+    "newEmail": "新邮箱",
+    "confirmNewEmail": "确认新邮箱",
+    "emailMismatch": "两次输入的邮箱不一致",
+    "emailSaved": "已保存。今后请使用 {{email}} 登录",
+    "usernameRules": "{{min}}–{{max}} 个字符：字母、数字、_ 和 -",
+    "leaveSessionToRename": "离开会话后才能更改用户名。",
     "deleteConfirmLabel": "确认删除",
     "userNotFound": "未找到用户",
     "emailTaken": "邮箱已被使用",
@@ -97,7 +104,8 @@
     "noFileUploaded": "未上传文件",
     "invalidAvatarType": "仅允许 JPEG、PNG 或 WebP 格式",
     "invalidAvatarContent": "文件不是有效的 JPEG、PNG 或 WebP 图像。",
-    "fileTooLarge": "文件过大。最大大小为 2 MB。"
+    "fileTooLarge": "文件过大。最大大小为 2 MB。",
+    "usernameTaken": "用户名已被占用"
   },
   "chat": {
     "sayHi": "跟 {{name}} 打个招呼吧！",
