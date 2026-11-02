@@ -31,7 +31,8 @@ const SERVER_ERROR_KEYS = {
   // other server related errors
   invalid_request_body: 'serverErrors.invalidRequestBody',
   internal_error: 'serverErrors.internalError',
-  unauthorized: 'serverErrors.unauthorized'
+  unauthorized: 'serverErrors.unauthorized',
+  rate_limited: 'serverErrors.tooManyAttempts'
 }
 
 export function translateServerError(t, error) {

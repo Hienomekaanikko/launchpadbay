@@ -61,8 +61,13 @@ export default function useChat(socket, userId, activeSession) {
   useEffect(() => {
     if (!socket || !activeSession) return
 
-    // session_joined / session_left become system lines: { id, system: 'joined' | 'left', username }
+    // session_joined / session_left become system lines: { id, system: 'joined' | 'left', username },
+    // a rate-limited session chat message becomes { id, system: 'slowDown' }
     return onMessage(socket, (msg) => {
+      if (msg.type === 'error' && msg.reason === 'rate_limited' && msg.chat === 'session') {
+        setSessionMessages((prev) => [...prev, { id: crypto.randomUUID(), system: 'slowDown' }])
+        return
+      }
       if (msg.sessionId !== activeSession) return
       if (msg.type === 'session_chat') {
         setSessionMessages((prev) => [...prev, { id: msg.id, text: msg.text, fromMe: msg.from === userId }])

@@ -13,6 +13,7 @@ const ERROR_KEYS = {
   no_such_user: 'chat.errors.noSuchUser',
   message_too_long: 'chat.errors.messageTooLong',
   empty_message: 'chat.errors.emptyMessage',
+  rate_limited: 'chat.errors.rateLimited',
 }
 
 export default function ChatWindow({ recipient, recipientOnline, messages, error, onSendMessage, onClose }) {
