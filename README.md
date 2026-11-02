@@ -12,7 +12,7 @@ Key features:
 
 - A themed 25-pad launchpad grid across five channels, with per-channel volume, low-pass filters, queued clip transitions, split timing, and stutter effects, driven by `frontend/src/launchpad/engine.js`.
 - Themes (background image + body styling + per-pad sounds) are served from the backend/database rather than bundled into the frontend build, so new themes/sounds can be added without a frontend rebuild.
-- User accounts with registration, username/password login, profile editing, avatars, friendships, and a GitHub OAuth flow.
+- User accounts with registration, email/password login, profile editing, avatars, friendships, and a GitHub OAuth flow.
 - Live presence, private/session chat, and two-user collaborative launchpad sessions with join requests and shared performance controls.
 - One-command containerised setup (`make up`) covering the frontend, backend, MySQL, Prometheus, and Grafana, with automatic migrations and seed data.
 
@@ -102,7 +102,7 @@ The entries below describe implemented features. Pending validation and missing 
 |---|---|---|
 | Launchpad and audio engine | 25 pads across five channels, scheduled loops and clip transitions, per-channel volume/filter controls, split timing, and stutter effects. Guest users can play without an account. | `msuokas`, `mbonsdor`; responsive layout by `timurray` |
 | Backend theme loading | Themes, backgrounds, and sample URLs come from MySQL through `GET /api/themes`. Loading retries accommodate a slow-starting backend. The launchpad currently loads the first returned theme. | `msuokas`, `mbonsdor` |
-| Registration and password login | Register with a username, email, and password; log in with username/password. Bcrypt protects passwords, JWTs authenticate requests, and the frontend stores the session in `localStorage`. Full input validation and email-based login remain open checklist items. | `msuokas` |
+| Registration and password login | Register with a username, email, and password; log in with email and password. Bcrypt protects passwords, JWTs authenticate requests, and the frontend stores the session in `localStorage`. Full input validation remains an open checklist item. | `msuokas` |
 | GitHub OAuth | Authorisation redirect, state-cookie validation, code exchange, local account lookup/creation, and application JWT delivery are implemented. A successful live login demonstration remains pending. | `mbonsdor` |
 | Profiles and avatars | View account information, edit email, change a password where applicable, upload an avatar or use the default image, and delete an account with confirmation. | `msuokas`, `mbonsdor` |
 | Friends | Send, accept, reject, and remove friend requests/connections; list friends and their online status. | `msuokas`; presence support by `ykadosh` |
@@ -150,9 +150,7 @@ The entries below describe implemented features. Pending validation and missing 
 - [x] Credentials are read from local, Git-ignored `.env` files, and `.env.example` is provided. The Compose database URL now interpolates environment variables instead of containing a literal password.
 - [x] The database has a clear schema and well-defined relations: users, friendships, messages, themes, and theme sounds are defined in Prisma with migrations.
 - [x] Passwords are hashed and salted with bcrypt, and protected routes verify JWTs.
-- [ ] Email and password authentication is available for both signup and login.
-
-> Technically the signup collects an email, but login currently looks up the account by username rather than email. We should sign in with email.
+- [x] Email and password authentication is available for both signup and login.
 
 - [ ] All forms and user inputs are properly validated in both the frontend and backend.
 
@@ -552,8 +550,50 @@ Saving in Grafana alone does not update the repository but will update local set
 
 - `users` table: `id` (uuid), `username` (case-insensitively unique), `email`/`github_id` (unique, nullable), `password_hash` (bcrypt, nullable for GitHub-only accounts), `avatar` (nullable), `created_at`.
 - `POST /register` — hashes password, creates user, 409 on duplicate username/email.
-- `POST /login` — bcrypt-compares password, returns a JWT on success. Wrong password and unknown username both return the same generic 401 (no username enumeration).
+- `POST /login` — bcrypt-compares password, returns a JWT on success. Wrong password and unknown email both return the same generic 401 (no username enumeration).
 - `JWT_SECRET` in `.env` signs/verifies tokens.
+
+#### Credential rules
+
+---
+
+##### 1. Native Launchpad Bay Accounts
+The backend enforces these rules in `backend/validation.js`; update this section when these constants change.
+
+- **Username**
+    - Length: between 4 and 30 characters (after trimming and NFC normalisation)
+    - Allowed characters: letters, digits, underscores and hyphens
+    - Unique, using case-insensitive comparison. A user may change the capitalization of their own username, but no other account can take a username that differs only by case.
+- **Email**
+    - Length: at most 255 characters (after trimming and NFC normalisation)
+    - One `@` and a `.` in the domain
+    - No whitespace or control characters
+    - Must be unique
+- **Password**
+    - At least 8 characters
+    - At most 72 UTF-8 bytes (matching bcrypt's limit)
+    - Complexity: At least one letter and one digit
+- **Credential & Account Management**
+    - **Modifications**: Profile view's editing page allows updating username, email address, and/or password.
+    - **Security Verification**: Changing the email, password or deleting the account altogether requires the current password.
+
+---
+
+##### 2. GitHub Accounts (OAuth)
+
+- **Username** 
+    - Based on the GitHub username; may be suffixed to avoid a collision and may exceed the 30-character native limit.
+- **Email**
+    - Can be kept empty, or added and modified through Launchpad Bay's profile view
+    - Length: at most 255 characters (after trimming and NFC normalisation)
+    - One `@` and a `.` in the domain
+    - No whitespace or control characters
+    - Must be unique
+- **Password**
+    - No local password; sign-in is handled by GitHub OAuth
+- **Account Management**
+    - Profile editing page supports modification of username and email
+    - Account deletion: possible from the same page page, after providing username
 
 ### Working on the backend/database
 
