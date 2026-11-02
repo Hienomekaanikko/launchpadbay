@@ -99,7 +99,7 @@ function ProfileDetails({ profile, onEditClick, onLogout }) {
 }
 
 // friends: [{ id, username, online }], incoming: [{ id, username }]
-export default function ProfileView({ token, inSession, friends, incoming, unread, onProfileClick, onChatClick, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen, onAccountDeleted, onLogout }) {
+export default function ProfileView({ token, inSession, friends, incoming, unread, onProfileClick, onChatClick, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen, onAccountDeleted, onLogout, onTokenChange }) {
   const { t } = useTranslation()
   const [profile, setProfile] = useState(null)
   const [error, setError] = useState('')
@@ -154,6 +154,7 @@ export default function ProfileView({ token, inSession, friends, incoming, unrea
           inSession={inSession}
           onProfileChange={(changes) => setProfile((p) => ({ ...p, ...changes }))}
           onAccountDeleted={onAccountDeleted}
+          onTokenChange={onTokenChange}
           onClose={() => setShowEdit(false)}
         />
       )}

@@ -10,6 +10,27 @@ function apiError(data, status) {
   return error
 }
 
+// App.jsx listens for this and logs out: the server refused our token (expired, from
+// before a password change, or the account is gone), so no request with it can work
+export const SESSION_EXPIRED_EVENT = 'session-expired'
+
+// for requests made while logged in: a 401 there means the session is over
+function failedWithToken(data, status) {
+  if (status === 401) window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
+  return apiError(data, status)
+}
+
+// when the token stops working (ms since epoch), read from its own 'exp' field;
+// Infinity if it has none or can't be read
+export function tokenExpiresAt(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))
+    return typeof payload.exp === 'number' ? payload.exp * 1000 : Infinity
+  } catch {
+    return Infinity
+  }
+}
+
 // Auth requests against the backend, proxied at /api/ (nginx in prod, Vite's
 // dev server proxy locally) — same pattern as launchpad/themes.js.
 async function post(path, body) {
@@ -39,7 +60,7 @@ async function requestWithToken(method, path, token, body) {
     body: body === undefined ? undefined : JSON.stringify(body),
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw apiError(data, res.status)
+  if (!res.ok) throw failedWithToken(data, res.status)
   return data
 }
 
@@ -73,7 +94,7 @@ export async function uploadAvatar(token, file) {
     body,
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw apiError(data, res.status)
+  if (!res.ok) throw failedWithToken(data, res.status)
   return data
 }
 

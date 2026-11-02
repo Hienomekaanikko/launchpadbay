@@ -57,6 +57,9 @@ const RATE_LIMIT_NOTICE_MS = 1000
 // login / register attempts per IP; each one costs a bcrypt hash
 const AUTH_ATTEMPTS_PER_MINUTE = 10
 
+// how long a login lasts; after that the frontend logs out and the user logs in again
+const JWT_EXPIRES_IN = '1d'
+
 const fastify = Fastify({
     logger: true,
     https: {
@@ -129,8 +132,11 @@ await fastify.register(fastifyStatic, {
     decorateReply: false,
 })
 
+// Every token expires (JWT_EXPIRES_IN) and carries the user's token_version as 'tv';
+// a password change bumps the version, so tokens signed before it stop working
 await fastify.register(jwt, {
-    secret: process.env.JWT_SECRET
+    secret: process.env.JWT_SECRET,
+    sign: { expiresIn: JWT_EXPIRES_IN }
 })
 
 await fastify.register(githubAuth)
@@ -150,11 +156,20 @@ await fastify.register(websocket, {
     options: { maxPayload: MAX_WS_BYTES_PER_FRAME }
 })
 
+// Valid signature and not expired isn't enough: the account must still exist, and the
+// token must not be older than the last password change
 fastify.decorate('authenticate', async function (request, reply) {
     try {
         await request.jwtVerify()
     } catch (err) {
-        reply.code(401).send({ error: 'unauthorized' })
+        return reply.code(401).send({ error: 'unauthorized' })
+    }
+    const user = await prisma.users.findUnique({
+        where: { id: request.user.id },
+        select: { token_version: true }
+    })
+    if (!user || user.token_version !== request.user.tv) {
+        return reply.code(401).send({ error: 'unauthorized' })
     }
 })
 
@@ -201,9 +216,10 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     // name inside the token is out of date once the user renames themselves
     const user = await prisma.users.findUnique({
         where: { id: jwtPayload.id },
-        select: { username: true }
+        select: { username: true, token_version: true }
     })
-    if (!user) { // account deleted, but the token still verifies
+    // account deleted, or the token is from before the last password change
+    if (!user || user.token_version !== jwtPayload.tv) {
         socket.close(4001, 'Unauthorized')
         return
     }
@@ -465,7 +481,7 @@ fastify.post('/login', { config: authRateLimit }, async (request, reply) => {
         return reply.code(401).send({ error: 'invalid_credentials' })
     }
 
-    const token = fastify.jwt.sign({ id: user.id, username: user.username })
+    const token = fastify.jwt.sign({ id: user.id, tv: user.token_version })
     return { token, id: user.id, username: user.username }
 })
 
