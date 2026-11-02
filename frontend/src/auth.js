@@ -52,13 +52,10 @@ export function fetchUser(token, id) {
   return requestWithToken('GET', `/users/${encodeURIComponent(id)}`, token)
 }
 
-// changes: any of { email, username }; an email change also needs currentPassword (password accounts)
+// changes: any of { username, email, newPassword }, saved together or not at all;
+// email and password changes also need currentPassword (password accounts)
 export function updateProfile(token, changes) {
   return requestWithToken('PATCH', '/profile', token, changes)
-}
-
-export function changePassword(token, currentPassword, newPassword) {
-  return requestWithToken('PUT', '/profile/password', token, { currentPassword, newPassword })
 }
 
 // confirm: { password } or, for GitHub-only accounts, { username }

@@ -76,10 +76,8 @@
     "memberSince": "חבר מאז",
     "save": "שמור",
     "saved": "נשמר",
-    "password": "סיסמה",
     "currentPassword": "סיסמה נוכחית",
     "newPassword": "סיסמה חדשה",
-    "changePassword": "שנה סיסמה",
     "passwordChanged": "הסיסמה שונתה",
     "deleteAccount": "מחק חשבון",
     "deleteConfirmPassword": "פעולה זו מוחקת לצמיתות את החשבון, החברים וההודעות שלך. הזן את הסיסמה שלך לאישור.",
@@ -105,7 +103,11 @@
     "invalidAvatarType": "רק תמונות JPEG, PNG או WebP מותרות",
     "invalidAvatarContent": "הקובץ אינו תמונת JPEG, PNG או WebP תקינה.",
     "fileTooLarge": "הקובץ גדול מדי. הגודל המרבי הוא 2 MB.",
-    "usernameTaken": "שם המשתמש כבר תפוס"
+    "usernameTaken": "שם המשתמש כבר תפוס",
+    "usernameUnchanged": "זה כבר שם המשתמש שלך",
+    "nothingToSave": "אין עדיין מה לשמור",
+    "currentPasswordRequired": "הזן את הסיסמה הנוכחית כדי לשנות את האימייל או הסיסמה",
+    "currentPasswordNote": "נדרשת לשינוי האימייל או הסיסמה"
   },
   "chat": {
     "sayHi": "תגיד שלום ל־{{name}}!",

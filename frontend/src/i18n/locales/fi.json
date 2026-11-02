@@ -76,10 +76,8 @@
     "memberSince": "Jäsen alkaen",
     "save": "Tallenna",
     "saved": "Tallennettu",
-    "password": "Salasana",
     "currentPassword": "Nykyinen salasana",
     "newPassword": "Uusi salasana",
-    "changePassword": "Vaihda salasana",
     "passwordChanged": "Salasana vaihdettu",
     "deleteAccount": "Poista tili",
     "deleteConfirmPassword": "Tämä poistaa tilisi, kaverisi ja viestisi pysyvästi. Vahvista syöttämällä salasanasi.",
@@ -105,7 +103,11 @@
     "invalidAvatarType": "Vain JPEG-, PNG- tai WebP-kuvat ovat sallittuja",
     "invalidAvatarContent": "Tiedosto ei ole kelvollinen JPEG-, PNG- tai WebP-kuva.",
     "fileTooLarge": "Tiedosto on liian suuri. Enimmäiskoko on 2 Mt.",
-    "usernameTaken": "Käyttäjänimi on jo käytössä"
+    "usernameTaken": "Käyttäjänimi on jo käytössä",
+    "usernameUnchanged": "Tämä on jo käyttäjänimesi",
+    "nothingToSave": "Ei vielä mitään tallennettavaa",
+    "currentPasswordRequired": "Anna nykyinen salasanasi vaihtaaksesi sähköpostin tai salasanan",
+    "currentPasswordNote": "Tarvitaan sähköpostin tai salasanan vaihtoon"
   },
   "chat": {
     "sayHi": "Sano hei käyttäjälle {{name}}!",

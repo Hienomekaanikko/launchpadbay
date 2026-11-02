@@ -76,10 +76,8 @@
     "memberSince": "Member since",
     "save": "Save",
     "saved": "Saved",
-    "password": "Password",
     "currentPassword": "Current password",
     "newPassword": "New password",
-    "changePassword": "Change password",
     "passwordChanged": "Password changed",
     "deleteAccount": "Delete account",
     "deleteConfirmPassword": "This permanently deletes your account, friends and messages. Enter your password to confirm.",
@@ -105,7 +103,11 @@
     "invalidAvatarType": "Only JPEG, PNG, or WebP allowed",
     "invalidAvatarContent": "File is not a valid JPEG, PNG, or WebP image.",
     "fileTooLarge": "File is too large. Maximum size is 2MB.",
-    "usernameTaken": "Username already taken"
+    "usernameTaken": "Username already taken",
+    "usernameUnchanged": "That's already your username",
+    "nothingToSave": "Nothing to save yet",
+    "currentPasswordRequired": "Enter your current password to change your email or password",
+    "currentPasswordNote": "Needed to change your email or password"
   },
   "chat": {
     "sayHi": "Say hi to {{name}}!",

@@ -76,10 +76,8 @@
     "memberSince": "注册时间",
     "save": "保存",
     "saved": "已保存",
-    "password": "密码",
     "currentPassword": "当前密码",
     "newPassword": "新密码",
-    "changePassword": "修改密码",
     "passwordChanged": "密码已修改",
     "deleteAccount": "删除账户",
     "deleteConfirmPassword": "这将永久删除你的账户、好友和消息。请输入密码确认。",
@@ -105,7 +103,11 @@
     "invalidAvatarType": "仅允许 JPEG、PNG 或 WebP 格式",
     "invalidAvatarContent": "文件不是有效的 JPEG、PNG 或 WebP 图像。",
     "fileTooLarge": "文件过大。最大大小为 2 MB。",
-    "usernameTaken": "用户名已被占用"
+    "usernameTaken": "用户名已被占用",
+    "usernameUnchanged": "这已经是你的用户名了",
+    "nothingToSave": "还没有可保存的内容",
+    "currentPasswordRequired": "请输入当前密码以更改邮箱或密码",
+    "currentPasswordNote": "更改邮箱或密码时需要"
   },
   "chat": {
     "sayHi": "跟 {{name}} 打个招呼吧！",

@@ -28,6 +28,7 @@ const SERVER_ERROR_KEYS = {
   invalid_avatar_content: 'profile.invalidAvatarContent',
   leave_session_before_rename: 'profile.leaveSessionToRename',
   username_taken: 'profile.usernameTaken',
+  username_unchanged: 'profile.usernameUnchanged',
   file_too_large: 'profile.fileTooLarge',
 
   // other server related errors

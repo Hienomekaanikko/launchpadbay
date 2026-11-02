@@ -2,151 +2,140 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { translateServerError } from '../i18n/serverErrors.js'
-import { updateProfile, changePassword, deleteAccount } from '../auth.js'
+import { updateProfile, deleteAccount } from '../auth.js'
 import Modal from './Modal.jsx'
-import CloseButton from './CloseButton.jsx'
 import Input from './Input.jsx'
-import FormButton from './FormButton.jsx'
+import NavButton from './NavButton.jsx'
 
-const sectionClasses = 'flex w-full flex-col gap-2'
-const headingClasses = 'text-black text-xs font-medium tracking-nav'
-const noteClasses = 'text-black/60 text-xs'
-const errorClasses = 'text-error text-xs'
-// FormButton's and Input's default white text is hard to read on this light popup (LoginView does the same)
-const buttonClasses = 'text-black'
-const inputClasses = 'text-black placeholder:text-black/60 placeholder:[text-shadow:none]'
+// Same look as LoginView and RegisterView
+const fieldClass = 'w-full normal-case'
+const labelClass = 'mb-2 text-sm font-medium inline-block uppercase'
+const noteClass = 'mt-1 text-xs normal-case opacity-70'
+const alertClass = 'w-full rounded-md border px-3 py-2 text-sm text-center normal-case'
+const disabledButtonClass = 'disabled:opacity-50 disabled:cursor-default disabled:active:scale-100'
 
-function Status({ error, success }) {
-  if (error) return <p className={errorClasses}>{error}</p>
-  if (success) return <p className={noteClasses}>{success}</p>
-  return null
-}
-
-// The email is the login, so it's typed twice and, on password accounts, needs the
-// current password (GitHub-only accounts have none)
-function EmailForm({ token, profile, onProfileChange }) {
-  const { t } = useTranslation()
-  const [email, setEmail] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [error, setError] = useState('')
-  const [savedEmail, setSavedEmail] = useState('')
-
-  async function handleSubmit(event) {
-    event.preventDefault()
-    setError('')
-    setSavedEmail('')
-    if (email !== confirm) {
-      setError(t('profile.emailMismatch'))
-      return
-    }
-    try {
-      const result = await updateProfile(token, { email, currentPassword })
-      onProfileChange({ email: result.email })
-      setEmail('')
-      setConfirm('')
-      setCurrentPassword('')
-      setSavedEmail(result.email)
-    } catch (err) {
-      setError(translateServerError(t, err))
-    }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className={sectionClasses}>
-      <h3 className={headingClasses}>{t('register.email')}</h3>
-      <Input className={inputClasses} type="email" aria-label={t('register.email')} placeholder={t('profile.newEmail')} value={email}
-        onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
-      <Input className={inputClasses} type="email" aria-label={t('profile.confirmNewEmail')} placeholder={t('profile.confirmNewEmail')} value={confirm}
-        onChange={(e) => setConfirm(e.target.value)} autoComplete="off" required />
-      {profile.hasPassword && (
-        <Input className={inputClasses} type="password" aria-label={t('profile.currentPassword')} placeholder={t('profile.currentPassword')}
-          value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password" required />
-      )}
-      <Status error={error} success={savedEmail && t('profile.emailSaved', { email: savedEmail })} />
-      <FormButton type="submit" className={`${buttonClasses} self-end`} disabled={!email || email === profile.email}>{t('profile.save')}</FormButton>
-    </form>
-  )
-}
-
-// Same rule as backend/validation.js (validateUsername), so the browser can stop most
-// typos before sending; the backend still decides. A session keeps its players' names,
-// so renaming waits until the user has left it
+// Same rule as backend/validation.js (validateUsername); shown as a hint, the backend checks it
 const USERNAME_MIN_LENGTH = 4
 const USERNAME_MAX_LENGTH = 30
 
-function UsernameForm({ token, profile, inSession, onProfileChange }) {
-  const { t } = useTranslation()
-  const usernameRules = t('profile.usernameRules', { min: USERNAME_MIN_LENGTH, max: USERNAME_MAX_LENGTH })
-  const [username, setUsername] = useState('')
-  const [error, setError] = useState('')
-  const [saved, setSaved] = useState(false)
-
-  async function handleSubmit(event) {
-    event.preventDefault()
-    setError('')
-    setSaved(false)
-    try {
-      const result = await updateProfile(token, { username })
-      onProfileChange({ username: result.username })
-      setUsername('')
-      setSaved(true)
-    } catch (err) {
-      setError(translateServerError(t, err))
-    }
-  }
-
+function Field({ id, label, note, ...inputProps }) {
   return (
-    <form onSubmit={handleSubmit} className={sectionClasses}>
-      <h3 className={headingClasses}>{t('login.username')}</h3>
-      <Input className={inputClasses} type="text" aria-label={t('login.username')} placeholder={t('profile.newUsername')} value={username}
-        onChange={(e) => setUsername(e.target.value)} disabled={inSession}
-        minLength={USERNAME_MIN_LENGTH} maxLength={USERNAME_MAX_LENGTH} pattern="[\p{L}\p{Nd}_\-]+" title={usernameRules} required />
-      <p className={noteClasses}>{inSession ? t('profile.leaveSessionToRename') : usernameRules}</p>
-      <Status error={error} success={saved && t('profile.saved')} />
-      <FormButton type="submit" className={`${buttonClasses} self-end`} disabled={inSession || !username || username === profile.username}>{t('profile.save')}</FormButton>
-    </form>
+    <div>
+      <label htmlFor={id} className={labelClass}>{label}</label>
+      <Input id={id} className={fieldClass} {...inputProps} />
+      {note && <p className={noteClass}>{note}</p>}
+    </div>
   )
 }
 
-function PasswordForm({ token }) {
+// clientError: a translation key, serverError: the error thrown by auth.js,
+// success: { key, params }. All are translated here, so they follow a language switch
+function Status({ clientError, serverError, success }) {
   const { t } = useTranslation()
-  const [current, setCurrent] = useState('')
-  const [next, setNext] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [error, setError] = useState('')
-  const [saved, setSaved] = useState(false)
+  if (clientError || serverError) {
+    return (
+      <div role="alert" className={`${alertClass} text-red-800`}>
+        {clientError ? t(clientError) : translateServerError(t, serverError)}
+      </div>
+    )
+  }
+  if (success) {
+    return <div role="status" className={alertClass}>{t(success.key, success.params)}</div>
+  }
+  return null
+}
+
+// Username, email and password in one save: they go out in one request and are saved
+// together or not at all. The current password is asked once, for email and password
+// changes; GitHub-only accounts have no password, so they get no password fields
+function ProfileForm({ token, profile, inSession, onProfileChange }) {
+  const { t } = useTranslation()
+  const [username, setUsername] = useState('')
+  const [email, setEmail] = useState('')
+  const [confirmEmail, setConfirmEmail] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [clientError, setClientError] = useState('')
+  const [serverError, setServerError] = useState(null)
+  const [success, setSuccess] = useState(null)
 
   async function handleSubmit(event) {
     event.preventDefault()
-    setError('')
-    setSaved(false)
-    if (next !== confirm) {
-      setError(t('register.passwordMismatch'))
+    setClientError('')
+    setServerError(null)
+    setSuccess(null)
+
+    // only the fields the user filled in are sent
+    const changes = {}
+    if (username.trim()) changes.username = username
+    if (email || confirmEmail) changes.email = email
+    if (newPassword || confirmPassword) changes.newPassword = newPassword
+
+    if (Object.keys(changes).length === 0) {
+      setClientError('profile.nothingToSave')
       return
     }
+    if (changes.username !== undefined && username.trim() === profile.username) {
+      setClientError('profile.usernameUnchanged')
+      return
+    }
+    if (changes.email !== undefined && email !== confirmEmail) {
+      setClientError('profile.emailMismatch')
+      return
+    }
+    if (changes.newPassword !== undefined && newPassword !== confirmPassword) {
+      setClientError('register.passwordMismatch')
+      return
+    }
+    const needsPassword = profile.hasPassword && (changes.email !== undefined || changes.newPassword !== undefined)
+    if (needsPassword && !currentPassword) {
+      setClientError('profile.currentPasswordRequired')
+      return
+    }
+    if (needsPassword) changes.currentPassword = currentPassword
+
     try {
-      await changePassword(token, current, next)
-      setCurrent('')
-      setNext('')
-      setConfirm('')
-      setSaved(true)
+      const { passwordChanged, ...saved } = await updateProfile(token, changes)
+      onProfileChange(saved)
+      setUsername('')
+      setEmail('')
+      setConfirmEmail('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setCurrentPassword('')
+      if (saved.email) setSuccess({ key: 'profile.emailSaved', params: { email: saved.email } })
+      else if (passwordChanged && !saved.username) setSuccess({ key: 'profile.passwordChanged' })
+      else setSuccess({ key: 'profile.saved' })
     } catch (err) {
-      setError(translateServerError(t, err))
+      setServerError(err)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className={sectionClasses}>
-      <h3 className={headingClasses}>{t('profile.password')}</h3>
-      <Input className={inputClasses} type="password" aria-label={t('profile.currentPassword')} placeholder={t('profile.currentPassword')}
-        value={current} onChange={(e) => setCurrent(e.target.value)} autoComplete="current-password" required />
-      <Input className={inputClasses} type="password" aria-label={t('profile.newPassword')} placeholder={t('profile.newPassword')}
-        value={next} onChange={(e) => setNext(e.target.value)} autoComplete="new-password" required />
-      <Input className={inputClasses} type="password" aria-label={t('register.confirmPassword')} placeholder={t('register.confirmPassword')}
-        value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="new-password" required />
-      <Status error={error} success={saved && t('profile.passwordChanged')} />
-      <FormButton type="submit" className={`${buttonClasses} self-end`}>{t('profile.changePassword')}</FormButton>
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+      <Field id="profile-username" label={t('profile.newUsername')} type="text" placeholder={profile.username}
+        value={username} onChange={(e) => setUsername(e.target.value)} disabled={inSession} autoComplete="username"
+        note={inSession
+          ? t('profile.leaveSessionToRename')
+          : t('profile.usernameRules', { min: USERNAME_MIN_LENGTH, max: USERNAME_MAX_LENGTH })} />
+      <Field id="profile-email" label={t('profile.newEmail')} type="email" placeholder={profile.email}
+        value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
+      <Field id="profile-confirm-email" label={t('profile.confirmNewEmail')} type="email" placeholder="name@launchpad.bay"
+        value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} autoComplete="off" />
+      {profile.hasPassword && (
+        <>
+          <Field id="profile-new-password" label={t('profile.newPassword')} type="password" placeholder="••••••••"
+            value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
+          <Field id="profile-confirm-password" label={t('register.confirmPassword')} type="password" placeholder="••••••••"
+            value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
+          <Field id="profile-current-password" label={t('profile.currentPassword')} type="password" placeholder="••••••••"
+            value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password"
+            note={t('profile.currentPasswordNote')} />
+        </>
+      )}
+      <Status clientError={clientError} serverError={serverError} success={success} />
+      <NavButton className="w-full" type="submit">{t('profile.save')}</NavButton>
     </form>
   )
 }
@@ -156,36 +145,49 @@ function DeleteSection({ token, profile, inSession, onAccountDeleted }) {
   const { t } = useTranslation()
   const [confirming, setConfirming] = useState(false)
   const [value, setValue] = useState('')
-  const [error, setError] = useState('')
+  const [clientError, setClientError] = useState('')
+  const [serverError, setServerError] = useState(null)
+
+  function cancel() {
+    setConfirming(false)
+    setValue('')
+    setClientError('')
+    setServerError(null)
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
-    setError('')
+    setClientError('')
+    setServerError(null)
+    if (!value) {
+      setClientError('common.fieldsRequired')
+      return
+    }
     try {
       await deleteAccount(token, profile.hasPassword ? { password: value } : { username: value })
       onAccountDeleted()
     } catch (err) {
-      setError(translateServerError(t, err))
+      setServerError(err)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className={sectionClasses}>
-      <h3 className={headingClasses}>{t('profile.deleteAccount')}</h3>
-      {inSession && <p className={noteClasses}>{t('profile.leaveSessionToDelete')}</p>}
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+      <h2 className={labelClass}>{t('profile.deleteAccount')}</h2>
+      {inSession && <p className={noteClass}>{t('profile.leaveSessionToDelete')}</p>}
       {!confirming
-        ? <FormButton type="button" className={`${buttonClasses} self-end bg-error/60`} disabled={inSession} onClick={() => setConfirming(true)}>
+        ? <NavButton type="button" className={`w-full bg-error/60 hover:bg-error/70 ${disabledButtonClass}`}
+            disabled={inSession} onClick={() => setConfirming(true)}>
             {t('profile.deleteAccount')}
-          </FormButton>
+          </NavButton>
         : <>
-            <p className={noteClasses}>{profile.hasPassword ? t('profile.deleteConfirmPassword') : t('profile.deleteConfirmUsername')}</p>
-            <Input className={inputClasses} type={profile.hasPassword ? 'password' : 'text'}
-              aria-label={t('profile.deleteConfirmLabel')}
-              value={value} onChange={(e) => setValue(e.target.value)} required />
-            <Status error={error} />
-            <div className="flex justify-end gap-2">
-              <FormButton type="button" className={buttonClasses} onClick={() => { setConfirming(false); setValue(''); setError('') }}>{t('common.cancel')}</FormButton>
-              <FormButton type="submit" className={`${buttonClasses} bg-error/60`}>{t('profile.deletePermanently')}</FormButton>
+            <p className="text-sm normal-case">{profile.hasPassword ? t('profile.deleteConfirmPassword') : t('profile.deleteConfirmUsername')}</p>
+            <Field id="profile-delete-confirm" label={t('profile.deleteConfirmLabel')}
+              type={profile.hasPassword ? 'password' : 'text'} value={value} onChange={(e) => setValue(e.target.value)} />
+            <Status clientError={clientError} serverError={serverError} />
+            <div className="flex gap-2">
+              <NavButton type="button" className="flex-1 px-3" onClick={cancel}>{t('common.cancel')}</NavButton>
+              <NavButton type="submit" className="flex-1 px-3 bg-error/60 hover:bg-error/70">{t('profile.deletePermanently')}</NavButton>
             </div>
           </>}
     </form>
@@ -195,16 +197,16 @@ function DeleteSection({ token, profile, inSession, onAccountDeleted }) {
 export default function EditProfilePopup({ token, profile, inSession, onProfileChange, onAccountDeleted, onClose }) {
   const { t } = useTranslation()
   // Fits below the navbar, which is drawn on top. The popup is portalled outside #root, where
-  // --app-nav-height is defined, so 76px (the tallest navbar) is the fallback
+  // --app-nav-height is defined, so 76px (the tallest navbar) is the fallback.
+  // Closes like LoginView and RegisterView: Esc or a click outside
   return createPortal(
-    <Modal className="z-30 w-[min(90vw,22rem)] top-[calc(50%+var(--app-nav-height,76px)/2)] max-h-[calc(100vh-var(--app-nav-height,76px)-2rem)] overflow-y-auto items-stretch gap-5">
-      <div className="flex w-full items-center justify-between">
-        <h2 className="text-black text-sm font-medium tracking-nav">{t('profile.edit')}</h2>
-        <CloseButton onClick={onClose}>x</CloseButton>
-      </div>
-      <UsernameForm token={token} profile={profile} inSession={inSession} onProfileChange={onProfileChange} />
-      <EmailForm token={token} profile={profile} onProfileChange={onProfileChange} />
-      {profile.hasPassword && <PasswordForm token={token} />}
+    <Modal
+      className="z-30 w-[min(90vw,24rem)] top-[calc(50%+var(--app-nav-height,76px)/2)] max-h-[calc(100vh-var(--app-nav-height,76px)-2rem)] overflow-y-auto items-stretch gap-0 bg-surface/30 text-white uppercase"
+      onClose={onClose}
+    >
+      <h1 className="text-center text-xl font-semibold mb-6">{t('profile.edit')}</h1>
+      <ProfileForm token={token} profile={profile} inSession={inSession} onProfileChange={onProfileChange} />
+      <div className="my-6 h-px bg-current/20" />
       <DeleteSection token={token} profile={profile} inSession={inSession} onAccountDeleted={onAccountDeleted} />
     </Modal>,
     document.body,
