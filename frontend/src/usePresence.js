@@ -26,6 +26,7 @@ export default function usePresence(socket) {
       else if (msg.type === 'user_connected') connected(msg)
       else if (msg.type === 'user_disconnected') setOnline(msg.id, false)
       else if (msg.type === 'user_deleted') setUsers((prev) => prev.filter((user) => user.id !== msg.id))
+      else if (msg.type === 'user_renamed') setUsers((prev) => prev.map((user) => (user.id === msg.id ? { ...user, username: msg.username } : user)))
     })
   }, [socket])
 

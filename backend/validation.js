@@ -74,6 +74,20 @@ export function validateEmail(value) {
   return { value: email }
 }
 
+// the same username rule as registration, for renaming an existing account
+export function validateUsername(value) {
+  const username = trimUsername(value)
+  if (!isBoundedString(username, USERNAME_MAX_LENGTH)
+      || username.length < USERNAME_MIN_LENGTH
+      || !USERNAME_PATTERN.test(username)) {
+    return {
+      error: 'invalid_username',
+      params: { min: USERNAME_MIN_LENGTH, max: USERNAME_MAX_LENGTH }
+    }
+  }
+  return { value: username }
+}
+
 export function validateRegistrationInput(body) {
   if (!isPlainObject(body)) {
     return { error: 'invalid_request_body' }

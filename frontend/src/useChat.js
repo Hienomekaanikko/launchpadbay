@@ -49,6 +49,8 @@ export default function useChat(socket, userId, activeSession) {
         else if (activeChatRef.current.id !== other.id) setUnread((prev) => (prev.includes(other.id) ? prev : [...prev, other.id]))
       } else if (msg.type === 'error' && typeof msg.to === 'string') {
         setChatError({ to: msg.to, reason: msg.reason })
+      } else if (msg.type === 'user_renamed' && activeChatRef.current?.id === msg.id) {
+        showChat({ ...activeChatRef.current, username: msg.username }) // the open chat's header
       }
     })
   }, [socket, userId])

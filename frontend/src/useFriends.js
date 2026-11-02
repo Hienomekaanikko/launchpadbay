@@ -6,12 +6,14 @@ import {
   rejectFriendRequest,
   removeFriend,
 } from './auth.js'
+import { onMessage } from './useSocket.js'
 
 const EMPTY = { friends: [], incoming: [], outgoing: [] }
 
 // Keeps the logged-in user's friends and pending requests (all as { id, username }).
-// REST only: refetches on login, on refresh(), and after each of our own actions.
-export default function useFriends(token) {
+// REST: refetches on login, on refresh(), and after each of our own actions.
+// The socket only brings renames, so the names stay current without a refetch.
+export default function useFriends(token, socket) {
   const [lists, setLists] = useState(EMPTY)
   // ids of users with a friend action still on its way: a second click (e.g. a double
   // click on 'add') is ignored until the first one is done, so no duplicate request is sent
@@ -34,6 +36,19 @@ export default function useFriends(token) {
       .catch((err) => console.error('Failed to fetch friends:', err))
     return () => { cancelled = true }
   }, [token])
+
+  useEffect(() => {
+    if (!socket) return
+    const rename = (list, msg) => list.map((user) => (user.id === msg.id ? { ...user, username: msg.username } : user))
+    return onMessage(socket, (msg) => {
+      if (msg.type !== 'user_renamed') return
+      setLists((prev) => ({
+        friends: rename(prev.friends, msg),
+        incoming: rename(prev.incoming, msg),
+        outgoing: rename(prev.outgoing, msg),
+      }))
+    })
+  }, [socket])
 
   // runs an API call for the given user ({ id, username }), then refetches so every
   // list stays in sync with the server
