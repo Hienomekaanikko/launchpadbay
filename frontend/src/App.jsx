@@ -200,8 +200,14 @@ function App() {
         lobbyOpen={lobbyMode}
         profileOpen={profileMode}
         onHome={handleHome}
-        onLobby={() => setLobbyMode((open) => !open)}
-        onProfile={() => setProfileMode((open) => !open)}
+        onLobby={() => setLobbyMode((open) => {
+          if (!open) setProfileMode(false)
+          return !open
+        })}
+        onProfile={() => setProfileMode((open) => {
+          if(!open) setLobbyMode(false)
+          return !open
+        })}
       />
       <main className={`app-main${playMode ? ' app-main-play' : ''}`}>
         {!playMode && (
