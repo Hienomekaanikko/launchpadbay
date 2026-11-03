@@ -132,7 +132,9 @@
     "removeFriend": "הסר מחברים",
     "chat": "צ'אט",
     "online": "מחובר",
-    "offline": "לא מחובר"
+    "offline": "לא מחובר",
+    "cannotAddSelf": "אי אפשר להוסיף את עצמך כחבר",
+    "requestNotFound": "בקשת החברות הזו כבר לא קיימת"
   },
   "session": {
     "join": "הצטרף",

@@ -5,6 +5,7 @@ import { translateServerError } from '../i18n/serverErrors.js'
 import Modal from './Modal.jsx'
 import CloseButton from './CloseButton.jsx'
 import { uploadAvatar } from '../auth.js'
+import { checkAvatar, AVATAR_TYPES } from '../validation.js'
 
 export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
   const { t } = useTranslation()
@@ -15,8 +16,15 @@ export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
   async function handleFileSelected(event) {
     const file = event.target.files?.[0]
     if (!file) return
-    setUploading(true)
     setError('')
+    // wrong type or too big: say so right away instead of uploading it for the server to refuse
+    const problem = checkAvatar(file)
+    if (problem) {
+      setError(translateServerError(t, problem))
+      event.target.value = '' // so picking the same file again still triggers onChange
+      return
+    }
+    setUploading(true)
     try {
       const { avatar } = await uploadAvatar(token, file)
       onAvatarChange(avatar)
@@ -37,7 +45,7 @@ export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
       </div>
       <input
         type="file"
-        accept="image/png,image/jpeg,image/webp"
+        accept={AVATAR_TYPES.join(',')}
         onChange={handleFileSelected}
         disabled={uploading}
         className="w-full text-xs text-black/80 file:me-2"

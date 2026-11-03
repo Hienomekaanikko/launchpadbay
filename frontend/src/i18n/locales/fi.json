@@ -132,7 +132,9 @@
     "removeFriend": "Poista kavereista",
     "chat": "Keskustele",
     "online": "Paikalla",
-    "offline": "Poissa"
+    "offline": "Poissa",
+    "cannotAddSelf": "Et voi lisätä itseäsi kaveriksi",
+    "requestNotFound": "Kaveripyyntöä ei enää ole"
   },
   "session": {
     "join": "LIITY",

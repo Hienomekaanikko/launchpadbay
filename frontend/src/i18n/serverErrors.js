@@ -31,6 +31,10 @@ const SERVER_ERROR_KEYS = {
   username_unchanged: 'profile.usernameUnchanged',
   file_too_large: 'profile.fileTooLarge',
 
+  // friends related errors
+  cannot_add_self: 'friends.cannotAddSelf',
+  friend_request_not_found: 'friends.requestNotFound',
+
   // other server related errors
   invalid_request_body: 'serverErrors.invalidRequestBody',
   internal_error: 'serverErrors.internalError',
