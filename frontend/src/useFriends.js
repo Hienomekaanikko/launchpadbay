@@ -19,11 +19,12 @@ export default function useFriends(token, socket) {
   // click on 'add') is ignored until the first one is done, so no duplicate request is sent
   const inFlight = useRef(new Set())
 
+  // a failed fetch keeps the lists as they are; the next refresh tries again
   const refresh = useCallback(() => {
     if (!token) return
     fetchFriends(token)
       .then(setLists)
-      .catch((err) => console.error('Failed to fetch friends:', err))
+      .catch(() => {})
   }, [token])
 
   // initial load per login; ignores a late response if the user has logged out meanwhile
@@ -33,7 +34,7 @@ export default function useFriends(token, socket) {
     let cancelled = false
     fetchFriends(token)
       .then((data) => { if (!cancelled) setLists(data) })
-      .catch((err) => console.error('Failed to fetch friends:', err))
+      .catch(() => {})
     return () => { cancelled = true }
   }, [token])
 
