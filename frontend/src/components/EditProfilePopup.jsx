@@ -3,6 +3,10 @@ import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { translateServerError } from '../i18n/serverErrors.js'
 import { updateProfile, deleteAccount } from '../auth.js'
+import {
+  checkUsername, checkEmail, checkNewPassword,
+  USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH, PASSWORD_MAX_BYTES,
+} from '../validation.js'
 import Modal from './Modal.jsx'
 import Input from './Input.jsx'
 import NavButton from './NavButton.jsx'
@@ -14,9 +18,11 @@ const noteClass = 'mt-1 text-xs normal-case opacity-70'
 const alertClass = 'w-full rounded-md border px-3 py-2 text-sm text-center normal-case'
 const disabledButtonClass = 'disabled:opacity-50 disabled:cursor-default disabled:active:scale-100'
 
-// Same rule as backend/validation.js (validateUsername); shown as a hint, the backend checks it
-const USERNAME_MIN_LENGTH = 4
-const USERNAME_MAX_LENGTH = 30
+// how the backend compares a typed name or email with the saved one
+const normalize = (value) => value.trim().normalize('NFC')
+
+// longer than any password can be, so certainly wrong; no need to ask the server
+const tooLongForPassword = (value) => new TextEncoder().encode(value).length > PASSWORD_MAX_BYTES
 
 function Field({ id, label, note, ...inputProps }) {
   return (
@@ -104,7 +110,11 @@ function ProfileForm({ token, profile, inSession, onProfileChange, onConfirmingC
     setClientError('')
     setServerError(null)
     if (!currentPassword) {
-      setClientError('profile.currentPasswordRequired')
+      setClientError('profile.currentPasswordEmpty')
+      return
+    }
+    if (tooLongForPassword(currentPassword)) {
+      setServerError({ code: 'current_password_incorrect' })
       return
     }
     if (newPassword && newPassword === currentPassword) {
@@ -125,16 +135,33 @@ function ProfileForm({ token, profile, inSession, onProfileChange, onConfirmingC
       setClientError('profile.nothingToSave')
       return
     }
-    if (changes.username !== undefined && username.trim() === profile.username) {
+    // the #159 rules (validation.js), so input the backend would refuse is never sent
+    const ruleError = (changes.username !== undefined && checkUsername(username))
+      || (changes.email !== undefined && checkEmail(email))
+      || (changes.newPassword !== undefined && checkNewPassword(newPassword))
+    if (ruleError) {
+      setServerError(ruleError)
+      return
+    }
+    if (changes.username !== undefined && normalize(username) === profile.username) {
       setClientError('profile.usernameUnchanged')
+      return
+    }
+    // an empty confirm field isn't a mismatch, just a step not done yet
+    if (changes.email !== undefined && !confirmEmail) {
+      setClientError('profile.confirmEmailRequired')
       return
     }
     if (changes.email !== undefined && email !== confirmEmail) {
       setClientError('profile.emailMismatch')
       return
     }
-    if (changes.email !== undefined && email.trim() === profile.email) {
+    if (changes.email !== undefined && normalize(email) === profile.email) {
       setClientError('profile.emailUnchanged')
+      return
+    }
+    if (changes.newPassword !== undefined && !confirmPassword) {
+      setClientError('profile.confirmPasswordRequired')
       return
     }
     if (changes.newPassword !== undefined && newPassword !== confirmPassword) {
@@ -229,7 +256,16 @@ function DeleteSection({ token, profile, inSession, onAccountDeleted }) {
     setClientError('')
     setServerError(null)
     if (!value) {
-      setClientError('common.fieldsRequired')
+      setClientError(profile.hasPassword ? 'profile.deleteEnterPassword' : 'profile.deleteEnterUsername')
+      return
+    }
+    // answers the server would give anyway, without the request
+    if (profile.hasPassword && tooLongForPassword(value)) {
+      setServerError({ code: 'password_incorrect' })
+      return
+    }
+    if (!profile.hasPassword && normalize(value) !== profile.username) {
+      setServerError({ code: 'username_mismatch' })
       return
     }
     try {

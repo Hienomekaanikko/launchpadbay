@@ -53,7 +53,7 @@
     "invalidUsername": "שם המשתמש חייב להיות באורך {{min}}–{{max}} תווים ולהכיל רק אותיות, ספרות, '_' או '-'",
     "invalidEmail": "הזן כתובת אימייל תקינה",
     "passwordTooShort": "הסיסמה חייבת להכיל לפחות {{min}} תווים",
-    "passwordTooLong": "הסיסמה יכולה להכיל עד {{max}} בייטים",
+    "passwordTooLong": "הסיסמה ארוכה מדי",
     "passwordRequireLetter": "הסיסמה חייבת להכיל לפחות אות אחת",
     "passwordRequireDigit": "הסיסמה חייבת להכיל לפחות ספרה אחת",
     "passwordRequireSpecial": "הסיסמה חייבת להכיל לפחות תו מיוחד אחד"
@@ -108,7 +108,12 @@
     "emailUnchanged": "זו כבר כתובת האימייל שלך",
     "passwordUnchanged": "זו כבר הסיסמה שלך",
     "nothingToSave": "אין עדיין מה לשמור",
-    "currentPasswordRequired": "הזן את הסיסמה הנוכחית כדי לשנות את האימייל או הסיסמה"
+    "currentPasswordRequired": "הזן את הסיסמה הנוכחית כדי לשנות את האימייל או הסיסמה",
+    "confirmEmailRequired": "אשר את כתובת האימייל החדשה",
+    "confirmPasswordRequired": "אשר את הסיסמה החדשה",
+    "currentPasswordEmpty": "הזן את הסיסמה הנוכחית שלך",
+    "deleteEnterPassword": "הזן את הסיסמה שלך לאישור",
+    "deleteEnterUsername": "הקלד את שם המשתמש שלך לאישור"
   },
   "chat": {
     "sayHi": "תגיד שלום ל־{{name}}!",

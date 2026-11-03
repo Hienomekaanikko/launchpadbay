@@ -53,7 +53,7 @@
     "invalidUsername": "用户名长度必须为 {{min}}–{{max}} 个字符，且只能包含字母、数字、'_' 或 '-'",
     "invalidEmail": "请输入有效的邮箱地址",
     "passwordTooShort": "密码长度至少为 {{min}} 个字符",
-    "passwordTooLong": "密码不得超过 {{max}} 字节",
+    "passwordTooLong": "密码太长",
     "passwordRequireLetter": "密码必须至少包含一个字母",
     "passwordRequireDigit": "密码必须至少包含一个数字",
     "passwordRequireSpecial": "密码必须至少包含一个特殊字符"
@@ -108,7 +108,12 @@
     "emailUnchanged": "这已经是你的邮箱了",
     "passwordUnchanged": "这已经是你的密码了",
     "nothingToSave": "还没有可保存的内容",
-    "currentPasswordRequired": "请输入当前密码以更改邮箱或密码"
+    "currentPasswordRequired": "请输入当前密码以更改邮箱或密码",
+    "confirmEmailRequired": "请确认新邮箱",
+    "confirmPasswordRequired": "请确认新密码",
+    "currentPasswordEmpty": "请输入当前密码",
+    "deleteEnterPassword": "请输入密码以确认",
+    "deleteEnterUsername": "请输入用户名以确认"
   },
   "chat": {
     "sayHi": "跟 {{name}} 打个招呼吧！",

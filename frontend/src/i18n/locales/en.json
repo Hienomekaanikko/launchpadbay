@@ -53,7 +53,7 @@
     "invalidUsername": "Username must be {{min}}-{{max}} characters long and contain only letters, numbers, '_' or '-'",
     "invalidEmail": "Enter a valid email address",
     "passwordTooShort": "Password must be at least {{min}} characters",
-    "passwordTooLong": "Password must not exceed {{max}} bytes",
+    "passwordTooLong": "Password is too long",
     "passwordRequireLetter": "Password must contain at least one letter",
     "passwordRequireDigit": "Password must contain at least one number",
     "passwordRequireSpecial": "Password must contain at least one special character"
@@ -108,7 +108,12 @@
     "emailUnchanged": "That's already your email",
     "passwordUnchanged": "That's already your password",
     "nothingToSave": "Nothing to save yet",
-    "currentPasswordRequired": "Enter your current password to change your email or password"
+    "currentPasswordRequired": "Enter your current password to change your email or password",
+    "confirmEmailRequired": "Confirm your new email",
+    "confirmPasswordRequired": "Confirm your new password",
+    "currentPasswordEmpty": "Enter your current password",
+    "deleteEnterPassword": "Enter your password to confirm",
+    "deleteEnterUsername": "Type your username to confirm"
   },
   "chat": {
     "sayHi": "Say hi to {{name}}!",

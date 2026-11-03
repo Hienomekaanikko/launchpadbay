@@ -53,7 +53,7 @@
     "invalidUsername": "Käyttäjänimen on oltava {{min}}–{{max}} merkkiä pitkä ja sisällettävä vain kirjaimia, numeroita, '_' tai '-'",
     "invalidEmail": "Anna kelvollinen sähköpostiosoite",
     "passwordTooShort": "Salasanan on oltava vähintään {{min}} merkkiä",
-    "passwordTooLong": "Salasana saa olla enintään {{max}} tavua",
+    "passwordTooLong": "Salasana on liian pitkä",
     "passwordRequireLetter": "Salasanassa on oltava vähintään yksi kirjain",
     "passwordRequireDigit": "Salasanassa on oltava vähintään yksi numero",
     "passwordRequireSpecial": "Salasanassa on oltava vähintään yksi erikoismerkki"
@@ -108,7 +108,12 @@
     "emailUnchanged": "Tämä on jo sähköpostiosoitteesi",
     "passwordUnchanged": "Tämä on jo salasanasi",
     "nothingToSave": "Ei vielä mitään tallennettavaa",
-    "currentPasswordRequired": "Anna nykyinen salasanasi vaihtaaksesi sähköpostin tai salasanan"
+    "currentPasswordRequired": "Anna nykyinen salasanasi vaihtaaksesi sähköpostin tai salasanan",
+    "confirmEmailRequired": "Vahvista uusi sähköpostiosoitteesi",
+    "confirmPasswordRequired": "Vahvista uusi salasanasi",
+    "currentPasswordEmpty": "Syötä nykyinen salasanasi",
+    "deleteEnterPassword": "Syötä salasanasi vahvistaaksesi",
+    "deleteEnterUsername": "Kirjoita käyttäjänimesi vahvistaaksesi"
   },
   "chat": {
     "sayHi": "Sano hei käyttäjälle {{name}}!",
