@@ -69,6 +69,8 @@
   "profile": {
     "friends": "Friends",
     "changeAvatar": "Change avatar",
+    "chooseFile": "Choose file",
+    "noFileSelected": "No file selected",
     "requests": "Requests",
     "noFriends": "No friends yet",
     "uploading": "Uploading…",

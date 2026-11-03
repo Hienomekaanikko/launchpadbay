@@ -69,6 +69,8 @@
   "profile": {
     "friends": "חברים",
     "changeAvatar": "החלף תמונת פרופיל",
+    "chooseFile": "בחר קובץ",
+    "noFileSelected": "לא נבחר קובץ",
     "requests": "בקשות",
     "noFriends": "אין חברים עדיין",
     "uploading": "מעלה…",
