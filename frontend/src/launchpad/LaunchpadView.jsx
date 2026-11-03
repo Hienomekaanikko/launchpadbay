@@ -58,9 +58,8 @@ export default function LaunchpadView({ socket, activeSession }) {
       } else {
         markReady()
       }
-    }).catch((err) => {
+    }).catch(() => {
       if (cancelled) return
-      console.error('Failed to load launchpad themes:', err)
       markReady()
     })
 

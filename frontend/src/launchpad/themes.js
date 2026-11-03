@@ -22,7 +22,6 @@ export async function fetchThemes(isCancelled = () => false) {
       } catch (err) {
         if (isCancelled())
           throw err
-        console.warn(`Themes not available yet, retrying in ${delay}ms:`, err.message)
         await new Promise((resolve) => setTimeout(resolve, delay))
         delay = Math.min(delay * 2, 10000)
       }
