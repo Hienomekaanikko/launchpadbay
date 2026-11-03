@@ -122,8 +122,8 @@
 
   .app-panels {
     position: fixed;
-    top: var(--app-nav-height);
-    inset-inline-end: max(24px, calc((100vw - 1120px) / 2 + 24px));
+    top: calc(var(--app-nav-height) + 16px);
+    inset-inline-end: max(16px, calc((100vw - 1120px) / 2 + 24px));
     bottom: 24px;
     z-index: 30;
     display: flex;
