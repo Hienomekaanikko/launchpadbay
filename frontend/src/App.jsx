@@ -200,6 +200,7 @@ function App() {
         lobbyOpen={lobbyMode}
         profileOpen={profileMode}
         onHome={handleHome}
+        onLogin={handleOpenLogin}
         onLobby={() => setLobbyMode((open) => {
           if (!open) setProfileMode(false)
           return !open
@@ -213,9 +214,6 @@ function App() {
         {!playMode && (
           <div className="flex flex-wrap justify-center gap-4 px-4 py-8">
             <NavButton onClick={handlePlayClick}>{t('nav.play')}</NavButton>
-            <NavButton onClick={loggedIn ? handleLogout : handleOpenLogin}>
-              {loggedIn ? t('nav.logout') : t('nav.login')}
-            </NavButton>
           </div>
         )}
 
@@ -231,6 +229,7 @@ function App() {
               token={token}
               inSession={Boolean(activeSession)}
               onAccountDeleted={handleLogout}
+              onLogout={handleLogout}
               friends={friendsWithStatus}
               incoming={friendsState.incoming}
               unread={chat.unread}
