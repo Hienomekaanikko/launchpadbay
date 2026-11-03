@@ -45,7 +45,7 @@ export default function AppNavbar({
         </div>
 
         <div className="app-nav">
-          {loggedIn ? (
+          {loggedIn && (
             <>
               <NavbarButton
                 aria-label={hasUnread ? t('nav.lobbyUnread') : undefined}
@@ -70,7 +70,8 @@ export default function AppNavbar({
                 <span className="truncate">{username}</span>
               </NavbarButton>
             </>
-          ) : (
+          )}
+          {!loggedIn && !playMode && (
             <NavbarButton className="uppercase" onClick={onLogin}>
               {t('nav.login')}
             </NavbarButton>
