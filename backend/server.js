@@ -54,6 +54,9 @@ const WS_CHAT_PER_SECOND = 5
 const WS_CHAT_BURST = 10
 const RATE_LIMIT_NOTICE_MS = 1000
 
+// how long a new WebSocket has to send its auth message before it's closed
+const WS_AUTH_TIMEOUT_MS = 5000
+
 // login / register attempts per IP; each one costs a bcrypt hash
 const AUTH_ATTEMPTS_PER_MINUTE = 10
 
@@ -199,14 +202,47 @@ wsHandlers.session_chat   = handleChatMessage
 // drop them from their session
 onGraceExpired(leaveSessionAndBroadcastUpdate)
 
-// WebSocket route
+// WebSocket route.
+// The browser can't set headers on a WebSocket, and a token in the URL would end up
+// in nginx's access log, so the token comes in the socket's first message instead:
+// { type: 'auth', token, tabId }
 fastify.get('/ws', { websocket: true }, async (socket, request) => {
-    const token = request.query.token
-    const tabId = request.query.tabId
-    let jwtPayload
+    // Listening starts before any await, so nothing the client sends early is lost.
+    // The first message is the auth; anything after it waits in 'early' until the
+    // user is set up, then goes to processMessage
+    const early = []
+    let processMessage = null
+    let gotFirst
+    const firstMessage = new Promise((resolve) => { gotFirst = resolve })
+    socket.on('message', (raw) => {
+        if (processMessage) {
+            processMessage(raw)
+        } else if (gotFirst) {
+            gotFirst(raw)
+            gotFirst = null
+        } else {
+            early.push(raw)
+        }
+    })
+    socket.once('close', () => gotFirst?.(null))
 
+    // 4000, not 4001: a slow network shouldn't log the user out, the client retries
+    const authTimer = setTimeout(() => socket.close(4000, 'No auth message'), WS_AUTH_TIMEOUT_MS)
+    const raw = await firstMessage
+    clearTimeout(authTimer)
+    if (raw === null) {
+        return
+    }
+
+    let jwtPayload
+    let tabId
     try {
-        jwtPayload = await fastify.jwt.verify(token)
+        const auth = JSON.parse(raw.toString())
+        if (auth?.type !== 'auth') {
+            throw new Error('first message must be auth')
+        }
+        tabId = auth.tabId
+        jwtPayload = await fastify.jwt.verify(auth.token)
     } catch (err) {
         socket.close(4001, 'Unauthorized')
         return
@@ -221,6 +257,10 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     // account deleted, or the token is from before the last password change
     if (!user || user.token_version !== jwtPayload.tv) {
         socket.close(4001, 'Unauthorized')
+        return
+    }
+    // gone while we were checking: don't register a dead socket
+    if (socket.readyState !== socket.OPEN) {
         return
     }
 
@@ -325,7 +365,8 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     // when a task is not needed anymore, and cleans it out of memory.
     // Parsing and rate limiting happen before queueing, so a flood of messages
     // can't grow the queue without bounds.
-    socket.on('message', (raw) => {
+    // Not a listener of its own: the one at the top hands messages over to it
+    const handleRawMessage = (raw) => {
         let msg
 
         try {
@@ -346,7 +387,7 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
         }
 
         queue = queue.then(() => handleMessage(msg))
-    })
+    }
 
     const handleDisconnect = () => {
         removeEntry(jwtPayload.id, entry)
@@ -373,6 +414,12 @@ fastify.get('/ws', { websocket: true }, async (socket, request) => {
     } catch (err) {
         request.log.error(err, `ws: failed to send initial snapshots ` +
             `(userId=${jwtPayload.id}, username=${entry.username})`)
+    }
+
+    // Set up: handle what came in during the auth, in order, then everything live
+    processMessage = handleRawMessage
+    for (const raw of early) {
+        handleRawMessage(raw)
     }
 })
 

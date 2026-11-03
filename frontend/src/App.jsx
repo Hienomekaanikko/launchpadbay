@@ -121,6 +121,7 @@ function App() {
     handleLogout()
     setLoginError('unauthorized')
     setShowLogin(true)
+    setPlayMode(false) // the login popup only shows outside the launchpad
   }
 
   // after a password change the server hands this session a new token; the old one
