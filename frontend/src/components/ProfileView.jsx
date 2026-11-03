@@ -110,7 +110,7 @@ export default function ProfileView({ token, inSession, friends, incoming, unrea
     let cancelled = false
     fetchProfile(token)
       .then((data) => { if (!cancelled) setProfile(data) })
-      .catch((err) => { if (!cancelled) setError(translateServerError(t, err)) })
+      .catch((err) => { if (!cancelled) setError(err) })
     return () => { cancelled = true }
   }, [token])
 
@@ -131,7 +131,7 @@ export default function ProfileView({ token, inSession, friends, incoming, unrea
           }} />
         </div>
       )}
-      {error && <div className="text-error text-xs text-center max-w-55">{error}</div>}
+      {error && <div className="text-error text-xs text-center max-w-55">{translateServerError(t, error)}</div>}
       {!error && !profile && <div>{t('common.loading')}</div>}
       {profile && (
         <div>
