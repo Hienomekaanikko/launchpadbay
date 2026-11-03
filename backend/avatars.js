@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { readdir, unlink } from 'node:fs/promises'
+import { randomUUID } from 'node:crypto'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -46,11 +47,14 @@ export const extensionFor = (mimetype) => mimetype === 'image/png' ? 'png'
 	: mimetype === 'image/webp' ? 'webp'
 	: 'jpg'
 
-export async function removeUserAvatars(userId) {
+export const newAvatarFilename = (userId, mimetype) =>
+	`${userId}.${randomUUID()}.${extensionFor(mimetype)}`
+
+export async function removeUserAvatars(userId, keepFilename) {
 	const files = await readdir(AVATAR_DIR).catch(() => [])
 	await Promise.all(
 		files
-			.filter((filename) => filename.startsWith(`${userId}.`))
+			.filter((filename) => filename.startsWith(`${userId}.`) && filename !== keepFilename)
 			.map((filename) => unlink(path.join(AVATAR_DIR, filename)).catch(() => {}))
 	)
 }

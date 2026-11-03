@@ -10,7 +10,7 @@ import {
 	DEFAULT_AVATAR_URL,
 	avatarUrl,
 	detectAvatarType,
-	extensionFor,
+	newAvatarFilename,
 	removeUserAvatars,
 	withAvatarLock,
 } from './avatars.js'
@@ -207,17 +207,18 @@ export default async function profileRoutes(fastify) {
 			return reply.code(400).send({ error: 'invalid_avatar_content' })
 		}
 
-		const filename = `${request.user.id}.${extensionFor(detectedType)}`
-		// one upload per user at a time: two at once (e.g. a png and a jpeg) would each
-		// delete the old files, both write theirs, and leave one behind as an orphan
+		// one upload per user at a time (preventing concurrent race conditions):
+		// the old file now stays intact until the DB points to the new one,
+		// ensuring a failed write never leaves a broken file.
+		const filename = newAvatarFilename(request.user.id, detectedType)
 		await withAvatarLock(request.user.id, async () => {
-			await removeUserAvatars(request.user.id)
 			// stream is consumed by toBuffer(), so writeFile() is used
 			await writeFile(path.join(AVATAR_DIR, filename), buffer)
 			await prisma.users.update({
 				where: { id: request.user.id },
 				data: { avatar: filename },
 			})
+			await removeUserAvatars(request.user.id, filename)
 		})
 
 		return { avatar: avatarUrl(filename) }
