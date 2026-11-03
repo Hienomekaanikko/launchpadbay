@@ -200,6 +200,7 @@ function App() {
         lobbyOpen={lobbyMode}
         profileOpen={profileMode}
         onHome={handleHome}
+        onLogin={handleOpenLogin}
         onLobby={() => setLobbyMode((open) => {
           if (!open) setProfileMode(false)
           return !open
