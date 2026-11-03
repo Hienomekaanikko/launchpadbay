@@ -221,6 +221,13 @@ export function mountLaunchpad(container, themes) {
         stopClip(pad)
       } else if (channel.state === 'queued' && channel.queuedPad === pad) {
         cancelQueue(channelId)
+      } else if (channel.state === 'armed' && padVoices[pad]) {
+        // Another pad is still waiting to start: start this one there instead. Queueing
+        // behind it would leave the lights on the first pad while this one plays,
+        // and nothing could stop it afterwards
+        stopPad(channel.activePad)
+        lightChannel(channelId, { type: 'STOP' })
+        launchClip(pad)
       } else if (channel.state === 'idle') {
         launchClip(pad)
       } else {
