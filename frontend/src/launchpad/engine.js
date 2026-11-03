@@ -384,9 +384,8 @@ export function mountLaunchpad(container, themes) {
     const stopProgress = startProgressLoop(byId('loop-bar-fill'), () =>
       clock.getPhase(audioContext.currentTime)
     )
-    const loaded = loadThemeSounds(themes[0]).catch((err) => {
-      console.error('Launchpad init error:', err)
-    })
+    // a sound that fails to load just leaves its pad silent; the rest still play
+    const loaded = loadThemeSounds(themes[0]).catch(() => {})
 
     function destroy() {
       isUnmounted = true
