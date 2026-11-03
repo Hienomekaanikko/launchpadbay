@@ -73,7 +73,7 @@ function FriendsPanel({ friends, incoming, unread, onProfileClick, onChatClick, 
   )
 }
 
-function ProfileDetails({ profile, onEditClick }) {
+function ProfileDetails({ profile, onEditClick, onLogout }) {
   const { t } = useTranslation()
   const rows = [
     [t('login.username'), profile.username],
@@ -90,13 +90,16 @@ function ProfileDetails({ profile, onEditClick }) {
           </div>
         ))}
       </dl>
-      <FormButton type="button" className="self-end" onClick={onEditClick}>{t('profile.edit')}</FormButton>
+      <div className="flex flex-wrap justify-end gap-2">
+        <FormButton type="button" onClick={onEditClick}>{t('profile.edit')}</FormButton>
+        <FormButton type="button" onClick={onLogout}>{t('nav.logout')}</FormButton>
+      </div>
     </div>
   )
 }
 
 // friends: [{ id, username, online }], incoming: [{ id, username }]
-export default function ProfileView({ token, inSession, friends, incoming, unread, onProfileClick, onChatClick, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen, onAccountDeleted }) {
+export default function ProfileView({ token, inSession, friends, incoming, unread, onProfileClick, onChatClick, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen, onAccountDeleted, onLogout }) {
   const { t } = useTranslation()
   const [profile, setProfile] = useState(null)
   const [error, setError] = useState('')
@@ -141,7 +144,7 @@ export default function ProfileView({ token, inSession, friends, incoming, unrea
                             onAcceptClick={onAcceptClick}
                             onRejectClick={onRejectClick}
                             onRemoveClick={onRemoveClick}
-                          /> : <ProfileDetails profile={profile} onEditClick={() => setShowEdit(true)} />}
+                          /> : <ProfileDetails profile={profile} onEditClick={() => setShowEdit(true)} onLogout={onLogout} />}
         </div>
       )}
       {showEdit && profile && (

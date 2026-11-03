@@ -20,6 +20,7 @@ export default function AppNavbar({
   lobbyOpen,
   profileOpen,
   onHome,
+  onLogin,
   onLobby,
   onProfile,
 }) {
@@ -43,32 +44,38 @@ export default function AppNavbar({
           )}
         </div>
 
-        {loggedIn && (
-          <div className="app-nav">
-            <NavbarButton
-              aria-label={hasUnread ? t('nav.lobbyUnread') : undefined}
-              aria-expanded={lobbyOpen}
-              onClick={onLobby}
-            >
-              <span className="relative">
-                {t('nav.lobby')}
-                {hasUnread && <span className="absolute -top-1 -end-2.5 w-2 h-2 rounded-full bg-brand" aria-hidden="true" />}
-              </span>
+        <div className="app-nav">
+          {loggedIn ? (
+            <>
+              <NavbarButton
+                aria-label={hasUnread ? t('nav.lobbyUnread') : undefined}
+                aria-expanded={lobbyOpen}
+                onClick={onLobby}
+              >
+                <span className="relative">
+                  {t('nav.lobby')}
+                  {hasUnread && <span className="absolute -top-1 -end-2.5 w-2 h-2 rounded-full bg-brand" aria-hidden="true" />}
+                </span>
+              </NavbarButton>
+              <NavbarButton
+                className="app-nav-user"
+                aria-label={t('nav.profileFor', { username })}
+                aria-expanded={profileOpen}
+                title={username}
+                onClick={onProfile}
+              >
+                <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand text-[11px] font-bold" aria-hidden="true">
+                  {username?.slice(0, 1).toUpperCase() || '?'}
+                </span>
+                <span className="truncate">{username}</span>
+              </NavbarButton>
+            </>
+          ) : (
+            <NavbarButton className="uppercase" onClick={onLogin}>
+              {t('nav.login')}
             </NavbarButton>
-            <NavbarButton
-              className="app-nav-user"
-              aria-label={t('nav.profileFor', { username })}
-              aria-expanded={profileOpen}
-              title={username}
-              onClick={onProfile}
-            >
-              <span className="inline-flex size-6 shrink-0 items-center justify-center rounded-full bg-brand/15 text-brand text-[11px] font-bold" aria-hidden="true">
-                {username?.slice(0, 1).toUpperCase() || '?'}
-              </span>
-              <span className="truncate">{username}</span>
-            </NavbarButton>
-          </div>
-        )}
+          )}
+        </div>
       </nav>
     </header>
   )
