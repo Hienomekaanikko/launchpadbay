@@ -25,7 +25,7 @@ export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
     // wrong type or too big: say so right away instead of uploading it for the server to refuse
     const problem = checkAvatar(file)
     if (problem) {
-      setError(translateServerError(t, problem))
+      setError(problem)
       return
     }
     setUploading(true)
@@ -34,7 +34,7 @@ export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
       onAvatarChange(avatar)
       onClose()
     } catch (err) {
-      setError(translateServerError(t, err))
+      setError(err)
       setUploading(false)
     }
   }
@@ -68,7 +68,7 @@ export default function AvatarUploadPopup({ token, onClose, onAvatarChange }) {
         </p>
       </div>
       {uploading && <p className="text-black/60 text-xs">{t('profile.uploading')}</p>}
-      {error && <p className="text-error text-xs">{error}</p>}
+      {error && <p className="text-error text-xs">{translateServerError(t, error)}</p>}
     </Modal>,
     document.body,
   )
