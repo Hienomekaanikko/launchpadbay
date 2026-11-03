@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { existsSync, readFileSync } from 'node:fs'
+import { closeSync, openSync, readFileSync, readSync } from 'node:fs'
 import Fastify from 'fastify'
 import { PrismaClient } from '@prisma/client'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
@@ -366,21 +366,36 @@ fastify.get('/health/db', async () => {
 })
 
 // Launchpad sounds live on disk; the database only names them (prisma/seed.js).
-// A file can go missing without the app noticing, so check before handing out its URL
+// A file can go missing or be swapped for something else without the app noticing,
+// so check before handing out its URL
 const SOUNDS_DIR = path.join(__dirname, 'uploads', 'sounds')
 
-function soundFileExists(filename) {
-    return existsSync(path.join(SOUNDS_DIR, filename))
+// A WAV file starts with "RIFF", 4 bytes of size, then "WAVE". Reads only those 12 bytes,
+// so a missing file, an empty one or e.g. a renamed jpg all count as unusable
+function soundFileUsable(filename) {
+    const header = Buffer.alloc(12)
+    let fd
+    try {
+        fd = openSync(path.join(SOUNDS_DIR, filename), 'r')
+        const bytesRead = readSync(fd, header, 0, 12, 0)
+        return bytesRead === 12
+            && header.toString('ascii', 0, 4) === 'RIFF'
+            && header.toString('ascii', 8, 12) === 'WAVE'
+    } catch {
+        return false
+    } finally {
+        if (fd !== undefined) closeSync(fd)
+    }
 }
 
-// Run once the server is up: a missing sound shows here, in docker logs, instead of
+// Run once the server is up: a broken sound shows here, in docker logs, instead of
 // being found later by a player. Never stops the server
 async function warnAboutMissingSounds() {
     try {
         const sounds = await prisma.theme_sounds.findMany()
         for (const sound of sounds) {
-            if (!soundFileExists(sound.filename)) {
-                fastify.log.warn(`launchpad sound file missing: theme ${sound.theme_id}, slot ${sound.slot}, ${sound.filename}`)
+            if (!soundFileUsable(sound.filename)) {
+                fastify.log.warn(`launchpad sound file missing or not a WAV: theme ${sound.theme_id}, slot ${sound.slot}, ${sound.filename}`)
             }
         }
     } catch (err) {
@@ -388,7 +403,7 @@ async function warnAboutMissingSounds() {
     }
 }
 
-// Missing sounds are left out, so the browser never asks for them: the launchpad
+// Unusable sounds are left out, so the browser never asks for them: the launchpad
 // still works, that pad is just silent, and the console stays clean
 fastify.get('/themes', async () => {
     const themeRows = await prisma.themes.findMany({
@@ -398,7 +413,7 @@ fastify.get('/themes', async () => {
     return themeRows.map((theme) => {
         const sampleUrls = {}
         for (const sound of theme.theme_sounds) {
-            if (soundFileExists(sound.filename)) {
+            if (soundFileUsable(sound.filename)) {
                 sampleUrls[sound.slot] = `/api/uploads/sounds/${sound.filename}`
             }
         }
