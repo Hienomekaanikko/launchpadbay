@@ -105,9 +105,10 @@
     "fileTooLarge": "Tiedosto on liian suuri. Enimmäiskoko on 2 Mt.",
     "usernameTaken": "Käyttäjänimi on jo käytössä",
     "usernameUnchanged": "Tämä on jo käyttäjänimesi",
+    "emailUnchanged": "Tämä on jo sähköpostiosoitteesi",
+    "passwordUnchanged": "Tämä on jo salasanasi",
     "nothingToSave": "Ei vielä mitään tallennettavaa",
-    "currentPasswordRequired": "Anna nykyinen salasanasi vaihtaaksesi sähköpostin tai salasanan",
-    "currentPasswordNote": "Tarvitaan sähköpostin tai salasanan vaihtoon"
+    "currentPasswordRequired": "Anna nykyinen salasanasi vaihtaaksesi sähköpostin tai salasanan"
   },
   "chat": {
     "sayHi": "Sano hei käyttäjälle {{name}}!",

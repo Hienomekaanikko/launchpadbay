@@ -105,9 +105,10 @@
     "fileTooLarge": "File is too large. Maximum size is 2MB.",
     "usernameTaken": "Username already taken",
     "usernameUnchanged": "That's already your username",
+    "emailUnchanged": "That's already your email",
+    "passwordUnchanged": "That's already your password",
     "nothingToSave": "Nothing to save yet",
-    "currentPasswordRequired": "Enter your current password to change your email or password",
-    "currentPasswordNote": "Needed to change your email or password"
+    "currentPasswordRequired": "Enter your current password to change your email or password"
   },
   "chat": {
     "sayHi": "Say hi to {{name}}!",

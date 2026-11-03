@@ -105,9 +105,10 @@
     "fileTooLarge": "הקובץ גדול מדי. הגודל המרבי הוא 2 MB.",
     "usernameTaken": "שם המשתמש כבר תפוס",
     "usernameUnchanged": "זה כבר שם המשתמש שלך",
+    "emailUnchanged": "זו כבר כתובת האימייל שלך",
+    "passwordUnchanged": "זו כבר הסיסמה שלך",
     "nothingToSave": "אין עדיין מה לשמור",
-    "currentPasswordRequired": "הזן את הסיסמה הנוכחית כדי לשנות את האימייל או הסיסמה",
-    "currentPasswordNote": "נדרשת לשינוי האימייל או הסיסמה"
+    "currentPasswordRequired": "הזן את הסיסמה הנוכחית כדי לשנות את האימייל או הסיסמה"
   },
   "chat": {
     "sayHi": "תגיד שלום ל־{{name}}!",

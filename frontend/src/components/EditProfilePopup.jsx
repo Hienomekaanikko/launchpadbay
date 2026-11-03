@@ -46,9 +46,10 @@ function Status({ clientError, serverError, success }) {
 }
 
 // Username, email and password in one save: they go out in one request and are saved
-// together or not at all. The current password is asked once, for email and password
-// changes; GitHub-only accounts have no password, so they get no password fields
-function ProfileForm({ token, profile, inSession, onProfileChange }) {
+// together or not at all. Email and password changes then ask for the current password
+// in a second step; GitHub-only accounts have no password, so they get no password fields.
+// onConfirmingChange: tells the popup when that step is showing
+function ProfileForm({ token, profile, inSession, onProfileChange, onConfirmingChange }) {
   const { t } = useTranslation()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -56,9 +57,62 @@ function ProfileForm({ token, profile, inSession, onProfileChange }) {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')
+  const [confirming, setConfirming] = useState(false)
   const [clientError, setClientError] = useState('')
   const [serverError, setServerError] = useState(null)
   const [success, setSuccess] = useState(null)
+
+  function showConfirmStep(show) {
+    setConfirming(show)
+    onConfirmingChange(show)
+    setCurrentPassword('')
+  }
+
+  // only the fields the user filled in are sent
+  function collectChanges() {
+    const changes = {}
+    if (username.trim()) changes.username = username
+    if (email) changes.email = email
+    if (newPassword) changes.newPassword = newPassword
+    return changes
+  }
+
+  async function save(changes) {
+    try {
+      const { passwordChanged, ...saved } = await updateProfile(token, changes)
+      onProfileChange(saved)
+      setUsername('')
+      setEmail('')
+      setConfirmEmail('')
+      setNewPassword('')
+      setConfirmPassword('')
+      showConfirmStep(false)
+      if (saved.email) setSuccess({ key: 'profile.emailSaved', params: { email: saved.email } })
+      else if (passwordChanged && !saved.username) setSuccess({ key: 'profile.passwordChanged' })
+      else setSuccess({ key: 'profile.saved' })
+    } catch (err) {
+      setServerError(err)
+      // a wrong current password is fixed in this step; anything else (e.g. email taken)
+      // in the form, so go back to it
+      if (err.code !== 'current_password_incorrect') showConfirmStep(false)
+    }
+  }
+
+  // second step: the current password, then the actual save
+  async function handleConfirm(event) {
+    event.preventDefault()
+    setClientError('')
+    setServerError(null)
+    if (!currentPassword) {
+      setClientError('profile.currentPasswordRequired')
+      return
+    }
+    if (newPassword && newPassword === currentPassword) {
+      setClientError('profile.passwordUnchanged')
+      return
+    }
+    await save({ ...collectChanges(), currentPassword })
+  }
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -66,12 +120,7 @@ function ProfileForm({ token, profile, inSession, onProfileChange }) {
     setServerError(null)
     setSuccess(null)
 
-    // only the fields the user filled in are sent
-    const changes = {}
-    if (username.trim()) changes.username = username
-    if (email || confirmEmail) changes.email = email
-    if (newPassword || confirmPassword) changes.newPassword = newPassword
-
+    const changes = collectChanges()
     if (Object.keys(changes).length === 0) {
       setClientError('profile.nothingToSave')
       return
@@ -84,32 +133,51 @@ function ProfileForm({ token, profile, inSession, onProfileChange }) {
       setClientError('profile.emailMismatch')
       return
     }
+    if (changes.email !== undefined && email.trim() === profile.email) {
+      setClientError('profile.emailUnchanged')
+      return
+    }
     if (changes.newPassword !== undefined && newPassword !== confirmPassword) {
       setClientError('register.passwordMismatch')
       return
     }
-    const needsPassword = profile.hasPassword && (changes.email !== undefined || changes.newPassword !== undefined)
-    if (needsPassword && !currentPassword) {
-      setClientError('profile.currentPasswordRequired')
+    if (profile.hasPassword && (changes.email !== undefined || changes.newPassword !== undefined)) {
+      showConfirmStep(true)
       return
     }
-    if (needsPassword) changes.currentPassword = currentPassword
+    await save(changes)
+  }
 
-    try {
-      const { passwordChanged, ...saved } = await updateProfile(token, changes)
-      onProfileChange(saved)
-      setUsername('')
-      setEmail('')
-      setConfirmEmail('')
-      setNewPassword('')
-      setConfirmPassword('')
-      setCurrentPassword('')
-      if (saved.email) setSuccess({ key: 'profile.emailSaved', params: { email: saved.email } })
-      else if (passwordChanged && !saved.username) setSuccess({ key: 'profile.passwordChanged' })
-      else setSuccess({ key: 'profile.saved' })
-    } catch (err) {
-      setServerError(err)
-    }
+  // Confirm fields only show up once their field has something in it, so a username
+  // change is just one field. Emptying a field also empties its confirm field
+  const changeEmail = (value) => {
+    setEmail(value)
+    if (!value) setConfirmEmail('')
+  }
+  const changeNewPassword = (value) => {
+    setNewPassword(value)
+    if (!value) setConfirmPassword('')
+  }
+
+  if (confirming) {
+    return (
+      // own key: a new form, not the main one reused, so the field gets focus (autoFocus)
+      <form key="confirm" onSubmit={handleConfirm} noValidate className="flex flex-col gap-4">
+        <p className="text-sm normal-case">{t('profile.currentPasswordRequired')}</p>
+        <Field id="profile-current-password" label={t('profile.currentPassword')} type="password" placeholder="••••••••"
+          value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password"
+          autoFocus />
+        <Status clientError={clientError} serverError={serverError} />
+        <div className="flex gap-2">
+          <NavButton type="button" className="flex-1 px-3" onClick={() => {
+            setClientError('')
+            setServerError(null)
+            showConfirmStep(false)
+          }}>{t('common.cancel')}</NavButton>
+          <NavButton type="submit" className="flex-1 px-3">{t('profile.save')}</NavButton>
+        </div>
+      </form>
+    )
   }
 
   return (
@@ -120,18 +188,19 @@ function ProfileForm({ token, profile, inSession, onProfileChange }) {
           ? t('profile.leaveSessionToRename')
           : t('profile.usernameRules', { min: USERNAME_MIN_LENGTH, max: USERNAME_MAX_LENGTH })} />
       <Field id="profile-email" label={t('profile.newEmail')} type="email" placeholder={profile.email}
-        value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" />
-      <Field id="profile-confirm-email" label={t('profile.confirmNewEmail')} type="email" placeholder="name@launchpad.bay"
-        value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} autoComplete="off" />
+        value={email} onChange={(e) => changeEmail(e.target.value)} autoComplete="email" />
+      {email && (
+        <Field id="profile-confirm-email" label={t('profile.confirmNewEmail')} type="email" placeholder="name@launchpad.bay"
+          value={confirmEmail} onChange={(e) => setConfirmEmail(e.target.value)} autoComplete="off" />
+      )}
       {profile.hasPassword && (
         <>
           <Field id="profile-new-password" label={t('profile.newPassword')} type="password" placeholder="••••••••"
-            value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" />
-          <Field id="profile-confirm-password" label={t('register.confirmPassword')} type="password" placeholder="••••••••"
-            value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
-          <Field id="profile-current-password" label={t('profile.currentPassword')} type="password" placeholder="••••••••"
-            value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} autoComplete="current-password"
-            note={t('profile.currentPasswordNote')} />
+            value={newPassword} onChange={(e) => changeNewPassword(e.target.value)} autoComplete="new-password" />
+          {newPassword && (
+            <Field id="profile-confirm-password" label={t('register.confirmPassword')} type="password" placeholder="••••••••"
+              value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" />
+          )}
         </>
       )}
       <Status clientError={clientError} serverError={serverError} success={success} />
@@ -196,6 +265,8 @@ function DeleteSection({ token, profile, inSession, onAccountDeleted }) {
 
 export default function EditProfilePopup({ token, profile, inSession, onProfileChange, onAccountDeleted, onClose }) {
   const { t } = useTranslation()
+  // while the current password is asked for, that's all the popup shows
+  const [confirming, setConfirming] = useState(false)
   // Fits below the navbar, which is drawn on top. The popup is portalled outside #root, where
   // --app-nav-height is defined, so 76px (the tallest navbar) is the fallback.
   // Closes like LoginView and RegisterView: Esc or a click outside
@@ -205,9 +276,14 @@ export default function EditProfilePopup({ token, profile, inSession, onProfileC
       onClose={onClose}
     >
       <h1 className="text-center text-xl font-semibold mb-6">{t('profile.edit')}</h1>
-      <ProfileForm token={token} profile={profile} inSession={inSession} onProfileChange={onProfileChange} />
-      <div className="my-6 h-px bg-current/20" />
-      <DeleteSection token={token} profile={profile} inSession={inSession} onAccountDeleted={onAccountDeleted} />
+      <ProfileForm token={token} profile={profile} inSession={inSession} onProfileChange={onProfileChange}
+        onConfirmingChange={setConfirming} />
+      {!confirming && (
+        <>
+          <div className="my-6 h-px bg-current/20" />
+          <DeleteSection token={token} profile={profile} inSession={inSession} onAccountDeleted={onAccountDeleted} />
+        </>
+      )}
     </Modal>,
     document.body,
   )

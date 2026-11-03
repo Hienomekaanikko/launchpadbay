@@ -92,6 +92,10 @@ export default async function profileRoutes(fastify) {
 			if (email.error) {
 				return reply.code(400).send({ error: email.error, params: email.params })
 			}
+			// same rule as the username: only the exact same address counts as unchanged
+			if (email.value === user.email) {
+				return reply.code(400).send({ error: 'email_unchanged' })
+			}
 			data.email = email.value
 		}
 		const changesPassword = body.newPassword !== undefined
@@ -112,6 +116,11 @@ export default async function profileRoutes(fastify) {
 			const parsedPassword = validateNewPassword(body.newPassword)
 			if (parsedPassword.error) {
 				return reply.code(400).send({ error: parsedPassword.error, params: parsedPassword.params })
+			}
+			// only after the current password checked out above, or this would let anyone
+			// with a token test password guesses
+			if (await bcrypt.compare(parsedPassword.value, user.password_hash)) {
+				return reply.code(400).send({ error: 'password_unchanged' })
 			}
 			data.password_hash = await bcrypt.hash(parsedPassword.value, 10)
 		}

@@ -29,6 +29,8 @@ const SERVER_ERROR_KEYS = {
   leave_session_before_rename: 'profile.leaveSessionToRename',
   username_taken: 'profile.usernameTaken',
   username_unchanged: 'profile.usernameUnchanged',
+  email_unchanged: 'profile.emailUnchanged',
+  password_unchanged: 'profile.passwordUnchanged',
   file_too_large: 'profile.fileTooLarge',
 
   // friends related errors

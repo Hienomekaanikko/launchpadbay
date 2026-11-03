@@ -105,9 +105,10 @@
     "fileTooLarge": "文件过大。最大大小为 2 MB。",
     "usernameTaken": "用户名已被占用",
     "usernameUnchanged": "这已经是你的用户名了",
+    "emailUnchanged": "这已经是你的邮箱了",
+    "passwordUnchanged": "这已经是你的密码了",
     "nothingToSave": "还没有可保存的内容",
-    "currentPasswordRequired": "请输入当前密码以更改邮箱或密码",
-    "currentPasswordNote": "更改邮箱或密码时需要"
+    "currentPasswordRequired": "请输入当前密码以更改邮箱或密码"
   },
   "chat": {
     "sayHi": "跟 {{name}} 打个招呼吧！",
