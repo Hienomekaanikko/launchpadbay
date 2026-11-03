@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import Fastify from 'fastify'
 import { PrismaClient } from '@prisma/client'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
@@ -365,6 +365,31 @@ fastify.get('/health/db', async () => {
     return { ok: Number(ok) }
 })
 
+// Launchpad sounds live on disk; the database only names them (prisma/seed.js).
+// A file can go missing without the app noticing, so check before handing out its URL
+const SOUNDS_DIR = path.join(__dirname, 'uploads', 'sounds')
+
+function soundFileExists(filename) {
+    return existsSync(path.join(SOUNDS_DIR, filename))
+}
+
+// Run once the server is up: a missing sound shows here, in docker logs, instead of
+// being found later by a player. Never stops the server
+async function warnAboutMissingSounds() {
+    try {
+        const sounds = await prisma.theme_sounds.findMany()
+        for (const sound of sounds) {
+            if (!soundFileExists(sound.filename)) {
+                fastify.log.warn(`launchpad sound file missing: theme ${sound.theme_id}, slot ${sound.slot}, ${sound.filename}`)
+            }
+        }
+    } catch (err) {
+        fastify.log.error(err, 'could not check launchpad sound files')
+    }
+}
+
+// Missing sounds are left out, so the browser never asks for them: the launchpad
+// still works, that pad is just silent, and the console stays clean
 fastify.get('/themes', async () => {
     const themeRows = await prisma.themes.findMany({
         include: { theme_sounds: true }
@@ -373,7 +398,9 @@ fastify.get('/themes', async () => {
     return themeRows.map((theme) => {
         const sampleUrls = {}
         for (const sound of theme.theme_sounds) {
-            sampleUrls[sound.slot] = `/api/uploads/sounds/${sound.filename}`
+            if (soundFileExists(sound.filename)) {
+                sampleUrls[sound.slot] = `/api/uploads/sounds/${sound.filename}`
+            }
         }
         return {
             id: theme.id,
@@ -432,6 +459,7 @@ fastify.listen({port: 3000, host: '0.0.0.0'}, function(err, address) {
         fastify.log.error(err)
         process.exit(1)
     }
+    warnAboutMissingSounds()
 })
 
 // trigger Fastify's graceful shutdown on terminating signals.
