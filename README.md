@@ -63,6 +63,7 @@ users
 ├── password_hash  VARCHAR(255) nullable (null for GitHub-only accounts)
 ├── github_id      VARCHAR(50)  UNIQUE, nullable
 ├── avatar         VARCHAR(255) nullable (uploaded avatar file name)
+├── token_version  INT          default 0 (incremented on password change)
 └── created_at     DATETIME(3), default now()
 
 themes
@@ -548,9 +549,11 @@ Saving in Grafana alone does not update the repository but will update local set
 
 ### Auth
 
-- `users` table: `id` (uuid), `username` (case-insensitively unique), `email`/`github_id` (unique, nullable), `password_hash` (bcrypt, nullable for GitHub-only accounts), `avatar` (nullable), `created_at`.
+- `users` table: `id` (uuid), `username` (case-insensitively unique), `email`/`github_id` (unique, nullable), `password_hash` (bcrypt, nullable for GitHub-only accounts), `avatar` (nullable), `token_version` (int, default 0), `created_at`.
 - `POST /register` — hashes password, creates user, 409 on duplicate username/email.
 - `POST /login` — bcrypt-compares password, returns a JWT on success. Wrong password and unknown email both return the same generic 401 (no username enumeration).
+- Tokens carry `{ id, tv }` and expire after 1 day. A password change increments `token_version`, so older tokens (`tv` mismatch) get 401 / WebSocket close 4001.
+- WebSocket auth — the token is sent in the first message (`{ type: 'auth', token, tabId }`), not the URL, so it stays out of nginx logs. No auth within 5 s → close 4000.
 - `JWT_SECRET` in `.env` signs/verifies tokens.
 
 #### Credential rules
