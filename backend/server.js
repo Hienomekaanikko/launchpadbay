@@ -131,7 +131,7 @@ await fastify.register(fastifyStatic, {
 
 await fastify.register(jwt, {
     secret: process.env.JWT_SECRET
-  })
+})
 
 await fastify.register(githubAuth)
 
@@ -388,21 +388,21 @@ fastify.get('/themes', async () => {
 fastify.post('/register', { config: authRateLimit }, async (request, reply) => {
     const parsed = validateRegistrationInput(request.body)
     if (parsed.error) {
-      return reply.code(400).send({ error: parsed.error, params: parsed.params })
+        return reply.code(400).send({ error: parsed.error, params: parsed.params })
     }
     const { username, email, password } = parsed.credentials
 
     const password_hash = await bcrypt.hash(password, 10)
     try {
-      const user = await prisma.users.create({
-        data: { username, email, password_hash }
-      })
-      return { id: user.id, username: user.username }
+        const user = await prisma.users.create({
+            data: { username, email, password_hash }
+        })
+        return { id: user.id, username: user.username }
     } catch (err) {
-      if (err.code === 'P2002') {
-        return reply.code(409).send({ error: 'already_taken' })
-      }
-      throw err
+        if (err.code === 'P2002') {
+            return reply.code(409).send({ error: 'already_taken' })
+        }
+        throw err
     }
 })
 
@@ -415,12 +415,12 @@ fastify.post('/login', { config: authRateLimit }, async (request, reply) => {
 
     const user = await prisma.users.findUnique({ where: { email } })
     if (!user || !user.password_hash) { // GitHub-only accounts have no password
-      return reply.code(401).send({ error: 'invalid_credentials' })
+        return reply.code(401).send({ error: 'invalid_credentials' })
     }
 
     const valid = await bcrypt.compare(password, user.password_hash)
     if (!valid) {
-      return reply.code(401).send({ error: 'invalid_credentials' })
+        return reply.code(401).send({ error: 'invalid_credentials' })
     }
 
     const token = fastify.jwt.sign({ id: user.id, username: user.username })
