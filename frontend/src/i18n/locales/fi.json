@@ -60,6 +60,8 @@
     "passwordRequireSpecial": "Salasanassa on oltava vähintään yksi erikoismerkki"
   },
   "lobby": {
+    "sections": "Aulan osiot",
+    "pendingRequests": "Kaveripyyntöjä: {{count}}",
     "online": "Paikalla",
     "sessions": "Sessiot",
     "sessionChat": "Sessiokeskustelu",
@@ -68,6 +70,8 @@
     "noMessages": "Ei viestejä"
   },
   "profile": {
+    "overview": "Profiili",
+    "editLink": "Muokkaa",
     "friends": "Kaverit",
     "changeAvatar": "Vaihda kuva",
     "chooseFile": "Valitse tiedosto",

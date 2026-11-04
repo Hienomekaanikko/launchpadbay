@@ -1,19 +1,21 @@
-import { useState } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { translateServerError } from '../i18n/serverErrors.js'
 import { updateProfile, deleteAccount } from '../auth.js'
 import { USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH } from '../validation.js'
-import Modal from './Modal.jsx'
+import GlassPanel from './GlassPanel.jsx'
 import Input from './Input.jsx'
-import NavButton from './NavButton.jsx'
+import AvatarUploadPopup from './AvatarUploadPopup.jsx'
 
 // Same look as LoginView and RegisterView
 const fieldClass = 'w-full normal-case'
 const labelClass = 'mb-2 text-sm font-medium inline-block uppercase'
 const noteClass = 'mt-1 text-xs normal-case opacity-70'
 const alertClass = 'w-full rounded-md border px-3 py-2 text-sm text-center normal-case'
-const disabledButtonClass = 'disabled:opacity-50 disabled:cursor-default disabled:active:scale-100'
+const disabledButtonClass = 'disabled:opacity-50 disabled:cursor-default disabled:hover:bg-error/60'
+const buttonClass = 'flex min-h-12 w-full cursor-pointer items-center justify-center rounded-xl px-4 py-3 text-sm font-medium normal-case text-white/90 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
+const actionButtonClass = `${buttonClass} bg-black/15 hover:bg-black/25`
+const deleteButtonClass = `${buttonClass} bg-error/60 hover:bg-error/70`
 
 function Field({ id, label, note, ...inputProps }) {
   return (
@@ -57,26 +59,26 @@ function ProfileForm({ token, profile, inSession, onProfileChange, onTokenChange
   const [serverError, setServerError] = useState(null)
   const [success, setSuccess] = useState(null)
 
+  const nextUsername = username.trim().normalize('NFC')
+  const nextEmail = email.trim().normalize('NFC')
+  const usernameChanged = !inSession && Boolean(nextUsername) && nextUsername !== profile.username
+  const emailChanged = Boolean(nextEmail) && nextEmail !== profile.email
+  const passwordChanged = profile.hasPassword && newPassword.length > 0
+  const hasChanges = usernameChanged || emailChanged || passwordChanged
+
   async function handleSubmit(event) {
     event.preventDefault()
+    if (!hasChanges) return
     setClientError('')
     setServerError(null)
     setSuccess(null)
 
-    // only the fields the user filled in are sent
+    // Only send values that differ from the saved profile.
     const changes = {}
-    if (username.trim()) changes.username = username
-    if (email || confirmEmail) changes.email = email
-    if (newPassword || confirmPassword) changes.newPassword = newPassword
+    if (usernameChanged) changes.username = nextUsername
+    if (emailChanged) changes.email = nextEmail
+    if (passwordChanged) changes.newPassword = newPassword
 
-    if (Object.keys(changes).length === 0) {
-      setClientError('profile.nothingToSave')
-      return
-    }
-    if (changes.username !== undefined && username.trim() === profile.username) {
-      setClientError('profile.usernameUnchanged')
-      return
-    }
     if (changes.email !== undefined && email !== confirmEmail) {
       setClientError('profile.emailMismatch')
       return
@@ -135,7 +137,7 @@ function ProfileForm({ token, profile, inSession, onProfileChange, onTokenChange
         </>
       )}
       <Status clientError={clientError} serverError={serverError} success={success} />
-      <NavButton className="w-full" type="submit">{t('profile.save')}</NavButton>
+      <button className={`${actionButtonClass} disabled:cursor-default disabled:opacity-50 disabled:hover:bg-black/15`} type="submit" disabled={!hasChanges}>{t('profile.save')}</button>
     </form>
   )
 }
@@ -173,42 +175,68 @@ function DeleteSection({ token, profile, inSession, onAccountDeleted }) {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-      <h2 className={labelClass}>{t('profile.deleteAccount')}</h2>
       {inSession && <p className={noteClass}>{t('profile.leaveSessionToDelete')}</p>}
       {!confirming
-        ? <NavButton type="button" className={`w-full bg-error/60 hover:bg-error/70 ${disabledButtonClass}`}
+        ? <button type="button" className={`${deleteButtonClass} ${disabledButtonClass}`}
             disabled={inSession} onClick={() => setConfirming(true)}>
             {t('profile.deleteAccount')}
-          </NavButton>
+          </button>
         : <>
             <p className="text-sm normal-case">{profile.hasPassword ? t('profile.deleteConfirmPassword') : t('profile.deleteConfirmUsername')}</p>
             <Field id="profile-delete-confirm" label={t('profile.deleteConfirmLabel')}
               type={profile.hasPassword ? 'password' : 'text'} value={value} onChange={(e) => setValue(e.target.value)} />
             <Status clientError={clientError} serverError={serverError} />
-            <div className="flex gap-2">
-              <NavButton type="button" className="flex-1 px-3" onClick={cancel}>{t('common.cancel')}</NavButton>
-              <NavButton type="submit" className="flex-1 px-3 bg-error/60 hover:bg-error/70">{t('profile.deletePermanently')}</NavButton>
+            <div className="grid grid-cols-2 gap-2">
+              <button type="button" className={actionButtonClass} onClick={cancel}>{t('common.cancel')}</button>
+              <button type="submit" className={deleteButtonClass}>{t('profile.deletePermanently')}</button>
             </div>
           </>}
     </form>
   )
 }
 
-export default function EditProfilePopup({ token, profile, inSession, onProfileChange, onTokenChange, onAccountDeleted, onClose }) {
+export default function EditProfileView({ token, profile, inSession, onProfileChange, onTokenChange, onAccountDeleted }) {
   const { t } = useTranslation()
-  // Fits below the navbar, which is drawn on top. The popup is portalled outside #root, where
-  // --app-nav-height is defined, so 76px (the tallest navbar) is the fallback.
-  // Closes like LoginView and RegisterView: Esc or a click outside
-  return createPortal(
-    <Modal
-      className="z-30 w-[min(90vw,24rem)] top-[calc(50%+var(--app-nav-height,76px)/2)] max-h-[calc(100vh-var(--app-nav-height,76px)-2rem)] overflow-y-auto items-stretch gap-0 bg-surface/30 text-white uppercase"
-      onClose={onClose}
-    >
-      <h1 className="text-center text-xl font-semibold mb-6">{t('profile.edit')}</h1>
-      <ProfileForm token={token} profile={profile} inSession={inSession} onProfileChange={onProfileChange} onTokenChange={onTokenChange} />
-      <div className="my-6 h-px bg-current/20" />
-      <DeleteSection token={token} profile={profile} inSession={inSession} onAccountDeleted={onAccountDeleted} />
-    </Modal>,
-    document.body,
+  const headingRef = useRef(null)
+  const avatarButtonRef = useRef(null)
+  const [showUpload, setShowUpload] = useState(false)
+
+  useEffect(() => {
+    headingRef.current?.focus()
+  }, [])
+
+  return (
+    <section aria-labelledby="edit-profile-heading" className="w-full max-w-5xl px-4 py-8 text-white">
+      <GlassPanel className="bg-surface/30 p-6 sm:p-8 uppercase">
+        <h1 id="edit-profile-heading" ref={headingRef} tabIndex={-1} className="text-2xl font-semibold mb-8 focus:outline-none">{t('profile.edit')}</h1>
+        <div className="grid grid-cols-1 items-start gap-8 md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:grid-rows-[1fr_auto]">
+          <section aria-label={t('profile.overview')} className="flex min-w-0 flex-col items-center gap-4 text-center md:col-start-2 md:row-start-1 md:self-stretch md:justify-center">
+            <img src={profile.avatar} alt="" className="size-40 shrink-0 rounded-full object-cover ring-2 ring-white/15 lg:size-48" />
+            <div className="w-full min-w-0 normal-case">
+              <h2 className="break-words text-xl font-semibold">{profile.username}</h2>
+              {profile.email && <p className="mt-1 break-words text-sm text-white/70">{profile.email}</p>}
+            </div>
+            <button ref={avatarButtonRef} type="button" onClick={() => setShowUpload(true)} className={actionButtonClass}>
+              {t('profile.changeAvatar')}
+            </button>
+          </section>
+          <div className="min-w-0 border-t border-white/15 pt-8 md:col-start-1 md:row-start-1 md:row-span-2 md:border-t-0 md:border-e md:pe-8 md:pt-0">
+            <ProfileForm token={token} profile={profile} inSession={inSession} onProfileChange={onProfileChange} onTokenChange={onTokenChange} />
+          </div>
+          <div className="min-w-0 border-t border-white/15 pt-6 md:col-start-2 md:row-start-2 md:self-end">
+            <DeleteSection token={token} profile={profile} inSession={inSession} onAccountDeleted={onAccountDeleted} />
+          </div>
+        </div>
+      </GlassPanel>
+      {showUpload && <AvatarUploadPopup
+        token={token}
+        avatar={profile.avatar}
+        onClose={() => {
+          setShowUpload(false)
+          avatarButtonRef.current?.focus()
+        }}
+        onAvatarChange={(avatar) => onProfileChange({ avatar })}
+      />}
+    </section>
   )
 }

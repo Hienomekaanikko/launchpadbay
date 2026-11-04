@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import './App.css'
 import LaunchpadView from './launchpad/LaunchpadView.jsx'
@@ -6,6 +6,7 @@ import landing from './assets/landing.jpg'
 import LobbyView from './components/LobbyView.jsx'
 import LoginView from './components/LoginView.jsx'
 import ProfileView from './components/ProfileView.jsx'
+import EditProfileView from './components/EditProfileView.jsx'
 import NavButton from './components/NavButton.jsx'
 import AppNavbar from './components/AppNavbar.jsx'
 import ChatWindow from './components/ChatWindow.jsx'
@@ -33,6 +34,7 @@ function App() {
   const [username, setUsername] = useState(() => localStorage.getItem('username'));
   const [lobbyMode, setLobbyMode] = useState(false);
   const [profileMode, setProfileMode] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(null);
   const [viewedUser, setViewedUser] = useState(null) // { id, username } whose profile popup is open
   const loggedIn = Boolean(token)
   const { socket, reconnecting } = useSocket(token)
@@ -64,7 +66,10 @@ function App() {
 
   // accepted into a session (guest) or hosting one: make sure the launchpad is open
   useEffect(() => {
-    if (activeSession) setPlayMode(true)
+    if (activeSession) {
+      setPlayMode(true)
+      setEditingProfile(null)
+    }
   }, [activeSession])
 
   const handleLoggedIn = (newToken, newUserId, newUsername) => {
@@ -109,6 +114,7 @@ function App() {
     setUserId(null)
     setUsername(null)
     setProfileMode(false)
+    setEditingProfile(null)
     setLobbyMode(false)
     setViewedUser(null)
   }
@@ -178,6 +184,7 @@ function App() {
     setPlayMode(false)
     setLobbyMode(false)
     setProfileMode(false)
+    setEditingProfile(null)
     chat.closeChat()
     setShowLogin(false)
   }
@@ -218,6 +225,39 @@ function App() {
     chat.openChat(other)
   }
 
+  const handleEditProfile = (profile) => {
+    setEditingProfile(profile)
+    setProfileMode(false)
+    setShowLogin(false)
+  }
+
+  const handleProfileChange = (changes) => {
+    setEditingProfile((profile) => profile ? { ...profile, ...changes } : null)
+    if (changes.username) {
+      localStorage.setItem('username', changes.username)
+      setUsername(changes.username)
+    }
+  }
+
+  const handleCloseProfile = useCallback(() => setProfileMode(false), [])
+
+  const handleToggleProfile = () => {
+    setEditingProfile(null)
+    if (!profileMode) {
+      setLobbyMode(false)
+    }
+    setProfileMode((open) => !open)
+  }
+
+  const handleToggleLobby = () => {
+    setEditingProfile(null)
+    if (!lobbyMode) {
+      setProfileMode(false)
+      friendsState.refresh()
+    }
+    setLobbyMode((open) => !open)
+  }
+
   return (
     <>
       <AppNavbar
@@ -227,19 +267,14 @@ function App() {
         hasUnread={chat.unread.length > 0}
         lobbyOpen={lobbyMode}
         profileOpen={profileMode}
+        editingProfile={Boolean(editingProfile)}
         onHome={handleHome}
         onLogin={handleOpenLogin}
-        onLobby={() => setLobbyMode((open) => {
-          if (!open) setProfileMode(false)
-          return !open
-        })}
-        onProfile={() => setProfileMode((open) => {
-          if(!open) setLobbyMode(false)
-          return !open
-        })}
+        onLobby={handleToggleLobby}
+        onProfile={handleToggleProfile}
       />
       <main className={`app-main${playMode ? ' app-main-play' : ''}`}>
-        {!playMode && (
+        {!playMode && !editingProfile && (
           <div className="flex flex-wrap justify-center gap-4 px-4 py-8">
             <NavButton onClick={handlePlayClick}>{t('nav.play')}</NavButton>
           </div>
@@ -251,23 +286,23 @@ function App() {
             setShowLogin={setShowLogin}
             initialError={loginError}
           />}
-        {(lobbyMode || (profileMode && loggedIn)) && (
-          <div className="app-panels">
+        {editingProfile && loggedIn && !playMode && (
+          <EditProfileView
+            token={token}
+            profile={editingProfile}
+            inSession={Boolean(activeSession)}
+            onProfileChange={handleProfileChange}
+            onTokenChange={handleTokenChange}
+            onAccountDeleted={handleLogout}
+          />
+        )}
+        {!editingProfile && (lobbyMode || (profileMode && loggedIn)) && (
+          <div className={`app-panels${profileMode ? ' app-panels-profile' : ' app-panels-lobby'}`}>
             {profileMode && loggedIn && <ProfileView
               token={token}
-              inSession={Boolean(activeSession)}
-              onAccountDeleted={handleLogout}
+              onEditClick={!playMode && !lobbyMode ? handleEditProfile : undefined}
               onLogout={handleLogout}
-              onTokenChange={handleTokenChange}
-              friends={friendsWithStatus}
-              incoming={friendsState.incoming}
-              unread={chat.unread}
-              onProfileClick={handleProfileClick}
-              onChatClick={chat.openChat}
-              onAcceptClick={friendsState.accept}
-              onRejectClick={friendsState.reject}
-              onRemoveClick={friendsState.remove}
-              onFriendsOpen={friendsState.refresh}
+              onClose={handleCloseProfile}
             />}
             {lobbyMode && <LobbyView
               activeSession={activeSession}
@@ -282,6 +317,12 @@ function App() {
               onChatClick={chat.openChat}
               sessionMessages={chat.sessionMessages}
               onSendSessionMessage={chat.sendSession}
+              friends={friendsWithStatus}
+              incoming={friendsState.incoming}
+              onAcceptClick={friendsState.accept}
+              onRejectClick={friendsState.reject}
+              onRemoveClick={friendsState.remove}
+              onFriendsOpen={friendsState.refresh}
             />}
           </div>
         )}

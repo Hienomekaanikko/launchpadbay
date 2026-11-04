@@ -124,6 +124,11 @@
     pointer-events: none;
   }
 
+  .app-panels-profile,
+  .app-panels-lobby {
+    width: min(380px, calc(100vw - 32px));
+  }
+
   .chat-scrollbar {
     --chat-scrollbar-thumb: rgba(255, 255, 255, 0.3);
     scrollbar-width: thin;
@@ -203,6 +208,13 @@
 
     .app-panels {
       inset-inline-end: 16px;
+    }
+
+    .app-panels-profile,
+    .app-panels-lobby {
+      inset-inline: 12px;
+      bottom: 12px;
+      width: auto;
     }
 
     .app-nav {

@@ -60,6 +60,8 @@
     "passwordRequireSpecial": "Password must contain at least one special character"
   },
   "lobby": {
+    "sections": "Lobby sections",
+    "pendingRequests": "Friend requests: {{count}}",
     "online": "Online",
     "sessions": "Sessions",
     "sessionChat": "Session-chat",
@@ -68,6 +70,8 @@
     "noMessages": "No messages yet"
   },
   "profile": {
+    "overview": "Profile",
+    "editLink": "Edit",
     "friends": "Friends",
     "changeAvatar": "Change avatar",
     "chooseFile": "Choose file",

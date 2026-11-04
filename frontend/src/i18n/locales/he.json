@@ -60,6 +60,8 @@
     "passwordRequireSpecial": "הסיסמה חייבת להכיל לפחות תו מיוחד אחד"
   },
   "lobby": {
+    "sections": "אזורי הלובי",
+    "pendingRequests": "בקשות חברות: {{count}}",
     "online": "מחוברים",
     "sessions": "סשנים",
     "sessionChat": "צ'אט סשן",
@@ -68,6 +70,8 @@
     "noMessages": "אין הודעות עדיין"
   },
   "profile": {
+    "overview": "פרופיל",
+    "editLink": "עריכה",
     "friends": "חברים",
     "changeAvatar": "החלף תמונת פרופיל",
     "chooseFile": "בחר קובץ",

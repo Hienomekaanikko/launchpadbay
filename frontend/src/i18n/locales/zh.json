@@ -60,6 +60,8 @@
     "passwordRequireSpecial": "密码必须至少包含一个特殊字符"
   },
   "lobby": {
+    "sections": "大厅栏目",
+    "pendingRequests": "好友请求：{{count}}",
     "online": "在线",
     "sessions": "会话",
     "sessionChat": "会话聊天",
@@ -68,6 +70,8 @@
     "noMessages": "暂无消息"
   },
   "profile": {
+    "overview": "个人资料",
+    "editLink": "编辑",
     "friends": "好友",
     "changeAvatar": "更换头像",
     "chooseFile": "选择文件",

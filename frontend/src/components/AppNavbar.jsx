@@ -17,6 +17,7 @@ export default function AppNavbar({
   hasUnread,
   lobbyOpen,
   profileOpen,
+  editingProfile,
   onHome,
   onLogin,
   onLobby,
@@ -29,7 +30,7 @@ export default function AppNavbar({
       <nav className="app-navbar" aria-label={t('nav.mainNavigation')}>
         <div className="app-navbar-brand">
           <NavbarButton
-            aria-current={!playMode && !lobbyOpen && !profileOpen ? 'page' : undefined}
+            aria-current={!playMode && !lobbyOpen && !profileOpen && !editingProfile ? 'page' : undefined}
             onClick={onHome}
           >
             {t('nav.home')}
@@ -51,8 +52,12 @@ export default function AppNavbar({
               </NavbarButton>
               <NavbarButton
                 className="app-nav-user"
+                id="profile-menu-trigger"
                 aria-label={t('nav.profileFor', { username })}
                 aria-expanded={profileOpen}
+                aria-haspopup="dialog"
+                aria-controls={profileOpen ? 'profile-menu' : undefined}
+                aria-current={editingProfile ? 'page' : undefined}
                 title={username}
                 onClick={onProfile}
               >
