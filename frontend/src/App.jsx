@@ -18,7 +18,6 @@ import useSessions from './useSessions.js'
 import useSessionJoin from './useSessionJoin.js'
 import useChat from './useChat.js'
 import JoinRequestPopup from './components/JoinRequestPopup.jsx'
-import UserProfilePopup from './components/UserProfilePopup.jsx'
 import PolicyDialog from './components/PoliciesDialog.jsx'
 import AlreadyOpenNotice from './components/AlreadyOpenNotice.jsx'
 import LanguageSwitcher from './components/LanguageSwitcher.jsx'
@@ -35,7 +34,6 @@ function App() {
   const [lobbyMode, setLobbyMode] = useState(false);
   const [profileMode, setProfileMode] = useState(false);
   const [editingProfile, setEditingProfile] = useState(null);
-  const [viewedUser, setViewedUser] = useState(null) // { id, username } whose profile popup is open
   const loggedIn = Boolean(token)
   const { socket, reconnecting } = useSocket(token)
   const closeCode = useCloseCode(socket)
@@ -116,7 +114,6 @@ function App() {
     setProfileMode(false)
     setEditingProfile(null)
     setLobbyMode(false)
-    setViewedUser(null)
   }
 
   // the server no longer accepts our token (expired, from before a password change, or
@@ -217,12 +214,7 @@ function App() {
   // the friend lists are only fetched on demand, so refresh them for an up-to-date button
   const handleProfileClick = (other) => {
     friendsState.refresh()
-    setViewedUser(other)
-  }
-
-  const handleProfileChatClick = (other) => {
-    setViewedUser(null)
-    chat.openChat(other)
+    chat.openProfile(other)
   }
 
   const handleEditProfile = (profile) => {
@@ -334,23 +326,19 @@ function App() {
             onRejectClick={join.rejectRequest}
           />
         )}
-        {loggedIn && viewedUser && (
-          <UserProfilePopup
+        {loggedIn && chat.activeChat && (
+          <ChatWindow
+            key={chat.activeChat.id}
             token={token}
             socket={socket}
-            userId={viewedUser.id}
-            online={isOnline(viewedUser.id)}
-            friendStatus={friendStatusOf(viewedUser.id)}
+            recipient={chat.activeChat}
+            recipientOnline={chatRecipientOnline}
+            unread={chat.unread.includes(chat.activeChat.id)}
+            friendStatus={friendStatusOf(chat.activeChat.id)}
             onAddFriendClick={handleAddFriendClick}
             onRemoveClick={friendsState.remove}
-            onChatClick={handleProfileChatClick}
-            onClose={() => setViewedUser(null)}
-          />
-        )}
-        {chat.activeChat && (
-          <ChatWindow
-            recipient={chat.activeChat.username}
-            recipientOnline={chatRecipientOnline}
+            onProfileClick={handleProfileClick}
+            onChatClick={chat.openChat}
             messages={chat.conversations[chat.activeChat.id] || []}
             error={chat.error}
             onSendMessage={(text) => chat.sendPrivate(chat.activeChat.id, text)}
