@@ -2,6 +2,7 @@ import i18n from '../i18n/index.js'
 import {
     initAudio,
     loadPadClip,
+    dropPadClip,
     clearPadVoices,
     launchLoop,
     stopLoop,
@@ -56,8 +57,8 @@ export function mountLaunchpad(container, themes) {
     // straight to handleUiAction; it comes back through applyAction.
     let actionHandler = null
 
-    // pad → url of a sample uploaded in this session, replacing the theme's;
-    // sent in the SYNC_STATE snapshot so a late joiner hears the same kit
+    // pad → url of a sample uploaded in this session; sent in the SYNC_STATE
+    // snapshot so a late joiner hears the same kit
     const padOverrides = {}
 
     initAudio()
@@ -274,9 +275,20 @@ export function mountLaunchpad(container, themes) {
       }
     }
 
+    // While set (PadSampleUpload), a pad tap picks that pad for an upload instead
+    // of playing it. Other controls are unaffected; nothing that plays stops
+    let padPickHandler = null
+
+    function setPadPickHandler(handler) {
+      padPickHandler = handler
+      container.classList.toggle('picking-sample', handler != null)
+    }
+
     // Everything bindings.js reports goes through here.
     function dispatch(action) {
-      if (actionHandler)
+      if (action.type === 'PAD_HIT' && padPickHandler)
+        padPickHandler(action.pad)
+      else if (actionHandler)
         actionHandler(action)
       else
         handleUiAction(action)
@@ -405,7 +417,7 @@ export function mountLaunchpad(container, themes) {
       if (channel.activePad === pad || channel.queuedPad === pad)
         padHit(pad)
       if (url == null) {
-        delete padVoices[pad]
+        dropPadClip(pad)
         return Promise.resolve()
       }
       // a sample that fails to load just leaves its pad silent
@@ -487,6 +499,7 @@ export function mountLaunchpad(container, themes) {
       loaded, // resolves once the theme's samples are in
       setActionHandler: (handler) => { actionHandler = handler },
       dispatch, // like a pad hit: shared with the session partner when in one
+      setPadPickHandler,
       applyAction: handleUiAction,
       getState,
       applyState,

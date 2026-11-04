@@ -105,9 +105,8 @@ export function uploadAvatar(token, file) {
 // in a session: replace one pad's sample for every player; returns { pad, url }
 export function uploadPadSample(token, pad, file) {
   const body = new FormData()
-  body.append('pad', String(pad)) // before the file: the backend reads it off the file part
   body.append('file', file)
-  return postForm('/session/pad-sample', token, body)
+  return postForm(`/session/pads/${pad}/sample`, token, body)
 }
 
 // { friends: [{ id, username }], incoming: [...], outgoing: [...] }

@@ -1,26 +1,38 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { translateServerError } from '../i18n/serverErrors.js'
 import { uploadPadSample } from '../auth.js'
 import { checkPadSample } from '../validation.js'
-import { PAD_COUNT } from './pads.js'
 
-const pads = Array.from({ length: PAD_COUNT }, (_, i) => i + 1)
-
-// In-session only: pick a pad, pick a WAV, and that pad gets the new sample.
-// Selecting the file uploads it (same as the avatar popup); the engine then
-// shows the pad's loading state while the new clip is fetched and decoded.
+// In-session only. SAMPLES toggles pick mode: the next pad tapped opens the file
+// picker instead of playing, and the chosen WAV becomes that pad's sample. The
+// engine then shows the pad's loading state while the new clip is fetched and
+// decoded. Cancelling the picker leaves pick mode on; tap SAMPLES again to leave.
 export default function PadSampleUpload({ token, engine }) {
   const { t } = useTranslation()
   const fileInput = useRef(null)
-  const [pad, setPad] = useState(1)
+  // set by the pick handler, read when the file arrives; a ref so the picker
+  // opens in the same tick as the tap, with no render in between
+  const pickedPad = useRef(null)
+  const [picking, setPicking] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+
+  // while picking, pad taps come here instead of playing; cleared on leave/unmount
+  useEffect(() => {
+    if (!picking) return
+    engine.setPadPickHandler((pad) => {
+      pickedPad.current = pad
+      fileInput.current?.click() // allowed: we're inside the tap's event handler
+    })
+    return () => engine.setPadPickHandler(null)
+  }, [engine, picking])
 
   async function handleFileSelected(event) {
     const file = event.target.files?.[0]
     if (!file) return
     event.target.value = '' // same file can be picked again after a failed upload
+    setPicking(false)
     setError('')
     const problem = checkPadSample(file)
     if (problem) {
@@ -29,6 +41,7 @@ export default function PadSampleUpload({ token, engine }) {
     }
     setUploading(true)
     try {
+      const pad = pickedPad.current
       const { url } = await uploadPadSample(token, pad, file)
       // the backend echoes it to both players, us included, so each reloads the pad once
       engine.dispatch({ type: 'PAD_SAMPLE', pad, url })
@@ -39,19 +52,12 @@ export default function PadSampleUpload({ token, engine }) {
     }
   }
 
+  const label = uploading ? t('launchpad.uploading')
+    : picking ? t('launchpad.pickPad')
+    : t('launchpad.samples')
+
   return (
     <div className="sample-upload">
-      <select
-        className="transport-btn sample-upload-pad"
-        value={pad}
-        onChange={(event) => setPad(Number(event.target.value))}
-        disabled={uploading}
-        aria-label={t('launchpad.pad', { n: pad })}
-      >
-        {pads.map((n) => (
-          <option value={n} key={n}>{t('launchpad.pad', { n })}</option>
-        ))}
-      </select>
       <input
         ref={fileInput}
         type="file"
@@ -62,11 +68,12 @@ export default function PadSampleUpload({ token, engine }) {
       />
       <button
         type="button"
-        className="transport-btn"
-        onClick={() => fileInput.current?.click()}
+        className={`transport-btn${picking ? ' active' : ''}`}
+        aria-pressed={picking}
+        onClick={() => { setError(''); setPicking((on) => !on) }}
         disabled={uploading}
       >
-        {uploading ? t('launchpad.uploading') : t('launchpad.upload')}
+        {label}
       </button>
       {error && (
         <p role="alert" className="sample-upload-error">{translateServerError(t, error)}</p>

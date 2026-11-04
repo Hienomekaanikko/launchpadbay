@@ -258,17 +258,12 @@ body {
 .sample-upload {
   position: relative;
   display: flex;
-  gap: 10px;
 }
 
-.sample-upload-pad {
-  appearance: none;
-  padding: 0 12px;
-}
-
-.sample-upload-pad option {
-  color: #000;
-  text-transform: none;
+/* Pick mode: pads are targets, not triggers, until one is tapped */
+.lpad-view.picking-sample .lpad .btn a {
+  outline: 1px dashed rgba(255, 255, 255, 0.55);
+  outline-offset: -3px;
 }
 
 .transport-btn:disabled {

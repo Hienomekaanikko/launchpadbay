@@ -4,6 +4,7 @@ import { mountLaunchpad } from './engine.js'
 import { fetchThemes } from './themes.js'
 import useLaunchpadSync from './useLaunchpadSync.js'
 import PadSampleUpload from './PadSampleUpload.jsx'
+import { PAD_COUNT } from './pads.js'
 import launchpadCss from './launchpad.css?raw'
 import landing from '../assets/landing.jpg'
 
@@ -71,7 +72,7 @@ export default function LaunchpadView({ socket, activeSession, token }) {
     }
   }, [])
 
-  const pads = Array.from({ length: 25 }, (_, i) => i + 1)
+  const pads = Array.from({ length: PAD_COUNT }, (_, i) => i + 1)
 
   return (
     <div ref={containerRef} className="lpad-view" dir="ltr">

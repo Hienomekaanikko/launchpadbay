@@ -20,23 +20,21 @@ export default async function padSampleRoutes(fastify) {
 
 	// Replaces one pad's sample for the uploader's current session. The file lives
 	// under uploads/sounds/session/<sessionId>/ until the session closes.
-	// Multipart fields, in this order: pad (1..PAD_COUNT), file (WAV). Returns { pad, url }
-	fastify.post('/session/pad-sample', { onRequest: [fastify.authenticate] }, async (request, reply) => {
+	// Body: one multipart file (WAV). Returns { pad, url }
+	fastify.post('/session/pads/:pad/sample', { onRequest: [fastify.authenticate] }, async (request, reply) => {
 		const session = getSessionByUserId(request.user.id)
 		if (!session) {
 			return reply.code(403).send({ error: 'not_in_session' })
 		}
 
+		const pad = Number(request.params.pad)
+		if (!isValidPad(pad)) {
+			return reply.code(400).send({ error: 'invalid_pad' })
+		}
+
 		const upload = await request.file()
 		if (!upload) {
 			return reply.code(400).send({ error: 'no_file_uploaded' })
-		}
-
-		// `pad` must be sent before `file`: fields that come after the file aren't
-		// on upload.fields yet (auth.js uploadPadSample keeps this order)
-		const pad = Number(upload.fields.pad?.value)
-		if (!isValidPad(pad)) {
-			return reply.code(400).send({ error: 'invalid_pad' })
 		}
 
 		// Read stream into buffer to inspect bytes before anything touches disk

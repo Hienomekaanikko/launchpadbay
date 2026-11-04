@@ -177,8 +177,8 @@
     "vol": "VOL",
     "lp": "LP",
     "stu": "STU",
-    "pad": "Pad {{n}}",
-    "upload": "Upload",
+    "samples": "Samples",
+    "pickPad": "Tap a pad",
     "uploading": "Uploading…",
     "errors": {
       "notInSession": "Join a session to upload samples",

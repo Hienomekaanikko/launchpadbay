@@ -49,7 +49,7 @@ Signal chain per channel: loop source → gain (VOL) → lowpass (LP) → output
 
 ## Pad samples (session uploads)
 
-- In a session either player can replace one pad's clip with a WAV (`PadSampleUpload.jsx` → `POST /session/pad-sample`, `backend/padSampleRoutes.js`). The file lands under `uploads/sounds/session/<sessionId>/`; the response is `{ pad, url }`.
+- In a session either player can replace one pad's clip with a WAV. SAMPLES (`PadSampleUpload.jsx`) turns on pick mode: while `engine.setPadPickHandler` is set, `dispatch` routes `PAD_HIT` to the file picker instead of playing the pad. The file goes to `POST /session/pads/:pad/sample` (`backend/padSampleRoutes.js`), lands under `uploads/sounds/session/<sessionId>/`, and the response is `{ pad, url }`.
 - The uploader then dispatches `{ type: 'PAD_SAMPLE', pad, url }` like a pad hit, so the relay makes both launchpads swap the clip once (`applyPadSample` → `replacePadSample`). A playing or queued pad is stopped first. Only urls under `/api/uploads/sounds/session/` are accepted, since the backend doesn't inspect actions.
 - `padOverrides` (pad → url) travels in `SYNC_STATE` as `overrides`; `applyState` loads them before arming, so a late joiner hears the same kit.
 - When the session closes the backend deletes its directory (`sessions.js` → `removeSessionSamples`), and `docker-entrypoint.sh` wipes `uploads/sounds/session/` on every boot. On the client, leaving a session calls `resetPadSamples()`, which puts the theme's clips back; the next session always starts from the default kit.

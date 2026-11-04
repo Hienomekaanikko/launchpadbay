@@ -177,8 +177,8 @@
     "vol": "音量",
     "lp": "滤波",
     "stu": "顿音",
-    "pad": "音垫 {{n}}",
-    "upload": "上传",
+    "samples": "采样",
+    "pickPad": "点按一个音垫",
     "uploading": "上传中…",
     "errors": {
       "notInSession": "加入会话后才能上传采样",
