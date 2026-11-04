@@ -124,6 +124,47 @@
     pointer-events: none;
   }
 
+  .chat-scrollbar {
+    --chat-scrollbar-thumb: rgba(255, 255, 255, 0.3);
+    scrollbar-width: thin;
+    scrollbar-color: var(--chat-scrollbar-thumb) transparent;
+    scrollbar-gutter: stable;
+  }
+
+  .chat-scrollbar:hover,
+  .chat-scrollbar:focus-within {
+    --chat-scrollbar-thumb: rgba(255, 255, 255, 0.5);
+  }
+
+  /* Use the custom scrollbar where supported so its arrow buttons can be hidden. */
+  @supports selector(::-webkit-scrollbar) {
+    .chat-scrollbar {
+      scrollbar-width: auto;
+      scrollbar-color: auto;
+    }
+  }
+
+  .chat-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .chat-scrollbar::-webkit-scrollbar-thumb {
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-color: var(--chat-scrollbar-thumb);
+    background-clip: padding-box;
+  }
+
   footer {
     display: flex;
     align-items: center;
