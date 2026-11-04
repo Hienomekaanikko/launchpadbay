@@ -28,7 +28,7 @@
     "username": "Nimi",
     "email": "Sähköposti",
     "password": "Salasana",
-    "login": "KIRJAUDU SISÄÄN",
+    "login": "Kirjaudu sisään",
     "loginWithGithub": "GITHUB-SISÄÄNKIRJAUTUMINEN",
     "notRegisteredYet": "Luo käyttäjätunnus",
     "or": "TAI",
