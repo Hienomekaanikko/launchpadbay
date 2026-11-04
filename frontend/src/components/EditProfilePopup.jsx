@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import { translateServerError } from '../i18n/serverErrors.js'
 import { updateProfile, deleteAccount } from '../auth.js'
+import { USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH } from '../validation.js'
 import Modal from './Modal.jsx'
 import Input from './Input.jsx'
 import NavButton from './NavButton.jsx'
@@ -13,10 +14,6 @@ const labelClass = 'mb-2 text-sm font-medium inline-block uppercase'
 const noteClass = 'mt-1 text-xs normal-case opacity-70'
 const alertClass = 'w-full rounded-md border px-3 py-2 text-sm text-center normal-case'
 const disabledButtonClass = 'disabled:opacity-50 disabled:cursor-default disabled:active:scale-100'
-
-// Same rule as backend/validation.js (validateUsername); shown as a hint, the backend checks it
-const USERNAME_MIN_LENGTH = 4
-const USERNAME_MAX_LENGTH = 30
 
 function Field({ id, label, note, ...inputProps }) {
   return (
@@ -117,6 +114,7 @@ function ProfileForm({ token, profile, inSession, onProfileChange, onTokenChange
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
       <Field id="profile-username" label={t('profile.newUsername')} type="text" placeholder={profile.username}
+        maxLength={USERNAME_MAX_LENGTH}
         value={username} onChange={(e) => setUsername(e.target.value)} disabled={inSession} autoComplete="username"
         note={inSession
           ? t('profile.leaveSessionToRename')

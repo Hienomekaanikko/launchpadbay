@@ -564,7 +564,7 @@ Saving in Grafana alone does not update the repository but will update local set
 The backend enforces these rules in `backend/validation.js`; update this section when these constants change.
 
 - **Username**
-    - Length: between 4 and 30 characters (after trimming and NFC normalisation)
+    - Length: between 4 and 15 characters (after trimming and NFC normalisation)
     - Allowed characters: letters, digits, underscores and hyphens
     - Unique, using case-insensitive comparison. A user may change the capitalization of their own username, but no other account can take a username that differs only by case.
 - **Email**
@@ -585,7 +585,7 @@ The backend enforces these rules in `backend/validation.js`; update this section
 ##### 2. GitHub Accounts (OAuth)
 
 - **Username** 
-    - Based on the GitHub username; may be suffixed to avoid a collision and may exceed the 30-character native limit.
+    - Based on the GitHub username; may be suffixed to avoid a collision and may exceed the 15-character native limit. Profile renames must follow the 4–15 character rule.
 - **Email**
     - Can be kept empty, or added and modified through Launchpad Bay's profile view
     - Length: at most 255 characters (after trimming and NFC normalisation)

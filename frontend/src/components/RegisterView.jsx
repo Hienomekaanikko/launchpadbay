@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { translateServerError } from '../i18n/serverErrors.js'
 import { register } from '../auth.js'
-import { checkUsername, checkEmail, checkNewPassword } from '../validation.js'
+import { checkUsername, checkEmail, checkNewPassword, USERNAME_MAX_LENGTH } from '../validation.js'
 import Modal from './Modal.jsx'
 import Input from './Input.jsx'
 import NavButton from './NavButton.jsx'
@@ -82,7 +82,7 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
         <div className="flex flex-col gap-4">
           <div>
             <label htmlFor="register-username" className={labelClass}>{t('register.username')}</label>
-            <Input id="register-username" className={fieldClass} type="text" placeholder="username" value={username} onChange={(e) => setUsername(e.target.value)} />
+            <Input id="register-username" className={fieldClass} type="text" placeholder="username" maxLength={USERNAME_MAX_LENGTH} value={username} onChange={(e) => setUsername(e.target.value)} />
           </div>
           <div>
             <label htmlFor="register-email" className={labelClass}>{t('register.email')}</label>

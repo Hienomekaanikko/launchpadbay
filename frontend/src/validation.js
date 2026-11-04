@@ -6,7 +6,7 @@
 
 export const USERNAME_PATTERN = /^[\p{L}\p{Nd}_-]+$/u
 export const USERNAME_MIN_LENGTH = 4
-export const USERNAME_MAX_LENGTH = 30
+export const USERNAME_MAX_LENGTH = 15
 
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u
 export const EMAIL_MAX_LENGTH = 255
