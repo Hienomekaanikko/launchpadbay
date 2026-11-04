@@ -14,7 +14,7 @@ export default function LaunchpadView({ socket, activeSession }) {
   const [ready, setReady] = useState(false)
   // set once the samples are loaded, so a session snapshot has something to play
   const [engine, setEngine] = useState(null)
-  useLaunchpadSync(engine, socket, activeSession)
+  const needsClick = useLaunchpadSync(engine, socket, activeSession)
 
 
   useEffect(() => {
@@ -82,6 +82,13 @@ export default function LaunchpadView({ socket, activeSession }) {
       >
         {t('launchpad.loading')}
       </div>
+
+      {/* after a page refresh in a session: the click lets the browser start our audio */}
+      {ready && needsClick && (
+        <button type="button" className="loading-overlay rejoin-overlay" onClick={engine.startAudio}>
+          {t('launchpad.clickToRejoin')}
+        </button>
+      )}
 
       {/* shown by the engine while a session joiner waits for the partner's loop */}
       <div id="sync-msg" role="status" />

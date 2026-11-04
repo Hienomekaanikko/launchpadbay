@@ -172,6 +172,7 @@
   "launchpad": {
     "loading": "Ladataan…",
     "syncing": "Synkronoidaan partnerin kanssa… {{seconds}} s",
+    "clickToRejoin": "Klikkaa liittyäksesi takaisin",
     "split": "PUOLITUS ½",
     "vol": "VOIMA",
     "lp": "SUODIN",

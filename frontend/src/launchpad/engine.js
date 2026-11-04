@@ -343,6 +343,14 @@ export function mountLaunchpad(container, themes) {
       showSyncMessage(when)
     }
 
+    // A page refresh in a session opens the launchpad without a click, and the
+    // browser keeps audio paused (its clock stopped) until there is one
+    function onAudioStateChange(handler) {
+      const context = audioContext
+      context.addEventListener('statechange', handler)
+      return () => context.removeEventListener('statechange', handler)
+    }
+
     function stopAllPlayback() {
       stutter.stopAll()
       for (const key of Object.keys(padVoices))
@@ -419,5 +427,8 @@ export function mountLaunchpad(container, themes) {
       applyAction: handleUiAction,
       getState,
       applyState,
+      isAudioRunning: () => audioContext?.state === 'running',
+      startAudio: resumeAudio, // only works from a click
+      onAudioStateChange,
     }
 }

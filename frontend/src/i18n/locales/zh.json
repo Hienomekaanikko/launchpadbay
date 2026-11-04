@@ -172,6 +172,7 @@
   "launchpad": {
     "loading": "加载中…",
     "syncing": "正在与伙伴同步… {{seconds}} 秒",
+    "clickToRejoin": "点击重新加入会话",
     "split": "分割 ½",
     "vol": "音量",
     "lp": "滤波",

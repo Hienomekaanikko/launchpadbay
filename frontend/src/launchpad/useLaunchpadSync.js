@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useCallback, useEffect, useSyncExternalStore } from 'react'
 import { onMessage, sendMessage } from '../useSocket.js'
 
 const isKnob = (action) => action.type === 'SET_GAIN' || action.type === 'SET_FILTER'
@@ -10,7 +10,14 @@ const isKnob = (action) => action.type === 'SET_GAIN' || action.type === 'SET_FI
 // Knobs (volume, filter) aren't shared: each player keeps their own mix.
 // A player who joins mid-play asks for a snapshot (SYNC_REQUEST) once their
 // samples are loaded, and the other player answers with SYNC_STATE.
+// After a page refresh the audio stays paused until the player clicks, so the
+// snapshot is asked for only once it runs: timed against a stopped clock, our
+// loop would start out of phase with the partner's.
+// Returns whether that click is still needed.
 export default function useLaunchpadSync(engine, socket, activeSession) {
+  const subscribe = useCallback((onChange) => (engine ? engine.onAudioStateChange(onChange) : () => {}), [engine])
+  const audioRunning = useSyncExternalStore(subscribe, () => engine?.isAudioRunning() ?? false)
+
   useEffect(() => {
     if (!engine || !socket || !activeSession) return
 
@@ -27,6 +34,8 @@ export default function useLaunchpadSync(engine, socket, activeSession) {
     const stopListening = onMessage(socket, (msg) => {
       // a late relay from a session we already left must not touch this one
       if (msg.type !== 'session_action' || msg.sessionId !== activeSession) return
+      // nothing can play yet; the snapshot asked for once the audio runs catches us up
+      if (!audioRunning) return
       const { action, mine } = msg
       if (action.type === 'SYNC_REQUEST') {
         if (!mine) send({ type: 'SYNC_STATE', state: engine.getState() })
@@ -38,11 +47,13 @@ export default function useLaunchpadSync(engine, socket, activeSession) {
     })
 
     // the host sends this too when its session starts; nobody else is there yet to answer
-    send({ type: 'SYNC_REQUEST' })
+    if (audioRunning) send({ type: 'SYNC_REQUEST' })
 
     return () => {
       engine.setActionHandler(null)
       stopListening()
     }
-  }, [engine, socket, activeSession])
+  }, [engine, socket, activeSession, audioRunning])
+
+  return Boolean(engine && socket && activeSession && !audioRunning)
 }

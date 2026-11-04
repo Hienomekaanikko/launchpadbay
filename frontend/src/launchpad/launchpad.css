@@ -305,6 +305,15 @@ body {
   pointer-events: none;
 }
 
+/* Click-to-rejoin after a page refresh in a session */
+.rejoin-overlay {
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+}
+
 /* Session joiner's countdown until their loop starts with the partner's */
 #sync-msg {
   position: fixed;
