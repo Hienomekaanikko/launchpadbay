@@ -30,7 +30,7 @@
     "password": "Password",
     "login": "LOGIN",
     "loginWithGithub": "LOGIN WITH GITHUB",
-    "notRegisteredYet": "Not Registered Yet?",
+    "notRegisteredYet": "Not registered yet?",
     "or": "OR",
     "invalidCredentials": "Invalid email or password",
     "githubLoginCancelled": "GitHub login cancelled",
