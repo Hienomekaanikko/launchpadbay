@@ -12,7 +12,8 @@ const EMPTY = { friends: [], incoming: [], outgoing: [] }
 
 // Keeps the logged-in user's friends and pending requests (all as { id, username }).
 // REST: refetches on login, on refresh(), and after each of our own actions.
-// The socket only brings renames, so the names stay current without a refetch.
+// The socket brings renames and friendship changes; the latter refetches the
+// updated lists after either user changes a request or friendship.
 export default function useFriends(token, socket) {
   const [lists, setLists] = useState(EMPTY)
   // ids of users with a friend action still on its way: a second click (e.g. a double
@@ -42,6 +43,10 @@ export default function useFriends(token, socket) {
     if (!socket) return
     const rename = (list, msg) => list.map((user) => (user.id === msg.id ? { ...user, username: msg.username } : user))
     return onMessage(socket, (msg) => {
+      if (msg.type === 'friends_changed') {
+        refresh()
+        return
+      }
       if (msg.type !== 'user_renamed') return
       setLists((prev) => ({
         friends: rename(prev.friends, msg),
@@ -49,7 +54,7 @@ export default function useFriends(token, socket) {
         outgoing: rename(prev.outgoing, msg),
       }))
     })
-  }, [socket])
+  }, [socket, refresh])
 
   // runs an API call for the given user ({ id, username }), then refetches so every
   // list stays in sync with the server. A failed call needs no message: it's almost always

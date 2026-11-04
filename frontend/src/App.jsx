@@ -300,6 +300,7 @@ function App() {
         {loggedIn && viewedUser && (
           <UserProfilePopup
             token={token}
+            socket={socket}
             userId={viewedUser.id}
             online={isOnline(viewedUser.id)}
             friendStatus={friendStatusOf(viewedUser.id)}
