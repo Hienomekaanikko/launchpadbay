@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { translateServerError } from '../i18n/serverErrors.js'
 import { fetchUser } from '../auth.js'
@@ -30,13 +30,16 @@ export default function UserProfilePopup({ token, socket, userId, online, friend
   const { t } = useTranslation()
   const [user, setUser] = useState(null)
   const [error, setError] = useState('')
+  const latestAvatar = useRef(null)
 
   useEffect(() => {
     let cancelled = false
     setUser(null)
     setError('')
+    latestAvatar.current = null
     fetchUser(token, userId)
-      .then((data) => { if (!cancelled) setUser(data) })
+      // A live avatar may have arrived while this fetch was in flight; prefer it over the response.
+      .then((data) => { if (!cancelled) setUser({ ...data, avatar: latestAvatar.current ?? data.avatar }) })
       .catch((err) => { if (!cancelled) setError(err) })
     return () => { cancelled = true }
   }, [token, userId])
@@ -46,6 +49,8 @@ export default function UserProfilePopup({ token, socket, userId, online, friend
     if (!socket) return
     return onMessage(socket, (msg) => {
       if (msg.type !== 'user_avatar_updated' || msg.id !== userId) return
+      // Keep it even if user is still loading, the fetch above will merge it
+      latestAvatar.current = msg.avatar
       setUser((prev) => (prev ? { ...prev, avatar: msg.avatar } : prev))
     })
   }, [socket, userId])
