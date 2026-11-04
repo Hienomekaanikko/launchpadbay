@@ -69,6 +69,8 @@
   "profile": {
     "friends": "Kaverit",
     "changeAvatar": "Vaihda kuva",
+    "chooseFile": "Valitse tiedosto",
+    "noFileSelected": "Ei tiedostoa valittu",
     "requests": "Pyynnöt",
     "noFriends": "Ei kavereita vielä",
     "uploading": "Lähetetään…",

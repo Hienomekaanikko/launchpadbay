@@ -36,7 +36,7 @@ export default function UserProfilePopup({ token, userId, online, friendStatus, 
     setError('')
     fetchUser(token, userId)
       .then((data) => { if (!cancelled) setUser(data) })
-      .catch((err) => { if (!cancelled) setError(translateServerError(t, err)) })
+      .catch((err) => { if (!cancelled) setError(err) })
     return () => { cancelled = true }
   }, [token, userId])
 
@@ -45,7 +45,7 @@ export default function UserProfilePopup({ token, userId, online, friendStatus, 
       <div className="flex w-full justify-end">
         <CloseButton onClick={onClose}>x</CloseButton>
       </div>
-      {error && <p className="text-error text-xs text-center">{error}</p>}
+      {error && <p className="text-error text-xs text-center">{translateServerError(t, error)}</p>}
       {!error && !user && <p className="text-black text-xs text-center">{t('common.loading')}</p>}
       {user && (
         <>
