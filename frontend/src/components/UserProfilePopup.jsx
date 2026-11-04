@@ -41,6 +41,15 @@ export default function UserProfilePopup({ token, socket, userId, online, friend
     return () => { cancelled = true }
   }, [token, userId])
 
+  // keep an already open profile in sync when that user changes their avatar
+  useEffect(() => {
+    if (!socket) return
+    return onMessage(socket, (msg) => {
+      if (msg.type !== 'user_avatar_updated' || msg.id !== userId) return
+      setUser((prev) => (prev ? { ...prev, avatar: msg.avatar } : prev))
+    })
+  }, [socket, userId])
+
   return (
     <Modal className="z-30 w-[min(90vw,20rem)] items-stretch gap-4">
       <div className="flex w-full justify-end">

@@ -225,6 +225,8 @@ export default async function profileRoutes(fastify) {
 			await removeUserAvatars(request.user.id, filename)
 		})
 
-		return { avatar: avatarUrl(filename) }
+		const avatar = avatarUrl(filename)
+		broadcastEvent({ type: 'user_avatar_updated', id: request.user.id, avatar })
+		return { avatar }
 	})
 }
