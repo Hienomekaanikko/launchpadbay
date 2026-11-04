@@ -338,7 +338,7 @@ function App() {
         <button
           type="button"
           onClick={() => setOpenPolicy('privacy')}
-          className="cursor-pointer text-sm text-white/80 underline underline-offset-4 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-yellow-300"
+          className="app-nav-action min-w-0 px-2 text-white/80 hover:bg-white/8 hover:text-white"
         >
           {t('policies.privacy.title')}
         </button>
@@ -346,7 +346,7 @@ function App() {
         <button
           type="button"
           onClick={() => setOpenPolicy('service')}
-          className="cursor-pointer text-sm text-white/80 underline underline-offset-4 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-yellow-300"
+          className="app-nav-action min-w-0 px-2 text-white/80 hover:bg-white/8 hover:text-white"
         >
           {t('policies.service.title')}
         </button>

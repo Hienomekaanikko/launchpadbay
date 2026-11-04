@@ -61,14 +61,14 @@ export default function LanguageSwitcher() {
     <div ref={rootRef} className="relative inline-flex">
       <button
         type="button"
-        className="app-nav-action min-w-0 inline-flex items-center gap-1.5 px-2 hover:bg-white/8 hover:text-white"
+        className="app-nav-action min-w-0 inline-flex items-center gap-1.5 px-2 leading-none hover:bg-white/8 hover:text-white"
         aria-label={t('common.language')}
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <GlobeIcon className="size-3.5 shrink-0 opacity-80" />
-        <span>{current.short}</span>
+        <GlobeIcon className="block size-3.5 shrink-0 opacity-80" />
+        <span className="block [text-box:trim-both_cap_alphabetic]">{current.short}</span>
       </button>
 
       {open && (

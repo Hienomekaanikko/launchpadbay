@@ -9,11 +9,11 @@ export default function PolicyDocument({ kind, titleRef }) {
 
     return (
         <article dir={i18n.dir()}
-            className="rounded-xl bg-slate-900 p-6 text-start text-slate-100">
+            className="p-6 text-start text-white sm:p-8">
             <h1 id={`policy-${kind}-title`}
                 ref={titleRef}
                 tabIndex={-1}
-                className="text-2xl font-bold">
+                className="text-2xl font-semibold focus:outline-none">
                 {policy.title}
             </h1>
             {policy.sections.map((section) => (
@@ -21,7 +21,7 @@ export default function PolicyDocument({ kind, titleRef }) {
                     <h2 className="text-lg font-semibold">
                         {section.title}
                     </h2>
-                    <p className="mt-2 leading-relaxed text-slate-200">
+                    <p className="mt-2 leading-relaxed text-white/80">
                         {section.text}
                     </p>
                 </section>
