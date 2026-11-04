@@ -139,6 +139,9 @@
     "requestNotFound": "That friend request no longer exists"
   },
   "session": {
+    "name": "{{username}}'s session",
+    "requestJoinNamed": "Request to join {{username}}'s session",
+    "cancelJoinNamed": "Cancel request to join {{username}}'s session",
     "join": "JOIN",
     "full": "FULL",
     "pending": "Pending...",

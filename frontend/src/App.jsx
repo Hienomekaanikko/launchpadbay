@@ -47,8 +47,6 @@ function App() {
     if (session.id === join.rejection?.sessionId) return { ...session, rejectedReason: join.rejection.reason }
     return session
   })
-  // only show who we're playing with while they're actually still in the session
-  const partner = sessions.find((session) => session.id === activeSession)?.current > 1 ? join.partner : null
   const friendsState = useFriends(token, socket)
   const isOnline = (id) => onlineUsers.some((user) => user.id === id && user.online)
   const friendsWithStatus = friendsState.friends.map((friend) => ({ ...friend, online: isOnline(friend.id) }))
@@ -226,8 +224,6 @@ function App() {
         playMode={playMode}
         loggedIn={loggedIn}
         username={username}
-        sessionId={activeSession}
-        partner={partner}
         hasUnread={chat.unread.length > 0}
         lobbyOpen={lobbyMode}
         profileOpen={profileMode}

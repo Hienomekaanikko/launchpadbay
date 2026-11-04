@@ -76,17 +76,21 @@ function SessionChat({ messages, onSendMessage }) {
 export default function LobbyView({ online, unread, canAddFriend, onAddFriendClick, activeSession, sessions, onJoinClick, onCancelClick, onProfileClick, onChatClick, sessionMessages, onSendSessionMessage }) {
   const { t } = useTranslation()
   const [tab, setTab] = useState('online')
+  const currentSession = sessions.find((session) => session.id === activeSession)
 
   return (
     <GlassPanel className="min-h-0 overflow-y-auto px-6 pt-6 bg-surface/30">
       <div className="flex gap-2 mb-3 justify-center">
         <NavButton active={tab === 'online'} onClick={() => setTab('online')} className={tab === 'online' ? 'bg-white/30' : undefined}>{t('lobby.online')}</NavButton>
-        <NavButton active={tab === 'sessions'} onClick={() => setTab('sessions')} className={tab === 'sessions' ? 'bg-white/30' : undefined}>{activeSession ? t('lobby.sessionChat') : t('lobby.sessions')}</NavButton>
+        <NavButton active={tab === 'sessions'} onClick={() => setTab('sessions')} className={tab === 'sessions' ? 'bg-white/30' : undefined}>{t('lobby.sessions')}</NavButton>
       </div>
       {tab === 'online'
         ? <PlayersOnline online={online} unread={unread} onProfileClick={onProfileClick} onChatClick={onChatClick} canAddFriend={canAddFriend} onAddFriendClick={onAddFriendClick} />
         : activeSession
-          ? <SessionChat messages={sessionMessages} onSendMessage={onSendSessionMessage} />
+          ? <section aria-labelledby="lobby-session-chat-heading">
+              <h3 id="lobby-session-chat-heading" className="mb-3 break-words text-xs font-medium uppercase tracking-wide text-white/60">{currentSession?.creatorName ? t('session.name', { username: currentSession.creatorName }) : activeSession}</h3>
+              <SessionChat messages={sessionMessages} onSendMessage={onSendSessionMessage} />
+            </section>
           : <SessionsList sessions={sessions} onJoinClick={onJoinClick} onCancelClick={onCancelClick} />}
     </GlassPanel>
   )

@@ -38,15 +38,6 @@
     gap: 12px;
   }
 
-  .app-navbar-session {
-    max-width: 32ch;
-    overflow: hidden;
-    color: rgba(255, 255, 255, 0.55);
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
   .app-nav {
     display: flex;
     align-items: center;
@@ -167,10 +158,6 @@
 
     .app-navbar-brand .app-nav-action {
       min-width: 0;
-    }
-
-    .app-navbar-session {
-      max-width: 14vw;
     }
 
     .app-panels {

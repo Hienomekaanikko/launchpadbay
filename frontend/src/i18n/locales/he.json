@@ -139,6 +139,9 @@
     "requestNotFound": "בקשת החברות הזו כבר לא קיימת"
   },
   "session": {
+    "name": "הסשן של {{username}}",
+    "requestJoinNamed": "בקשה להצטרף לסשן של {{username}}",
+    "cancelJoinNamed": "בטל בקשת הצטרפות לסשן של {{username}}",
     "join": "הצטרף",
     "full": "מלא",
     "pending": "ממתין...",

@@ -14,8 +14,6 @@ export default function AppNavbar({
   playMode,
   loggedIn,
   username,
-  sessionId,
-  partner,
   hasUnread,
   lobbyOpen,
   profileOpen,
@@ -36,12 +34,6 @@ export default function AppNavbar({
           >
             {t('nav.home')}
           </NavbarButton>
-          {sessionId && (
-            <span className="app-navbar-session" title={`${t('nav.session', { id: sessionId })}${partner ? t('nav.withPartner', { partner }) : ''}`}>
-              {t('nav.session', { id: sessionId })}
-              {partner && <span className="text-white">{t('nav.withPartner', { partner })}</span>}
-            </span>
-          )}
         </div>
 
         <div className="app-nav">
@@ -72,7 +64,7 @@ export default function AppNavbar({
             </>
           )}
           {!loggedIn && !playMode && (
-            <NavbarButton className="uppercase" onClick={onLogin}>
+            <NavbarButton onClick={onLogin}>
               {t('nav.login')}
             </NavbarButton>
           )}

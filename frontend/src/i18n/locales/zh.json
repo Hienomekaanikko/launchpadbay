@@ -139,6 +139,9 @@
     "requestNotFound": "该好友请求已不存在"
   },
   "session": {
+    "name": "{{username}} 的会话",
+    "requestJoinNamed": "请求加入 {{username}} 的会话",
+    "cancelJoinNamed": "取消加入 {{username}} 的会话的请求",
     "join": "加入",
     "full": "已满",
     "pending": "等待中...",

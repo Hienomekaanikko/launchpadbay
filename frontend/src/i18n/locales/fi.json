@@ -139,6 +139,9 @@
     "requestNotFound": "Kaveripyyntöä ei enää ole"
   },
   "session": {
+    "name": "Käyttäjän {{username}} sessio",
+    "requestJoinNamed": "Pyydä liittymistä käyttäjän {{username}} sessioon",
+    "cancelJoinNamed": "Peruuta liittymispyyntö käyttäjän {{username}} sessioon",
     "join": "LIITY",
     "full": "TÄYNNÄ",
     "pending": "Odottaa...",
