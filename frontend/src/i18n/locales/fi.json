@@ -1,5 +1,6 @@
 {
   "common": {
+    "close": "Sulje",
     "accept": "Hyväksy",
     "reject": "Hylkää",
     "send": "Lähetä",
@@ -27,7 +28,7 @@
     "username": "Nimi",
     "email": "Sähköposti",
     "password": "Salasana",
-    "login": "KIRJAUDU SISÄÄN",
+    "login": "Kirjaudu sisään",
     "loginWithGithub": "GITHUB-SISÄÄNKIRJAUTUMINEN",
     "notRegisteredYet": "Luo käyttäjätunnus",
     "or": "TAI",
@@ -59,6 +60,8 @@
     "passwordRequireSpecial": "Salasanassa on oltava vähintään yksi erikoismerkki"
   },
   "lobby": {
+    "sections": "Aulan osiot",
+    "pendingRequests": "Kaveripyyntöjä: {{count}}",
     "online": "Paikalla",
     "sessions": "Sessiot",
     "sessionChat": "Sessiokeskustelu",
@@ -67,10 +70,14 @@
     "noMessages": "Ei viestejä"
   },
   "profile": {
+    "overview": "Profiili",
+    "editLink": "Muokkaa",
     "friends": "Kaverit",
     "changeAvatar": "Vaihda kuva",
     "chooseFile": "Valitse tiedosto",
     "noFileSelected": "Ei tiedostoa valittu",
+    "chooseImage": "Valitse kuva",
+    "avatarRequirements": "JPEG, PNG tai WebP · enintään {{max}} Mt",
     "requests": "Pyynnöt",
     "noFriends": "Ei kavereita vielä",
     "uploading": "Lähetetään…",
@@ -139,6 +146,9 @@
     "requestNotFound": "Kaveripyyntöä ei enää ole"
   },
   "session": {
+    "name": "Käyttäjän {{username}} sessio",
+    "requestJoinNamed": "Pyydä liittymistä käyttäjän {{username}} sessioon",
+    "cancelJoinNamed": "Peruuta liittymispyyntö käyttäjän {{username}} sessioon",
     "join": "LIITY",
     "full": "TÄYNNÄ",
     "pending": "Odottaa...",

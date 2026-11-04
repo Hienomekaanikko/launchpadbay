@@ -204,15 +204,17 @@ body {
 #transport-controls {
   order: 1;
   display: flex;
+  width: max-content;
   gap: 10px;
   justify-content: center;
   background: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(12px);
   border-radius: 12px;
-  padding: 8px 14px;
+  padding: 8px;
 }
 
 .transport-btn {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -228,6 +230,16 @@ body {
   text-transform: uppercase;
   transition: background 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s;
   backdrop-filter: blur(10px);
+}
+
+.transport-btn-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 .transport-btn:hover {
@@ -623,7 +635,7 @@ body[style*="background-image"] {
   }
 
   #transport-controls {
-    padding-block: 4px;
+    padding: 4px;
     transform: translateY(4px);
   }
 }

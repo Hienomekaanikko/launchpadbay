@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import './App.css'
 import LaunchpadView from './launchpad/LaunchpadView.jsx'
@@ -6,6 +6,7 @@ import landing from './assets/landing.jpg'
 import LobbyView from './components/LobbyView.jsx'
 import LoginView from './components/LoginView.jsx'
 import ProfileView from './components/ProfileView.jsx'
+import EditProfileView from './components/EditProfileView.jsx'
 import NavButton from './components/NavButton.jsx'
 import AppNavbar from './components/AppNavbar.jsx'
 import ChatWindow from './components/ChatWindow.jsx'
@@ -17,7 +18,6 @@ import useSessions from './useSessions.js'
 import useSessionJoin from './useSessionJoin.js'
 import useChat from './useChat.js'
 import JoinRequestPopup from './components/JoinRequestPopup.jsx'
-import UserProfilePopup from './components/UserProfilePopup.jsx'
 import PolicyDialog from './components/PoliciesDialog.jsx'
 import AlreadyOpenNotice from './components/AlreadyOpenNotice.jsx'
 import LanguageSwitcher from './components/LanguageSwitcher.jsx'
@@ -33,7 +33,7 @@ function App() {
   const [username, setUsername] = useState(() => localStorage.getItem('username'));
   const [lobbyMode, setLobbyMode] = useState(false);
   const [profileMode, setProfileMode] = useState(false);
-  const [viewedUser, setViewedUser] = useState(null) // { id, username } whose profile popup is open
+  const [editingProfile, setEditingProfile] = useState(null);
   const loggedIn = Boolean(token)
   const { socket, reconnecting } = useSocket(token)
   const closeCode = useCloseCode(socket)
@@ -47,8 +47,6 @@ function App() {
     if (session.id === join.rejection?.sessionId) return { ...session, rejectedReason: join.rejection.reason }
     return session
   })
-  // only show who we're playing with while they're actually still in the session
-  const partner = sessions.find((session) => session.id === activeSession)?.current > 1 ? join.partner : null
   const friendsState = useFriends(token, socket)
   const isOnline = (id) => onlineUsers.some((user) => user.id === id && user.online)
   const friendsWithStatus = friendsState.friends.map((friend) => ({ ...friend, online: isOnline(friend.id) }))
@@ -66,7 +64,10 @@ function App() {
 
   // accepted into a session (guest) or hosting one: make sure the launchpad is open
   useEffect(() => {
-    if (activeSession) setPlayMode(true)
+    if (activeSession) {
+      setPlayMode(true)
+      setEditingProfile(null)
+    }
   }, [activeSession])
 
   const handleLoggedIn = (newToken, newUserId, newUsername) => {
@@ -111,8 +112,8 @@ function App() {
     setUserId(null)
     setUsername(null)
     setProfileMode(false)
+    setEditingProfile(null)
     setLobbyMode(false)
-    setViewedUser(null)
   }
 
   // the server no longer accepts our token (expired, from before a password change, or
@@ -180,6 +181,7 @@ function App() {
     setPlayMode(false)
     setLobbyMode(false)
     setProfileMode(false)
+    setEditingProfile(null)
     chat.closeChat()
     setShowLogin(false)
   }
@@ -212,12 +214,40 @@ function App() {
   // the friend lists are only fetched on demand, so refresh them for an up-to-date button
   const handleProfileClick = (other) => {
     friendsState.refresh()
-    setViewedUser(other)
+    chat.openProfile(other)
   }
 
-  const handleProfileChatClick = (other) => {
-    setViewedUser(null)
-    chat.openChat(other)
+  const handleEditProfile = (profile) => {
+    setEditingProfile(profile)
+    setProfileMode(false)
+    setShowLogin(false)
+  }
+
+  const handleProfileChange = (changes) => {
+    setEditingProfile((profile) => profile ? { ...profile, ...changes } : null)
+    if (changes.username) {
+      localStorage.setItem('username', changes.username)
+      setUsername(changes.username)
+    }
+  }
+
+  const handleCloseProfile = useCallback(() => setProfileMode(false), [])
+
+  const handleToggleProfile = () => {
+    setEditingProfile(null)
+    if (!profileMode) {
+      setLobbyMode(false)
+    }
+    setProfileMode((open) => !open)
+  }
+
+  const handleToggleLobby = () => {
+    setEditingProfile(null)
+    if (!lobbyMode) {
+      setProfileMode(false)
+      friendsState.refresh()
+    }
+    setLobbyMode((open) => !open)
   }
 
   return (
@@ -226,24 +256,17 @@ function App() {
         playMode={playMode}
         loggedIn={loggedIn}
         username={username}
-        sessionId={activeSession}
-        partner={partner}
         hasUnread={chat.unread.length > 0}
         lobbyOpen={lobbyMode}
         profileOpen={profileMode}
+        editingProfile={Boolean(editingProfile)}
         onHome={handleHome}
         onLogin={handleOpenLogin}
-        onLobby={() => setLobbyMode((open) => {
-          if (!open) setProfileMode(false)
-          return !open
-        })}
-        onProfile={() => setProfileMode((open) => {
-          if(!open) setLobbyMode(false)
-          return !open
-        })}
+        onLobby={handleToggleLobby}
+        onProfile={handleToggleProfile}
       />
       <main className={`app-main${playMode ? ' app-main-play' : ''}`}>
-        {!playMode && (
+        {!playMode && !editingProfile && (
           <div className="flex flex-wrap justify-center gap-4 px-4 py-8">
             <NavButton onClick={handlePlayClick}>{t('nav.play')}</NavButton>
           </div>
@@ -255,23 +278,23 @@ function App() {
             setShowLogin={setShowLogin}
             initialError={loginError}
           />}
-        {(lobbyMode || (profileMode && loggedIn)) && (
-          <div className="app-panels">
+        {editingProfile && loggedIn && !playMode && (
+          <EditProfileView
+            token={token}
+            profile={editingProfile}
+            inSession={Boolean(activeSession)}
+            onProfileChange={handleProfileChange}
+            onTokenChange={handleTokenChange}
+            onAccountDeleted={handleLogout}
+          />
+        )}
+        {!editingProfile && (lobbyMode || (profileMode && loggedIn)) && (
+          <div className={`app-panels${profileMode ? ' app-panels-profile' : ' app-panels-lobby'}`}>
             {profileMode && loggedIn && <ProfileView
               token={token}
-              inSession={Boolean(activeSession)}
-              onAccountDeleted={handleLogout}
+              onEditClick={!playMode && !lobbyMode ? handleEditProfile : undefined}
               onLogout={handleLogout}
-              onTokenChange={handleTokenChange}
-              friends={friendsWithStatus}
-              incoming={friendsState.incoming}
-              unread={chat.unread}
-              onProfileClick={handleProfileClick}
-              onChatClick={chat.openChat}
-              onAcceptClick={friendsState.accept}
-              onRejectClick={friendsState.reject}
-              onRemoveClick={friendsState.remove}
-              onFriendsOpen={friendsState.refresh}
+              onClose={handleCloseProfile}
             />}
             {lobbyMode && <LobbyView
               activeSession={activeSession}
@@ -286,6 +309,12 @@ function App() {
               onChatClick={chat.openChat}
               sessionMessages={chat.sessionMessages}
               onSendSessionMessage={chat.sendSession}
+              friends={friendsWithStatus}
+              incoming={friendsState.incoming}
+              onAcceptClick={friendsState.accept}
+              onRejectClick={friendsState.reject}
+              onRemoveClick={friendsState.remove}
+              onFriendsOpen={friendsState.refresh}
             />}
           </div>
         )}
@@ -297,23 +326,19 @@ function App() {
             onRejectClick={join.rejectRequest}
           />
         )}
-        {loggedIn && viewedUser && (
-          <UserProfilePopup
+        {loggedIn && chat.activeChat && (
+          <ChatWindow
+            key={chat.activeChat.id}
             token={token}
             socket={socket}
-            userId={viewedUser.id}
-            online={isOnline(viewedUser.id)}
-            friendStatus={friendStatusOf(viewedUser.id)}
+            recipient={chat.activeChat}
+            recipientOnline={chatRecipientOnline}
+            unread={chat.unread.includes(chat.activeChat.id)}
+            friendStatus={friendStatusOf(chat.activeChat.id)}
             onAddFriendClick={handleAddFriendClick}
             onRemoveClick={friendsState.remove}
-            onChatClick={handleProfileChatClick}
-            onClose={() => setViewedUser(null)}
-          />
-        )}
-        {chat.activeChat && (
-          <ChatWindow
-            recipient={chat.activeChat.username}
-            recipientOnline={chatRecipientOnline}
+            onProfileClick={handleProfileClick}
+            onChatClick={chat.openChat}
             messages={chat.conversations[chat.activeChat.id] || []}
             error={chat.error}
             onSendMessage={(text) => chat.sendPrivate(chat.activeChat.id, text)}
@@ -338,7 +363,7 @@ function App() {
         <button
           type="button"
           onClick={() => setOpenPolicy('privacy')}
-          className="cursor-pointer text-sm text-white/80 underline underline-offset-4 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-yellow-300"
+          className="app-nav-action min-w-0 px-2 text-white/80 hover:bg-white/8 hover:text-white"
         >
           {t('policies.privacy.title')}
         </button>
@@ -346,7 +371,7 @@ function App() {
         <button
           type="button"
           onClick={() => setOpenPolicy('service')}
-          className="cursor-pointer text-sm text-white/80 underline underline-offset-4 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-yellow-300"
+          className="app-nav-action min-w-0 px-2 text-white/80 hover:bg-white/8 hover:text-white"
         >
           {t('policies.service.title')}
         </button>

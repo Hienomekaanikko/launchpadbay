@@ -3,7 +3,7 @@ import { send, sendToUser, broadcastEvent } from './ws.js'
 
 // registry of live sessions, where:
 // key = 'sessionId',
-// value = session data, shape: { id, hostId, players, max, pending }
+// value = session data, shape: { id, creatorName, hostId, players, max, pending }
 // 'players' maps each player's userId to their username, so their name is still
 // known after their connection is gone (e.g. to announce that they left)
 // 'pending' holds: { id, name } of the requesting user, or otherwise it is null
@@ -16,6 +16,7 @@ function createSession(creatorId, creatorName) {
     const id = `session${++sessionCounter}`
     const session = {
         id,
+        creatorName,
         hostId: creatorId,
         players: new Map([[creatorId, creatorName]]),
         max: 2,
@@ -324,6 +325,7 @@ function getSessionHostedBy(userId) {
 function toSessionView(session) {
     return {
         id: session.id,
+        creatorName: session.creatorName,
         current: session.players.size,
         max: session.max,
         status: (session.players.size >= session.max) ? 'full' : 'open'

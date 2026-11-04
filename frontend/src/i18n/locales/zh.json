@@ -1,5 +1,6 @@
 {
   "common": {
+    "close": "关闭",
     "accept": "接受",
     "reject": "拒绝",
     "send": "发送",
@@ -59,6 +60,8 @@
     "passwordRequireSpecial": "密码必须至少包含一个特殊字符"
   },
   "lobby": {
+    "sections": "大厅栏目",
+    "pendingRequests": "好友请求：{{count}}",
     "online": "在线",
     "sessions": "会话",
     "sessionChat": "会话聊天",
@@ -67,10 +70,14 @@
     "noMessages": "暂无消息"
   },
   "profile": {
+    "overview": "个人资料",
+    "editLink": "编辑",
     "friends": "好友",
     "changeAvatar": "更换头像",
     "chooseFile": "选择文件",
     "noFileSelected": "未选择文件",
+    "chooseImage": "选择图片",
+    "avatarRequirements": "JPEG、PNG 或 WebP · 不超过 {{max}} MB",
     "requests": "请求",
     "noFriends": "暂无好友",
     "uploading": "上传中…",
@@ -139,6 +146,9 @@
     "requestNotFound": "该好友请求已不存在"
   },
   "session": {
+    "name": "{{username}} 的会话",
+    "requestJoinNamed": "请求加入 {{username}} 的会话",
+    "cancelJoinNamed": "取消加入 {{username}} 的会话的请求",
     "join": "加入",
     "full": "已满",
     "pending": "等待中...",

@@ -11,19 +11,20 @@ const SESSION_NOTICE_MS = 4000
 // what's shown is what was actually delivered.
 export default function useChat(socket, userId, activeSession) {
   const [conversations, setConversations] = useState({})
-  const [activeChat, setActiveChat] = useState(null) // { id, username } of the open chat
+  const [activeChat, setActiveChat] = useState(null) // { id, username, view: 'chat' | 'profile' } of the open user panel
   const [unread, setUnread] = useState([]) // ids of users whose new messages we haven't seen
   const [chatError, setChatError] = useState(null) // { to, reason } of the last failed private message, 'to' is an id
   const [sessionMessages, setSessionMessages] = useState([])
   const [sessionNotice, setSessionNotice] = useState(null) // latest joined/left line, shown briefly on top of everything
-  // the socket listener needs the open chat, but is only set up once per socket
+  // the socket listener needs the open user panel, but is only set up once per socket
   const activeChatRef = useRef(null)
 
-  // user: { id, username }, or null to close
-  const showChat = (user) => {
-    activeChatRef.current = user
-    setActiveChat(user)
-    if (user) setUnread((prev) => prev.filter((id) => id !== user.id))
+  // Viewing a profile doesn't mark that user's conversation as read.
+  const showChat = (user, view = 'chat') => {
+    const panel = user ? { ...user, view } : null
+    activeChatRef.current = panel
+    setActiveChat(panel)
+    if (panel?.view === 'chat') setUnread((prev) => prev.filter((id) => id !== panel.id))
   }
 
   useEffect(() => {
@@ -44,13 +45,15 @@ export default function useChat(socket, userId, activeSession) {
           [other.id]: [...(prev[other.id] || []), { id: msg.id, text: msg.text, fromMe }],
         }))
         if (fromMe) return
-        // someone wrote to us: open their chat, or mark it unread if another one is open
+        // Open their chat, or mark it unread if their conversation isn't visible.
         if (!activeChatRef.current) showChat(other)
-        else if (activeChatRef.current.id !== other.id) setUnread((prev) => (prev.includes(other.id) ? prev : [...prev, other.id]))
+        else if (activeChatRef.current.id !== other.id || activeChatRef.current.view !== 'chat') {
+          setUnread((prev) => (prev.includes(other.id) ? prev : [...prev, other.id]))
+        }
       } else if (msg.type === 'error' && typeof msg.to === 'string') {
         setChatError({ to: msg.to, reason: msg.reason })
       } else if (msg.type === 'user_renamed' && activeChatRef.current?.id === msg.id) {
-        showChat({ ...activeChatRef.current, username: msg.username }) // the open chat's header
+        showChat({ ...activeChatRef.current, username: msg.username }, activeChatRef.current.view)
       }
     })
   }, [socket, userId])
@@ -106,7 +109,8 @@ export default function useChat(socket, userId, activeSession) {
     error: chatError && chatError.to === activeChat?.id ? chatError.reason : null,
     sessionMessages,
     sessionNotice,
-    openChat: showChat,
+    openChat: (user) => showChat(user),
+    openProfile: (user) => showChat(user, 'profile'),
     closeChat: () => showChat(null),
     sendPrivate,
     sendSession,

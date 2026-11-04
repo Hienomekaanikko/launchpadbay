@@ -1,5 +1,6 @@
 {
   "common": {
+    "close": "Close",
     "accept": "Accept",
     "reject": "Reject",
     "send": "Send",
@@ -29,7 +30,7 @@
     "password": "Password",
     "login": "LOGIN",
     "loginWithGithub": "LOGIN WITH GITHUB",
-    "notRegisteredYet": "Not Registered Yet?",
+    "notRegisteredYet": "Not registered yet?",
     "or": "OR",
     "invalidCredentials": "Invalid email or password",
     "githubLoginCancelled": "GitHub login cancelled",
@@ -59,6 +60,8 @@
     "passwordRequireSpecial": "Password must contain at least one special character"
   },
   "lobby": {
+    "sections": "Lobby sections",
+    "pendingRequests": "Friend requests: {{count}}",
     "online": "Online",
     "sessions": "Sessions",
     "sessionChat": "Session-chat",
@@ -67,10 +70,14 @@
     "noMessages": "No messages yet"
   },
   "profile": {
+    "overview": "Profile",
+    "editLink": "Edit",
     "friends": "Friends",
     "changeAvatar": "Change avatar",
     "chooseFile": "Choose file",
     "noFileSelected": "No file selected",
+    "chooseImage": "Choose image",
+    "avatarRequirements": "JPEG, PNG or WebP · up to {{max}} MB",
     "requests": "Requests",
     "noFriends": "No friends yet",
     "uploading": "Uploading…",
@@ -139,6 +146,9 @@
     "requestNotFound": "That friend request no longer exists"
   },
   "session": {
+    "name": "{{username}}'s session",
+    "requestJoinNamed": "Request to join {{username}}'s session",
+    "cancelJoinNamed": "Cancel request to join {{username}}'s session",
     "join": "JOIN",
     "full": "FULL",
     "pending": "Pending...",

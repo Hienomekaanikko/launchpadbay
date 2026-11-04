@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { onMessage } from './useSocket.js'
 
-// Keeps a live list of active sessions: [{ id, current, max, status: 'open' | 'full' }]
+// Keeps a live list of active sessions: [{ id, creatorName, current, max, status: 'open' | 'full' }]
 export default function useSessions(socket) {
   const [sessions, setSessions] = useState([])
 

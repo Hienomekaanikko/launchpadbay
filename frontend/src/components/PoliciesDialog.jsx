@@ -1,9 +1,7 @@
 import { useEffect, useRef } from "react";
 import PolicyDocument from "./Policies.jsx";
-import { useTranslation } from 'react-i18next'
 
 export default function PolicyDialog({ kind, onClose }) {
-    const { t } = useTranslation()
     const dialogRef = useRef(null);
     const titleRef = useRef(null);
 
@@ -31,17 +29,16 @@ export default function PolicyDialog({ kind, onClose }) {
             aria-labelledby={`policy-${kind}-title`}
             onClose={onClose}
             onClick={(e) => {
-              if (e.target === dialogRef.current){
-                dialogRef.current.close()
+              if (e.target !== dialogRef.current) return
+              const bounds = e.currentTarget.getBoundingClientRect()
+              if (e.clientX < bounds.left || e.clientX > bounds.right
+                  || e.clientY < bounds.top || e.clientY > bounds.bottom) {
+                e.currentTarget.close()
               }
             }}
-            className="m-auto max-h-[85dvh] w-[min(92vw,48rem)] overflow-y-auto rounded-xl border border-white/20 bg-slate-900 p-0 text-slate-100 backdrop:bg-black/70"
+            className="m-auto max-h-[calc(100dvh-2rem)] w-[min(calc(100vw-2rem),48rem)] overflow-y-auto rounded-[20px] border-0 border-t border-t-white/18 border-b border-b-white/8 bg-surface/30 p-0 text-white shadow-panel backdrop-blur-[15px] backdrop:bg-transparent backdrop:backdrop-blur-sm"
         >
-            <div className="sticky top-0 z-10 flex justify-end border-b border-white/10 bg-slate-900 p-3">
-           
-            </div>
-            <PolicyDocument kind={kind} titleRef={titleRef}
-            />
+            <PolicyDocument kind={kind} titleRef={titleRef} />
         </dialog>
     )
 }

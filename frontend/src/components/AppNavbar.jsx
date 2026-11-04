@@ -14,11 +14,10 @@ export default function AppNavbar({
   playMode,
   loggedIn,
   username,
-  sessionId,
-  partner,
   hasUnread,
   lobbyOpen,
   profileOpen,
+  editingProfile,
   onHome,
   onLogin,
   onLobby,
@@ -31,17 +30,11 @@ export default function AppNavbar({
       <nav className="app-navbar" aria-label={t('nav.mainNavigation')}>
         <div className="app-navbar-brand">
           <NavbarButton
-            aria-current={!playMode && !lobbyOpen && !profileOpen ? 'page' : undefined}
+            aria-current={!playMode && !lobbyOpen && !profileOpen && !editingProfile ? 'page' : undefined}
             onClick={onHome}
           >
             {t('nav.home')}
           </NavbarButton>
-          {sessionId && (
-            <span className="app-navbar-session" title={`${t('nav.session', { id: sessionId })}${partner ? t('nav.withPartner', { partner }) : ''}`}>
-              {t('nav.session', { id: sessionId })}
-              {partner && <span className="text-white">{t('nav.withPartner', { partner })}</span>}
-            </span>
-          )}
         </div>
 
         <div className="app-nav">
@@ -59,8 +52,12 @@ export default function AppNavbar({
               </NavbarButton>
               <NavbarButton
                 className="app-nav-user"
+                id="profile-menu-trigger"
                 aria-label={t('nav.profileFor', { username })}
                 aria-expanded={profileOpen}
+                aria-haspopup="dialog"
+                aria-controls={profileOpen ? 'profile-menu' : undefined}
+                aria-current={editingProfile ? 'page' : undefined}
                 title={username}
                 onClick={onProfile}
               >
@@ -72,7 +69,7 @@ export default function AppNavbar({
             </>
           )}
           {!loggedIn && !playMode && (
-            <NavbarButton className="uppercase" onClick={onLogin}>
+            <NavbarButton onClick={onLogin}>
               {t('nav.login')}
             </NavbarButton>
           )}
