@@ -259,6 +259,9 @@ export function mountLaunchpad(container, themes) {
         case 'SET_FILTER':
           setChannelCutoff(action.channelId, action.value / 100)
           break
+        case 'PAD_SAMPLE':
+          reloadPad(action.pad, action.url)
+          break
         default:
           break
       }
@@ -358,6 +361,33 @@ export function mountLaunchpad(container, themes) {
       resetTransport()
     }
 
+    // --- pad samples ---
+
+    // Fetches one pad's clip, showing its loading state meanwhile. Rejects like
+    // loadPadClip; the caller decides whether a silent pad is acceptable
+    function loadPad(pad, url) {
+      const channel = channels[channelOfPad(pad)]
+      setPadLoadingUi(channel, pad, true)
+      renderPad(padEl, getPadVisual(channel, slotOfPad(pad)))
+      return loadPadClip(pad, url).finally(() => {
+        if (isUnmounted)
+          return
+        setPadLoadingUi(channel, pad, false)
+        renderPad(padEl, getPadVisual(channel, slotOfPad(pad)))
+      })
+    }
+
+    // Swaps one pad's sample (session upload). A playing or queued pad is hit
+    // first, which stops or unqueues it; otherwise its old loop node would be
+    // left behind, still playing, with nothing pointing at it
+    function reloadPad(pad, url) {
+      const channel = channels[channelOfPad(pad)]
+      if (channel.activePad === pad || channel.queuedPad === pad)
+        padHit(pad)
+      // a sample that fails to load just leaves its pad silent
+      return loadPad(pad, url).catch(() => {})
+    }
+
     // --- themes ---
 
     async function loadThemeSounds(theme) {
@@ -367,24 +397,13 @@ export function mountLaunchpad(container, themes) {
       for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++)
         applyChannelEvent(channels[channelId], { type: 'RESET' })
 
-      const samples = Object.entries(theme.sampleUrls).map(([key, url]) => ({ pad: Number(key), url }))
-      for (const { pad } of samples)
-        setPadLoadingUi(channels[channelOfPad(pad)], pad, true)
-
       for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
         renderChannel(padEl, channels[channelId])
         stutter.refreshBtn(channelId)
       }
 
-      await Promise.all(samples.map(({ pad, url }) =>
-        loadPadClip(pad, url).finally(() => {
-          if (isUnmounted)
-            return
-          const channel = channels[channelOfPad(pad)]
-          setPadLoadingUi(channel, pad, false)
-          renderPad(padEl, getPadVisual(channel, slotOfPad(pad)))
-        })
-      ))
+      const samples = Object.entries(theme.sampleUrls).map(([key, url]) => ({ pad: Number(key), url }))
+      await Promise.all(samples.map(({ pad, url }) => loadPad(pad, url)))
     }
 
     // --- mount / destroy ---
@@ -430,5 +449,6 @@ export function mountLaunchpad(container, themes) {
       isAudioRunning: () => audioContext?.state === 'running',
       startAudio: resumeAudio, // only works from a click
       onAudioStateChange,
+      reloadPad,
     }
 }

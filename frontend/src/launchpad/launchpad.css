@@ -254,6 +254,42 @@ body {
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.18);
 }
 
+/* Pad sample upload (in-session), sits in #transport-controls next to split */
+.sample-upload {
+  position: relative;
+  display: flex;
+  gap: 10px;
+}
+
+.sample-upload-pad {
+  appearance: none;
+  padding: 0 12px;
+}
+
+.sample-upload-pad option {
+  color: #000;
+  text-transform: none;
+}
+
+.transport-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sample-upload-error {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ff8080;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 /* Stutter buttons */
 .stutter-btn {
   width: var(--control-size);

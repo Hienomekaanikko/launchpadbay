@@ -31,6 +31,14 @@ const SERVER_ERROR_KEYS = {
   username_unchanged: 'profile.usernameUnchanged',
   file_too_large: 'profile.fileTooLarge',
 
+  // launchpad pad sample upload errors (invalid_sample_type and sample_too_large
+  // are browser-side only; the server answers file_too_large for the latter)
+  not_in_session: 'launchpad.errors.notInSession',
+  invalid_pad: 'launchpad.errors.invalidPad',
+  invalid_sample_type: 'launchpad.errors.invalidSampleType',
+  invalid_sample_content: 'launchpad.errors.invalidSampleType',
+  sample_too_large: 'launchpad.errors.sampleTooLarge',
+
   // friends related errors
   cannot_add_self: 'friends.cannotAddSelf',
   friend_request_not_found: 'friends.requestNotFound',

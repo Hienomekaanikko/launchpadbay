@@ -3,12 +3,13 @@ import { useTranslation } from 'react-i18next'
 import { mountLaunchpad } from './engine.js'
 import { fetchThemes } from './themes.js'
 import useLaunchpadSync from './useLaunchpadSync.js'
+import PadSampleUpload from './PadSampleUpload.jsx'
 import launchpadCss from './launchpad.css?raw'
 import landing from '../assets/landing.jpg'
 
 const MIN_LOADING_MS = 1000
 
-export default function LaunchpadView({ socket, activeSession }) {
+export default function LaunchpadView({ socket, activeSession, token }) {
   const { t } = useTranslation()
   const containerRef = useRef(null)
   const [ready, setReady] = useState(false)

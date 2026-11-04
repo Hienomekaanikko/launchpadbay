@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import { PrismaClient } from '@prisma/client'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
+import { PAD_COUNT } from '../padSamples.js'
 
 const adapter = new PrismaMariaDb({
     host: process.env.MYSQL_HOST,
@@ -27,7 +28,7 @@ async function main() {
         },
     })
 
-    for (let slot = 1; slot <= 25; slot++) {
+    for (let slot = 1; slot <= PAD_COUNT; slot++) {
         const filename = `sound${slot}.wav`
         await prisma.theme_sounds.upsert({
             where: { theme_id_slot: { theme_id: 'local', slot } },

@@ -176,7 +176,16 @@
     "split": "分割 ½",
     "vol": "音量",
     "lp": "滤波",
-    "stu": "顿音"
+    "stu": "顿音",
+    "pad": "音垫 {{n}}",
+    "upload": "上传",
+    "uploading": "上传中…",
+    "errors": {
+      "notInSession": "加入会话后才能上传采样",
+      "invalidPad": "没有这个音垫",
+      "invalidSampleType": "仅允许 WAV 文件",
+      "sampleTooLarge": "文件过大。最大大小为 10 MB。"
+    }
   },
   "policies": {
     "close": "关闭",

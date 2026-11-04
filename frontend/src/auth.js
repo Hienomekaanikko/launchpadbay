@@ -84,11 +84,9 @@ export function deleteAccount(token, confirm) {
   return requestWithToken('DELETE', '/profile', token, confirm)
 }
 
-export async function uploadAvatar(token, file) {
-  const body = new FormData()
-  body.append('avatar', file)
-
-  const res = await fetch('/api/profile/avatar', {
+// multipart upload; the browser sets the Content-Type (with boundary) from the FormData
+async function postForm(path, token, body) {
+  const res = await fetch(`/api${path}`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
     body,
@@ -96,6 +94,20 @@ export async function uploadAvatar(token, file) {
   const data = await res.json().catch(() => ({}))
   if (!res.ok) throw failedWithToken(data, res.status)
   return data
+}
+
+export function uploadAvatar(token, file) {
+  const body = new FormData()
+  body.append('avatar', file)
+  return postForm('/profile/avatar', token, body)
+}
+
+// in a session: replace one pad's sample for every player; returns { pad, url }
+export function uploadPadSample(token, pad, file) {
+  const body = new FormData()
+  body.append('pad', String(pad)) // before the file: the backend reads it off the file part
+  body.append('file', file)
+  return postForm('/session/pad-sample', token, body)
 }
 
 // { friends: [{ id, username }], incoming: [...], outgoing: [...] }

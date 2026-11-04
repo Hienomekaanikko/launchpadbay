@@ -17,6 +17,10 @@ export const PASSWORD_MAX_BYTES = 72 // bcrypt ignores bytes after 72
 export const AVATAR_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 export const AVATAR_MAX_BYTES = 2 * 1024 * 1024 // backend/profile.js multipart limit
 
+// browsers disagree on the MIME type of a .wav (or leave it empty), so the name counts too
+export const SAMPLE_TYPES = ['audio/wav', 'audio/x-wav', 'audio/wave', 'audio/vnd.wave']
+export const SAMPLE_MAX_BYTES = 10 * 1024 * 1024 // backend/padSamples.js MAX_PAD_SAMPLE_BYTES
+
 // backend: PASSWORD_REQUIRE_LETTER and _DIGIT are on, _SPECIAL is off
 const CONTROL_CHARS = /\p{Cc}/u
 const HAS_LETTER = /\p{L}/u
@@ -66,6 +70,16 @@ export function checkAvatar(file) {
   }
   if (file.size > AVATAR_MAX_BYTES) {
     return { code: 'file_too_large' }
+  }
+  return null
+}
+
+export function checkPadSample(file) {
+  if (!SAMPLE_TYPES.includes(file.type) && !file.name.toLowerCase().endsWith('.wav')) {
+    return { code: 'invalid_sample_type' }
+  }
+  if (file.size > SAMPLE_MAX_BYTES) {
+    return { code: 'sample_too_large' }
   }
   return null
 }

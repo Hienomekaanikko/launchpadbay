@@ -1,7 +1,7 @@
 import 'dotenv/config'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { closeSync, openSync, readFileSync, readSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import Fastify from 'fastify'
 import { PrismaClient } from '@prisma/client'
 import { PrismaMariaDb } from '@prisma/adapter-mariadb'
@@ -43,6 +43,8 @@ import githubAuth from './authGithub.js'
 import friends from './friends.js'
 import { registerMetrics } from './metrics.js'
 import profileRoutes from './profile.js'
+import padSampleRoutes from './padSampleRoutes.js'
+import { SOUNDS_DIR, isWavFile } from './padSamples.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -179,6 +181,7 @@ fastify.decorate('authenticate', async function (request, reply) {
 // Registered after the 'authenticate' decorator above: their routes reference it at definition time
 await fastify.register(friends)
 await fastify.register(profileRoutes)
+await fastify.register(padSampleRoutes)
 
 fastify.addHook('onClose', () => {
     stopHeartbeat()
@@ -430,26 +433,8 @@ fastify.get('/health/db', async () => {
 
 // Launchpad sounds live on disk; the database only names them (prisma/seed.js).
 // A file can go missing or be swapped for something else without the app noticing,
-// so check before handing out its URL
-const SOUNDS_DIR = path.join(__dirname, 'uploads', 'sounds')
-
-// A WAV file starts with "RIFF", 4 bytes of size, then "WAVE". Reads only those 12 bytes,
-// so a missing file, an empty one or e.g. a renamed jpg all count as unusable
-function soundFileUsable(filename) {
-    const header = Buffer.alloc(12)
-    let fd
-    try {
-        fd = openSync(path.join(SOUNDS_DIR, filename), 'r')
-        const bytesRead = readSync(fd, header, 0, 12, 0)
-        return bytesRead === 12
-            && header.toString('ascii', 0, 4) === 'RIFF'
-            && header.toString('ascii', 8, 12) === 'WAVE'
-    } catch {
-        return false
-    } finally {
-        if (fd !== undefined) closeSync(fd)
-    }
-}
+// so check before handing out its URL (isWavFile in padSamples.js)
+const soundFileUsable = (filename) => isWavFile(path.join(SOUNDS_DIR, filename))
 
 // Run once the server is up: a broken sound shows here, in docker logs, instead of
 // being found later by a player. Never stops the server
