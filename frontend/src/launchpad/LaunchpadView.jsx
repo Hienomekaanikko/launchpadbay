@@ -108,6 +108,7 @@ export default function LaunchpadView({ socket, activeSession, token }) {
             <span aria-hidden="true" className="invisible">{t('launchpad.split')}</span>
             <span className="transport-btn-label">{t('launchpad.split')}</span>
           </button>
+          {activeSession && engine && <PadSampleUpload token={token} engine={engine} />}
         </div>
 
         <div className="grid-with-knobs">
