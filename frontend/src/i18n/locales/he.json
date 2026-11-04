@@ -1,5 +1,6 @@
 {
   "common": {
+    "close": "סגור",
     "accept": "אשר",
     "reject": "דחה",
     "send": "שלח",
@@ -71,6 +72,8 @@
     "changeAvatar": "החלף תמונת פרופיל",
     "chooseFile": "בחר קובץ",
     "noFileSelected": "לא נבחר קובץ",
+    "chooseImage": "בחר תמונה",
+    "avatarRequirements": "JPEG, PNG או WebP · עד {{max}} MB",
     "requests": "בקשות",
     "noFriends": "אין חברים עדיין",
     "uploading": "מעלה…",

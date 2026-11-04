@@ -1,5 +1,6 @@
 {
   "common": {
+    "close": "Close",
     "accept": "Accept",
     "reject": "Reject",
     "send": "Send",
@@ -71,6 +72,8 @@
     "changeAvatar": "Change avatar",
     "chooseFile": "Choose file",
     "noFileSelected": "No file selected",
+    "chooseImage": "Choose image",
+    "avatarRequirements": "JPEG, PNG or WebP · up to {{max}} MB",
     "requests": "Requests",
     "noFriends": "No friends yet",
     "uploading": "Uploading…",

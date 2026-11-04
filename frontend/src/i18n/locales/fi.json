@@ -1,5 +1,6 @@
 {
   "common": {
+    "close": "Sulje",
     "accept": "Hyväksy",
     "reject": "Hylkää",
     "send": "Lähetä",
@@ -71,6 +72,8 @@
     "changeAvatar": "Vaihda kuva",
     "chooseFile": "Valitse tiedosto",
     "noFileSelected": "Ei tiedostoa valittu",
+    "chooseImage": "Valitse kuva",
+    "avatarRequirements": "JPEG, PNG tai WebP · enintään {{max}} Mt",
     "requests": "Pyynnöt",
     "noFriends": "Ei kavereita vielä",
     "uploading": "Lähetetään…",

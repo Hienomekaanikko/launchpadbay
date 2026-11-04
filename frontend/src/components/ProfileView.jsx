@@ -32,6 +32,7 @@ function Avatar({ src, token, onAvatarChange }) {
       {showUpload && (
         <AvatarUploadPopup
           token={token}
+          avatar={src}
           onClose={() => setShowUpload(false)}
           onAvatarChange={onAvatarChange}
         />

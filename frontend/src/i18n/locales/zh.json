@@ -1,5 +1,6 @@
 {
   "common": {
+    "close": "关闭",
     "accept": "接受",
     "reject": "拒绝",
     "send": "发送",
@@ -71,6 +72,8 @@
     "changeAvatar": "更换头像",
     "chooseFile": "选择文件",
     "noFileSelected": "未选择文件",
+    "chooseImage": "选择图片",
+    "avatarRequirements": "JPEG、PNG 或 WebP · 不超过 {{max}} MB",
     "requests": "请求",
     "noFriends": "暂无好友",
     "uploading": "上传中…",
