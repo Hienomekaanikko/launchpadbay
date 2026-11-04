@@ -18,11 +18,6 @@ export default function LaunchpadView({ socket, activeSession }) {
 
 
   useEffect(() => {
-    const styleTag = document.createElement('style')
-    styleTag.setAttribute('data-launchpad-style', 'true')
-    styleTag.textContent = `@layer base {\n${launchpadCss}\n}`
-    document.head.appendChild(styleTag)
-
     let cancelled = false
     let minWaitTimer = null
     let destroy = null
@@ -67,7 +62,6 @@ export default function LaunchpadView({ socket, activeSession }) {
       cancelled = true
       if (minWaitTimer) clearTimeout(minWaitTimer)
       if (destroy) destroy()
-      styleTag.remove()
     }
   }, [])
 
@@ -75,6 +69,7 @@ export default function LaunchpadView({ socket, activeSession }) {
 
   return (
     <div ref={containerRef} className="lpad-view" dir="ltr">
+      <style data-launchpad-style="true">{`@layer base {\n${launchpadCss}\n}`}</style>
       <div className="dot-grid" />
 
       <div
@@ -94,7 +89,11 @@ export default function LaunchpadView({ socket, activeSession }) {
       <div className={`grid-wrapper${ready ? ' ready' : ''}`}>
         <div id="loop-bar"><div id="loop-bar-fill" /></div>
         <div id="transport-controls">
-          <button type="button" id="split-btn" className="transport-btn">{t('launchpad.split')}</button>
+          <button type="button" id="split-btn" className="transport-btn">
+            {/* Preserve the original label's layout width while enlarging the visible text. */}
+            <span aria-hidden="true" className="invisible">{t('launchpad.split')}</span>
+            <span className="transport-btn-label">{t('launchpad.split')}</span>
+          </button>
         </div>
 
         <div className="grid-with-knobs">
