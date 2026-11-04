@@ -114,6 +114,8 @@ export default async function profileRoutes(fastify) {
 				return reply.code(400).send({ error: parsedPassword.error, params: parsedPassword.params })
 			}
 			data.password_hash = await bcrypt.hash(parsedPassword.value, 10)
+			// logs out every other session: their tokens carry the old version
+			data.token_version = { increment: 1 }
 		}
 
 		let updated
@@ -147,6 +149,8 @@ export default async function profileRoutes(fastify) {
 		}
 		if (changesPassword) {
 			changed.passwordChanged = true
+			// a fresh token for the session that made the change, so it stays logged in
+			changed.token = fastify.jwt.sign({ id: updated.id, tv: updated.token_version })
 		}
 		return changed
 	})

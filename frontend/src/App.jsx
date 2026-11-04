@@ -10,6 +10,7 @@ import NavButton from './components/NavButton.jsx'
 import AppNavbar from './components/AppNavbar.jsx'
 import ChatWindow from './components/ChatWindow.jsx'
 import useSocket, { onMessage, sendMessage, useCloseCode } from './useSocket.js'
+import { SESSION_EXPIRED_EVENT, tokenExpiresAt } from './auth.js'
 import usePresence from './usePresence.js'
 import useFriends from './useFriends.js'
 import useSessions from './useSessions.js'
@@ -114,6 +115,37 @@ function App() {
     setViewedUser(null)
   }
 
+  // the server no longer accepts our token (expired, from before a password change, or
+  // the account is gone): log out and say why on the login popup
+  const handleSessionExpired = () => {
+    handleLogout()
+    setLoginError('unauthorized')
+    setShowLogin(true)
+    setPlayMode(false) // the login popup only shows outside the launchpad
+  }
+
+  // after a password change the server hands this session a new token; the old one
+  // stopped working along with every other session's
+  const handleTokenChange = (newToken) => {
+    localStorage.setItem('token', newToken)
+    setToken(newToken)
+  }
+
+  // a logged-in request was answered with 401 (see auth.js)
+  useEffect(() => {
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired)
+  }, [])
+
+  // log out when the token expires, before any request could fail with it
+  useEffect(() => {
+    if (!token) return
+    const msLeft = tokenExpiresAt(token) - Date.now()
+    if (!Number.isFinite(msLeft)) return // no expiry in it; the server still decides
+    const timer = setTimeout(handleSessionExpired, Math.max(0, msLeft))
+    return () => clearTimeout(timer)
+  }, [token])
+
   // our own rename: keep the navbar and the stored name current
   useEffect(() => {
     if (!socket) return
@@ -126,7 +158,7 @@ function App() {
 
   // the server refused our token (expired or invalid): reconnecting can't help, log out
   useEffect(() => {
-    if (closeCode === 4001) handleLogout()
+    if (closeCode === 4001) handleSessionExpired()
   }, [closeCode])
 
   // logged in before user ids were stored: log in again to get one.
@@ -230,6 +262,7 @@ function App() {
               inSession={Boolean(activeSession)}
               onAccountDeleted={handleLogout}
               onLogout={handleLogout}
+              onTokenChange={handleTokenChange}
               friends={friendsWithStatus}
               incoming={friendsState.incoming}
               unread={chat.unread}

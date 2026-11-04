@@ -48,7 +48,7 @@ function Status({ clientError, serverError, success }) {
 // Username, email and password in one save: they go out in one request and are saved
 // together or not at all. The current password is asked once, for email and password
 // changes; GitHub-only accounts have no password, so they get no password fields
-function ProfileForm({ token, profile, inSession, onProfileChange }) {
+function ProfileForm({ token, profile, inSession, onProfileChange, onTokenChange }) {
   const { t } = useTranslation()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -96,7 +96,9 @@ function ProfileForm({ token, profile, inSession, onProfileChange }) {
     if (needsPassword) changes.currentPassword = currentPassword
 
     try {
-      const { passwordChanged, ...saved } = await updateProfile(token, changes)
+      const { passwordChanged, token: newToken, ...saved } = await updateProfile(token, changes)
+      // a password change ends every session's token, this one's too: switch to the new one
+      if (newToken) onTokenChange(newToken)
       onProfileChange(saved)
       setUsername('')
       setEmail('')
@@ -194,7 +196,7 @@ function DeleteSection({ token, profile, inSession, onAccountDeleted }) {
   )
 }
 
-export default function EditProfilePopup({ token, profile, inSession, onProfileChange, onAccountDeleted, onClose }) {
+export default function EditProfilePopup({ token, profile, inSession, onProfileChange, onTokenChange, onAccountDeleted, onClose }) {
   const { t } = useTranslation()
   // Fits below the navbar, which is drawn on top. The popup is portalled outside #root, where
   // --app-nav-height is defined, so 76px (the tallest navbar) is the fallback.
@@ -205,7 +207,7 @@ export default function EditProfilePopup({ token, profile, inSession, onProfileC
       onClose={onClose}
     >
       <h1 className="text-center text-xl font-semibold mb-6">{t('profile.edit')}</h1>
-      <ProfileForm token={token} profile={profile} inSession={inSession} onProfileChange={onProfileChange} />
+      <ProfileForm token={token} profile={profile} inSession={inSession} onProfileChange={onProfileChange} onTokenChange={onTokenChange} />
       <div className="my-6 h-px bg-current/20" />
       <DeleteSection token={token} profile={profile} inSession={inSession} onAccountDeleted={onAccountDeleted} />
     </Modal>,

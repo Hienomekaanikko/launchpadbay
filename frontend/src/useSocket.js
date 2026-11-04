@@ -26,7 +26,8 @@ export default function useSocket(token) {
     if (!token) return
 
     const protocol = location.protocol === 'https:' ? 'wss' : 'ws'
-    const url = `${protocol}://${location.host}/api/ws?token=${encodeURIComponent(token)}&tabId=${encodeURIComponent(getOrCreateTabId())}`
+    // no token in the URL (it would end up in server logs): it's sent as the first message
+    const url = `${protocol}://${location.host}/api/ws`
     let ws = null
     let retryTimer = null
     let attempts = 0
@@ -36,7 +37,9 @@ export default function useSocket(token) {
       clearTimeout(retryTimer)
       retryTimer = null
       const current = new WebSocket(url)
+      // added before any hook gets the socket, so the auth is always the first message
       current.addEventListener('open', () => {
+        current.send(JSON.stringify({ type: 'auth', token, tabId: getOrCreateTabId() }))
         attempts = 0
         setReconnecting(false)
       })
