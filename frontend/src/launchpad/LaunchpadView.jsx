@@ -17,6 +17,11 @@ export default function LaunchpadView({ socket, activeSession, token }) {
   const [engine, setEngine] = useState(null)
   const needsClick = useLaunchpadSync(engine, socket, activeSession)
 
+  // out of a session (left it, or it ended): uploaded samples go back to the theme's.
+  // Also runs once when the engine first appears, with nothing to reset
+  useEffect(() => {
+    if (engine && !activeSession) engine.resetPadSamples()
+  }, [engine, activeSession])
 
   useEffect(() => {
     let cancelled = false

@@ -30,7 +30,8 @@ export default function PadSampleUpload({ token, engine }) {
     setUploading(true)
     try {
       const { url } = await uploadPadSample(token, pad, file)
-      engine.applyAction({ type: 'PAD_SAMPLE', pad, url })
+      // the backend echoes it to both players, us included, so each reloads the pad once
+      engine.dispatch({ type: 'PAD_SAMPLE', pad, url })
     } catch (err) {
       setError(err)
     } finally {

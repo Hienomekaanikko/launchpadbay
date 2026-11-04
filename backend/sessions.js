@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import { send, sendToUser, broadcastEvent } from './ws.js'
+import { removeSessionSamples } from './padSamples.js'
 
 // registry of live sessions, where:
 // key = 'sessionId',
@@ -201,6 +202,9 @@ function leaveSession(userId) {
             })
         }
         sessionRegistry.delete(session.id)
+        // uploaded pad samples go with the session; a failed delete only costs disk
+        // until the next boot, when docker-entrypoint.sh wipes the whole directory
+        removeSessionSamples(session.id).catch(() => {})
         return { status: 'closed', sessionId: session.id }
     }
 

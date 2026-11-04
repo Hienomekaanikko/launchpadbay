@@ -1,6 +1,7 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { closeSync, openSync, readSync } from 'node:fs'
+import { rm } from 'node:fs/promises'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -16,6 +17,11 @@ export const isValidPad = (pad) => Number.isInteger(pad) && pad >= 1 && pad <= P
 
 export const sessionSoundUrl = (sessionId, filename) =>
 	`/api/uploads/sounds/session/${sessionId}/${filename}`
+
+// Called when a session closes. A session that never uploaded has no directory;
+// force: true makes that a no-op instead of an error
+export const removeSessionSamples = (sessionId) =>
+	rm(path.join(SESSION_SOUNDS_DIR, sessionId), { recursive: true, force: true })
 
 // A WAV file starts with "RIFF", 4 bytes of size, then "WAVE". Used on an
 // upload before anything touches disk
