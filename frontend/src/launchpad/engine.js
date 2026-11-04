@@ -431,7 +431,20 @@ export function mountLaunchpad(container, themes) {
       if (typeof url !== 'string' || !url.startsWith(SESSION_SAMPLE_URL_PREFIX))
         return Promise.resolve()
       padOverrides[pad] = url
-      return replacePadSample(pad, url)
+      return replacePadSample(pad, url).then(() => flashPad(pad))
+    }
+
+    // One-shot highlight once a new sample is in, so both players see which pad
+    // changed. Pure CSS animation; the class comes off when it ends
+    function flashPad(pad) {
+      const el = padEl(pad)
+      if (!el || isUnmounted)
+        return
+      el.addEventListener('animationend', (e) => {
+        if (e.animationName === 'sample-flash')
+          el.classList.remove('sample-flash')
+      }, { once: true })
+      el.classList.add('sample-flash')
     }
 
     // The session is over: back to the theme's samples. The server deletes the

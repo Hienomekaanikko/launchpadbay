@@ -266,6 +266,17 @@ body {
   outline-offset: -3px;
 }
 
+/* A pad whose new sample just loaded (engine flashPad); same yellow as stutter */
+.lpad .btn.sample-flash a {
+  animation: sample-flash 1.2s ease-out;
+}
+
+@keyframes sample-flash {
+  from {
+    background: rgba(255, 213, 0, 0.55);
+  }
+}
+
 .transport-btn:disabled {
   opacity: 0.5;
   cursor: default;

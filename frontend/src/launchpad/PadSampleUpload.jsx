@@ -4,10 +4,11 @@ import { translateServerError } from '../i18n/serverErrors.js'
 import { uploadPadSample } from '../auth.js'
 import { checkPadSample } from '../validation.js'
 
-// In-session only. SAMPLES toggles pick mode: the next pad tapped opens the file
+// In-session only. UPLOAD toggles pick mode: the next pad tapped opens the file
 // picker instead of playing, and the chosen WAV becomes that pad's sample. The
 // engine then shows the pad's loading state while the new clip is fetched and
-// decoded. Cancelling the picker leaves pick mode on; tap SAMPLES again to leave.
+// decoded, and flashes it once it's in. Cancelling the picker leaves pick mode
+// on; tap UPLOAD again to leave.
 export default function PadSampleUpload({ token, engine }) {
   const { t } = useTranslation()
   const fileInput = useRef(null)
@@ -54,7 +55,7 @@ export default function PadSampleUpload({ token, engine }) {
 
   const label = uploading ? t('launchpad.uploading')
     : picking ? t('launchpad.pickPad')
-    : t('launchpad.samples')
+    : t('launchpad.upload')
 
   return (
     <div className="sample-upload">
