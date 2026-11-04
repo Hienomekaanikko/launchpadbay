@@ -1,6 +1,16 @@
+import { sendToUser } from './ws.js'
+
 // Friend requests and friend list routes
 export default async function friends(fastify) {
     const { prisma } = fastify
+
+    // After any successful mutation, tell both accounts to refetch their lists.
+    // This also updates the other user's open lobby/profile/friends views.
+    function notifyFriendshipChange(...ids) {
+        for (const id of new Set(ids)) {
+            sendToUser(id, { type: 'friends_changed' })
+        }
+    }
 
     // finds the friendship row between two users, whichever of them sent the request
     function findFriendship(aId, bId) {
@@ -70,6 +80,7 @@ export default async function friends(fastify) {
             if (count === 0) {
                 return reply.code(404).send({ error: 'friend_request_not_found' })
             }
+            notifyFriendshipChange(me, other.id)
             return { status: 'accepted' }
         }
 
@@ -97,8 +108,10 @@ export default async function friends(fastify) {
                     data: { status: 'accepted' }
                 })
             ])
+            notifyFriendshipChange(me, other.id)
             return { status: 'accepted' }
         }
+        notifyFriendshipChange(me, other.id)
         return { status: 'pending' }
     })
 
@@ -119,6 +132,9 @@ export default async function friends(fastify) {
                 return reply.code(404).send({ error: 'friend_request_not_found' })
             }
         }
+        if (count > 0) {
+            notifyFriendshipChange(request.user.id, other.id)
+        }
         return { status: 'accepted' }
     })
 
@@ -129,9 +145,12 @@ export default async function friends(fastify) {
         if (!other) {
             return reply.code(404).send({ error: 'user_not_found' })
         }
-        await prisma.friendships.deleteMany({
+        const { count } = await prisma.friendships.deleteMany({
             where: { requester_id: other.id, addressee_id: request.user.id, status: 'pending' }
         })
+        if (count > 0) {
+            notifyFriendshipChange(request.user.id, other.id)
+        }
         return { ok: true }
     })
 
@@ -142,7 +161,7 @@ export default async function friends(fastify) {
         if (!other) {
             return reply.code(404).send({ error: 'user_not_found' })
         }
-        await prisma.friendships.deleteMany({
+        const { count } = await prisma.friendships.deleteMany({
             where: {
                 status: 'accepted',
                 OR: [
@@ -151,6 +170,9 @@ export default async function friends(fastify) {
                 ]
             }
         })
+        if (count > 0) {
+            notifyFriendshipChange(me, other.id)
+        }
         return { ok: true }
     })
 }

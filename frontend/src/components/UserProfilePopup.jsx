@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { translateServerError } from '../i18n/serverErrors.js'
 import { fetchUser } from '../auth.js'
+import { onMessage } from '../useSocket.js'
 import Modal from './Modal.jsx'
 import CloseButton from './CloseButton.jsx'
 import FormButton from './FormButton.jsx'
@@ -25,7 +26,7 @@ function FriendAction({ user, friendStatus, onAddFriendClick, onRemoveClick }) {
 
 // Another user's public profile; online and friendStatus come from the app's live state.
 // Action callbacks get the user as { id, username }
-export default function UserProfilePopup({ token, userId, online, friendStatus, onAddFriendClick, onRemoveClick, onChatClick, onClose }) {
+export default function UserProfilePopup({ token, socket, userId, online, friendStatus, onAddFriendClick, onRemoveClick, onChatClick, onClose }) {
   const { t } = useTranslation()
   const [user, setUser] = useState(null)
   const [error, setError] = useState('')
