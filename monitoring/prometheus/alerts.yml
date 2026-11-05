@@ -1,0 +1,11 @@
+groups:
+  - name: launchpadbay
+    rules:
+      - alert: BackendMetricsUnavailable
+        expr: up{job="backend"} == 0
+        for : 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend metrics unavailable"
+          description: "Prometheus cannot scrape {{ $labels.instance }}. Diagnose the backend or networking."
