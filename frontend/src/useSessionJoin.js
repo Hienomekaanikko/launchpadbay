@@ -61,6 +61,12 @@ export default function useSessionJoin(socket) {
   }, [rejection])
 
   const requestJoin = (sessionId) => {
+    // keep the first request pending until it is accepted, rejected, or cancelled.
+    // The backend allows only one pending join request per user.
+    if (pendingSessionId) {
+      setRejection({ sessionId, reason: 'already_in_session' })
+      return
+    }
     sendMessage(socket, { type: 'join_request', sessionId })
     setPendingSessionId(sessionId)
     setRejection(null)
