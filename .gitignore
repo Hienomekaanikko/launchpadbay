@@ -42,3 +42,4 @@ backend/uploads/images/avatars/
 
 # local notes
 OAUTH_FLOW.md
+.DS_Store
