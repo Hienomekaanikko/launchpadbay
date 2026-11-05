@@ -105,8 +105,8 @@ The entries below describe implemented features. Pending validation and missing 
 | Backend theme loading | Themes, backgrounds, and sample URLs come from MySQL through `GET /api/themes`. Loading retries accommodate a slow-starting backend. The launchpad currently loads the first returned theme. | `msuokas`, `mbonsdor` |
 | Registration and password login | Register with a username, email, and password; log in with email and password. Bcrypt protects passwords, JWTs authenticate requests, and the frontend stores the session in `localStorage`. Full input validation remains an open checklist item. | `msuokas` |
 | GitHub OAuth | Authorisation redirect, state-cookie validation, code exchange, local account lookup/creation, and application JWT delivery are implemented. Successful GitHub login has been confirmed locally. | `mbonsdor` |
-| Profiles and avatars | View account information, edit email, change a password where applicable, upload an avatar or use the default image, and delete an account with confirmation. | `msuokas`, `mbonsdor` |
-| Friends | Send, accept, reject, and remove friend requests/connections; list friends and their online status. | `msuokas`; presence support by `ykadosh` |
+| Profiles and avatars | View account information, edit email, change a password where applicable, upload an avatar or use the default image, and delete an account with confirmation. | `msuokas`, `mbonsdor`, `ykadosh` |
+| Friends | Send, accept, reject, and remove friend requests/connections; list friends and their online status. | `msuokas`; presence and realtime support by `ykadosh` |
 | Live lobby | Display connected users and active sessions, with presence updates and session join requests. | `ykadosh`, `msuokas` |
 | Collaborative sessions | Host a two-user session, request/cancel a join, accept/reject a guest, leave a session, and share pad, split, and stutter actions. A joining partner requests a launchpad state snapshot. | `ykadosh`, `msuokas`; underlying audio engine by `mbonsdor` |
 | Chat | Exchange private and session messages with unread indicators and delivery-error feedback. Private messages are stored in MySQL; the frontend does not restore their history after a reload. | `ykadosh`, `msuokas` |
@@ -145,11 +145,7 @@ The team has confirmed full user flows in Chrome (latest stable), Brave, and Saf
 - [x] The database has a clear schema and well-defined relations: users, friendships, messages, themes, and theme sounds are defined in Prisma with migrations.
 - [x] Passwords are hashed and salted with bcrypt, and protected routes verify JWTs.
 - [x] Email and password authentication is available for both signup and login.
-
-- [ ] All forms and user inputs are properly validated in both the frontend and backend.
-
-> From the LLM assessment: "registration/login lack complete server-side field validation; empty JSON requests currently return HTTP 500, and login exposes Prisma error details. Session actions only receive shallow validation, and avatar uploads lack complete client-side size/format validation and server-side file-content validation."
-
+- [x] All forms and user inputs are properly validated in both the frontend and backend.
 - [x] HTTPS is used for frontend-to-backend requests and the nginx-to-backend connection; browser WebSockets use WSS in the HTTPS deployment.
 
 #### README requirements
@@ -411,9 +407,17 @@ These summaries follow the authored changes in the repository and the role assig
 
 ### ykadosh: Technical Lead / Developer
 
-- **Implemented:** JWT-guarded WebSockets, the presence registry and broadcasts, session creation and join/accept/reject/leave flows, private/session chat, the messages table and persistence, canonical username handling, ordered message processing, graceful shutdown, and reconnection/session restoration. Also contributed frontend integration and technical documentation for the real-time layer.
+- **Implemented:**
+  - **Real-time backend:** JWT-authenticated WebSockets, presence updates, session lifecycle and join requests, refresh and reconnect handling (working closely on these with `msuokas`)
+  - **Chat:** Private and session messaging, message delivery feedback, and persistent private messages (for eventual integration).
+  - **Shared sessions:** Ordered processing of incoming WebSocket messages and launchpad state synchronisation for joining players.
+  - **Account and profile improvements:** Robust backend input validation, live friendship and avatar updates, and profile editing safeguards.
+  - **Supporting work:** Graceful server shutdown, user facing messages and feedback, language translations
 - **Key areas:** `backend/ws.js`, `backend/sessions.js`, `backend/chat.js`, WebSocket handling in `backend/server.js`, message migrations, and socket/session hooks.
-- **Challenge and solution:** TODO
+- **Challenges and solutions:**
+  - **Learning full-stack web development:** This was my first web-development project, and I had to learn the stack while contributing to it. Tracing a feature across the React frontend, backend, WebSockets, infrastructure, and database was a steep learning curve after working mainly in C and C++. I made progress by studying teammates’ pull requests carefully, using documentation and tutorials, and asking questions in our open team discussions. Regular review helped me build a clearer picture of how the pieces fit together.
+  - **Reasoning about concurrent events:** With multiple clients communicating through WebSockets, it could be difficult to understand how events and state changes interacted. I worked through these cases with `msuokas`, drawing on experience from multithreaded projects and slowing down the interaction flow to reason through it step by step. The project strengthened my understanding of race conditions, and it also showed me how much more there is to learn about distributed systems.
+  - **Managing context switching:** The work often shifted between backend implementation, frontend code review, Git workflow, writing clear pull requests, and coordinating with the team. With practice, these transitions became easier to manage. I developed a better rhythm for communicating progress, keeping changes reviewable, and learning from teammates across different parts of the stack.
 
 ### timurray: Project Manager / Developer
 
