@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 mkdir -p uploads/images/avatars
+# Per-session pad samples never outlive a run: session ids restart from 1 on
+# boot, so leftovers from the previous run would collide with new sessions
+rm -rf uploads/sounds/session
+mkdir -p uploads/sounds/session
 # Belt-and-suspenders for the mysql healthcheck in docker-compose.yml: on a
 # slow/loaded machine (e.g. a school lab PC) MySQL can still not be fully
 # ready the instant the healthcheck flips green, or this image can be run

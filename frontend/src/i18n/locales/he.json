@@ -176,7 +176,16 @@
     "split": "פיצול ½",
     "vol": ".וול",
     "lp": "מסנן",
-    "stu": "גמגום"
+    "stu": "גמגום",
+    "upload": "העלאה",
+    "pickPad": "הקש על פד",
+    "uploading": "מעלה…",
+    "errors": {
+      "notInSession": "יש להצטרף לסשן כדי להעלות סאמפלים",
+      "invalidPad": "אין פד כזה",
+      "invalidSampleType": "רק קובצי WAV מותרים",
+      "sampleTooLarge": "הקובץ גדול מדי. הגודל המרבי הוא 10 MB."
+    }
   },
   "policies": {
     "close": "סגור",

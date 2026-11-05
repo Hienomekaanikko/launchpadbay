@@ -176,7 +176,16 @@
     "split": "PUOLITUS ½",
     "vol": "VOIMA",
     "lp": "SUODIN",
-    "stu": "ÄNKYTYS"
+    "stu": "ÄNKYTYS",
+    "upload": "Lähetä",
+    "pickPad": "Valitse padi",
+    "uploading": "Lähetetään…",
+    "errors": {
+      "notInSession": "Liity sessioon lähettääksesi ääniä",
+      "invalidPad": "Padia ei ole",
+      "invalidSampleType": "Vain WAV-tiedostot ovat sallittuja",
+      "sampleTooLarge": "Tiedosto on liian suuri. Enimmäiskoko on 10 Mt."
+    }
   },
   "policies": {
     "close": "Sulje",

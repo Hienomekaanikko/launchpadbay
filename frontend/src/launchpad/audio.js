@@ -82,6 +82,11 @@ export async function loadPadClip(pad, url) {
     padVoices[pad] = { buffer, playback: null }
 }
 
+// The pad goes silent; its loop is expected to be stopped already
+export function dropPadClip(pad) {
+    delete padVoices[pad]
+}
+
 export function clearPadVoices() {
     for (const voice of Object.values(padVoices))
       stopLoop(voice.playback)

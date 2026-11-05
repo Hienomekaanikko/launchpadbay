@@ -1,12 +1,15 @@
 import { randomUUID } from 'node:crypto'
 import { send, sendToUser, broadcastEvent } from './ws.js'
+import { removeSessionSamples } from './padSamples.js'
 
 // registry of live sessions, where:
 // key = 'sessionId',
-// value = session data, shape: { id, creatorName, hostId, players, max, pending }
+// value = session data, shape: { id, hostId, players, max, pending, overrides }
 // 'players' maps each player's userId to their username, so their name is still
 // known after their connection is gone (e.g. to announce that they left)
 // 'pending' holds: { id, name } of the requesting user, or otherwise it is null
+// 'overrides' maps pad → filename of a sample uploaded for this session
+// (padSampleRoutes.js); the files live under uploads/sounds/session/<id>/
 const sessionRegistry = new Map()
 
 // used to give each session a short, unique id
@@ -20,7 +23,8 @@ function createSession(creatorId, creatorName) {
         hostId: creatorId,
         players: new Map([[creatorId, creatorName]]),
         max: 2,
-        pending: null
+        pending: null,
+        overrides: new Map()
     }
     sessionRegistry.set(id, session)
     return session
@@ -198,6 +202,9 @@ function leaveSession(userId) {
             })
         }
         sessionRegistry.delete(session.id)
+        // uploaded pad samples go with the session; a failed delete only costs disk
+        // until the next boot, when docker-entrypoint.sh wipes the whole directory
+        removeSessionSamples(session.id).catch(() => {})
         return { status: 'closed', sessionId: session.id }
     }
 

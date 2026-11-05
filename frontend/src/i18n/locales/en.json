@@ -176,7 +176,16 @@
     "split": "SPLIT ½",
     "vol": "VOL",
     "lp": "LP",
-    "stu": "STU"
+    "stu": "STU",
+    "upload": "Upload",
+    "pickPad": "Tap a pad",
+    "uploading": "Uploading…",
+    "errors": {
+      "notInSession": "Join a session to upload samples",
+      "invalidPad": "No such pad",
+      "invalidSampleType": "Only WAV files are allowed",
+      "sampleTooLarge": "File is too large. Maximum size is 10MB."
+    }
   },
   "policies": {
     "close": "Close",

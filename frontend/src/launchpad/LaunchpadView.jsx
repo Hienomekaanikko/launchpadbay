@@ -3,12 +3,14 @@ import { useTranslation } from 'react-i18next'
 import { mountLaunchpad } from './engine.js'
 import { fetchThemes } from './themes.js'
 import useLaunchpadSync from './useLaunchpadSync.js'
+import PadSampleUpload from './PadSampleUpload.jsx'
+import { PAD_COUNT } from './pads.js'
 import launchpadCss from './launchpad.css?raw'
 import landing from '../assets/landing.jpg'
 
 const MIN_LOADING_MS = 1000
 
-export default function LaunchpadView({ socket, activeSession }) {
+export default function LaunchpadView({ socket, activeSession, token }) {
   const { t } = useTranslation()
   const containerRef = useRef(null)
   const [ready, setReady] = useState(false)
@@ -16,6 +18,11 @@ export default function LaunchpadView({ socket, activeSession }) {
   const [engine, setEngine] = useState(null)
   const needsClick = useLaunchpadSync(engine, socket, activeSession)
 
+  // out of a session (left it, or it ended): uploaded samples go back to the theme's.
+  // Also runs once when the engine first appears, with nothing to reset
+  useEffect(() => {
+    if (engine && !activeSession) engine.resetPadSamples()
+  }, [engine, activeSession])
 
   useEffect(() => {
     let cancelled = false
@@ -65,7 +72,7 @@ export default function LaunchpadView({ socket, activeSession }) {
     }
   }, [])
 
-  const pads = Array.from({ length: 25 }, (_, i) => i + 1)
+  const pads = Array.from({ length: PAD_COUNT }, (_, i) => i + 1)
 
   return (
     <div ref={containerRef} className="lpad-view" dir="ltr">
@@ -101,6 +108,7 @@ export default function LaunchpadView({ socket, activeSession }) {
             <span aria-hidden="true" className="invisible">{t('launchpad.split')}</span>
             <span className="transport-btn-label">{t('launchpad.split')}</span>
           </button>
+          {activeSession && engine && <PadSampleUpload token={token} engine={engine} />}
         </div>
 
         <div className="grid-with-knobs">

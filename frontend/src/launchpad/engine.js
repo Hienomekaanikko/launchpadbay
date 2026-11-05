@@ -2,6 +2,7 @@ import i18n from '../i18n/index.js'
 import {
     initAudio,
     loadPadClip,
+    dropPadClip,
     clearPadVoices,
     launchLoop,
     stopLoop,
@@ -40,6 +41,9 @@ import {
 import { createUiTimers } from './uiTimers.js'
 import { bindLaunchpadControls } from './bindings.js'
 
+// where backend/padSampleRoutes.js puts session uploads (see applyPadSample)
+const SESSION_SAMPLE_URL_PREFIX = '/api/uploads/sounds/session/'
+
 export function mountLaunchpad(container, themes) {
     let isUnmounted = false
     const uiTimers = createUiTimers()
@@ -52,6 +56,10 @@ export function mountLaunchpad(container, themes) {
     // In a session, user input goes to actionHandler (useLaunchpadSync) instead of
     // straight to handleUiAction; it comes back through applyAction.
     let actionHandler = null
+
+    // pad → url of a sample uploaded in this session; sent in the SYNC_STATE
+    // snapshot so a late joiner hears the same kit
+    const padOverrides = {}
 
     initAudio()
 
@@ -259,14 +267,28 @@ export function mountLaunchpad(container, themes) {
         case 'SET_FILTER':
           setChannelCutoff(action.channelId, action.value / 100)
           break
+        case 'PAD_SAMPLE':
+          applyPadSample(action.pad, action.url)
+          break
         default:
           break
       }
     }
 
+    // While set (PadSampleUpload), a pad tap picks that pad for an upload instead
+    // of playing it. Other controls are unaffected; nothing that plays stops
+    let padPickHandler = null
+
+    function setPadPickHandler(handler) {
+      padPickHandler = handler
+      container.classList.toggle('picking-sample', handler != null)
+    }
+
     // Everything bindings.js reports goes through here.
     function dispatch(action) {
-      if (actionHandler)
+      if (action.type === 'PAD_HIT' && padPickHandler)
+        padPickHandler(action.pad)
+      else if (actionHandler)
         actionHandler(action)
       else
         handleUiAction(action)
@@ -304,12 +326,13 @@ export function mountLaunchpad(container, themes) {
         const pad = ch.state === 'idle' ? null : (ch.queuedPad ?? ch.activePad)
         state.channels[channelId] = { pad, division: ch.stutter.division }
       }
+      state.overrides = { ...padOverrides }
       return state
     }
 
     // Replaces our whole launchpad state with the partner's: whatever we were
     // playing stops first, so the joiner can't keep anything the partner doesn't have.
-    function applyState(state) {
+    async function applyState(state) {
       resumeAudio()
       stopAllPlayback()
       for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++)
@@ -323,16 +346,27 @@ export function mountLaunchpad(container, themes) {
       clock.setSplit(state.split)
       updateSplitBtn(byId, state.split)
 
+      // The partner's uploaded samples have to be in before we arm anything,
+      // or we'd start the theme's clip on a pad they replaced
+      await Promise.all(
+        Object.entries(state.overrides ?? {})
+          .filter(([pad, url]) => padOverrides[pad] !== url)
+          .map(([pad, url]) => applyPadSample(Number(pad), url))
+      )
+      if (isUnmounted)
+        return
+
       if (state.loopLength == null) {
         showSyncMessage(0) // hides one left over from an earlier snapshot
         return
       }
       // Start our loop on the partner's next loop boundary, so both play in
-      // phase. Too close to the boundary to schedule in time: wait one loop more.
+      // phase. Too close to the boundary to schedule in time: wait a loop more;
+      // loading samples above may have taken longer than one.
       // (The snapshot's travel time isn't compensated; a few ms on a LAN.)
       const now = audioContext.currentTime
       let remaining = (1 - state.phase) * state.loopLength
-      if (remaining < LOOKAHEAD_SEC)
+      while (remaining < LOOKAHEAD_SEC)
         remaining += state.loopLength
       const fullLength = state.split ? state.loopLength * 2 : state.loopLength
       const when = clock.startClockAt(now + remaining, fullLength)
@@ -358,6 +392,70 @@ export function mountLaunchpad(container, themes) {
       resetTransport()
     }
 
+    // --- pad samples ---
+
+    // Fetches one pad's clip, showing its loading state meanwhile. Rejects like
+    // loadPadClip; the caller decides whether a silent pad is acceptable
+    function loadPad(pad, url) {
+      const channel = channels[channelOfPad(pad)]
+      setPadLoadingUi(channel, pad, true)
+      renderPad(padEl, getPadVisual(channel, slotOfPad(pad)))
+      return loadPadClip(pad, url).finally(() => {
+        if (isUnmounted)
+          return
+        setPadLoadingUi(channel, pad, false)
+        renderPad(padEl, getPadVisual(channel, slotOfPad(pad)))
+      })
+    }
+
+    // Swaps one pad's clip. A playing or queued pad is hit first, which stops or
+    // unqueues it; otherwise its old loop node would be left behind, still
+    // playing, with nothing pointing at it. No url (the theme has no usable
+    // sound for this pad): the pad just goes silent
+    function replacePadSample(pad, url) {
+      const channel = channels[channelOfPad(pad)]
+      if (channel.activePad === pad || channel.queuedPad === pad)
+        padHit(pad)
+      if (url == null) {
+        dropPadClip(pad)
+        return Promise.resolve()
+      }
+      // a sample that fails to load just leaves its pad silent
+      return loadPad(pad, url).catch(() => {})
+    }
+
+    // A PAD_SAMPLE action, ours or the partner's, or one pad of a snapshot. The
+    // backend relays actions without reading them, so only urls under the
+    // session upload path are accepted
+    function applyPadSample(pad, url) {
+      if (typeof url !== 'string' || !url.startsWith(SESSION_SAMPLE_URL_PREFIX))
+        return Promise.resolve()
+      padOverrides[pad] = url
+      return replacePadSample(pad, url).then(() => flashPad(pad))
+    }
+
+    // One-shot highlight once a new sample is in, so both players see which pad
+    // changed. Pure CSS animation; the class comes off when it ends
+    function flashPad(pad) {
+      const el = padEl(pad)
+      if (!el || isUnmounted)
+        return
+      el.addEventListener('animationend', (e) => {
+        if (e.animationName === 'sample-flash')
+          el.classList.remove('sample-flash')
+      }, { once: true })
+      el.classList.add('sample-flash')
+    }
+
+    // The session is over: back to the theme's samples. The server deletes the
+    // uploads with the session, so the next one always starts from the default kit
+    function resetPadSamples() {
+      const pads = Object.keys(padOverrides).map(Number)
+      for (const pad of pads)
+        delete padOverrides[pad]
+      return Promise.all(pads.map((pad) => replacePadSample(pad, themes[0].sampleUrls[pad])))
+    }
+
     // --- themes ---
 
     async function loadThemeSounds(theme) {
@@ -367,24 +465,13 @@ export function mountLaunchpad(container, themes) {
       for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++)
         applyChannelEvent(channels[channelId], { type: 'RESET' })
 
-      const samples = Object.entries(theme.sampleUrls).map(([key, url]) => ({ pad: Number(key), url }))
-      for (const { pad } of samples)
-        setPadLoadingUi(channels[channelOfPad(pad)], pad, true)
-
       for (let channelId = 1; channelId <= CHANNEL_COUNT; channelId++) {
         renderChannel(padEl, channels[channelId])
         stutter.refreshBtn(channelId)
       }
 
-      await Promise.all(samples.map(({ pad, url }) =>
-        loadPadClip(pad, url).finally(() => {
-          if (isUnmounted)
-            return
-          const channel = channels[channelOfPad(pad)]
-          setPadLoadingUi(channel, pad, false)
-          renderPad(padEl, getPadVisual(channel, slotOfPad(pad)))
-        })
-      ))
+      const samples = Object.entries(theme.sampleUrls).map(([key, url]) => ({ pad: Number(key), url }))
+      await Promise.all(samples.map(({ pad, url }) => loadPad(pad, url)))
     }
 
     // --- mount / destroy ---
@@ -424,11 +511,14 @@ export function mountLaunchpad(container, themes) {
       destroy,
       loaded, // resolves once the theme's samples are in
       setActionHandler: (handler) => { actionHandler = handler },
+      dispatch, // like a pad hit: shared with the session partner when in one
+      setPadPickHandler,
       applyAction: handleUiAction,
       getState,
       applyState,
       isAudioRunning: () => audioContext?.state === 'running',
       startAudio: resumeAudio, // only works from a click
       onAudioStateChange,
+      resetPadSamples,
     }
 }

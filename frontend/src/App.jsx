@@ -318,7 +318,7 @@ function App() {
             />}
           </div>
         )}
-        {playMode && <LaunchpadView socket={socket} activeSession={activeSession} />}
+        {playMode && <LaunchpadView socket={socket} activeSession={activeSession} token={token} />}
         {join.incomingRequest && (
           <JoinRequestPopup
             username={join.incomingRequest.from.name}

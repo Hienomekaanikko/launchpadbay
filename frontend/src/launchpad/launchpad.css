@@ -254,6 +254,48 @@ body {
   box-shadow: 0 0 12px rgba(255, 255, 255, 0.18);
 }
 
+/* Pad sample upload (in-session), sits in #transport-controls next to split */
+.sample-upload {
+  position: relative;
+  display: flex;
+}
+
+/* Pick mode: pads are targets, not triggers, until one is tapped */
+.lpad-view.picking-sample .lpad .btn a {
+  outline: 1px dashed rgba(255, 255, 255, 0.55);
+  outline-offset: -3px;
+}
+
+/* A pad whose new sample just loaded (engine flashPad); same yellow as stutter */
+.lpad .btn.sample-flash a {
+  animation: sample-flash 1.2s ease-out;
+}
+
+@keyframes sample-flash {
+  from {
+    background: rgba(255, 213, 0, 0.55);
+  }
+}
+
+.transport-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.sample-upload-error {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ff8080;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
 /* Stutter buttons */
 .stutter-btn {
   width: var(--control-size);
