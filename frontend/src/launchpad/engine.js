@@ -519,6 +519,6 @@ export function mountLaunchpad(container, themes) {
       isAudioRunning: () => audioContext?.state === 'running',
       startAudio: resumeAudio, // only works from a click
       onAudioStateChange,
-      reloadPad,
+      resetPadSamples,
     }
 }
