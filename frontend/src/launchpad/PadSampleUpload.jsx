@@ -74,8 +74,7 @@ export default function PadSampleUpload({ token, engine }) {
         onClick={() => { setError(''); setPicking((on) => !on) }}
         disabled={uploading}
       >
-        <span aria-hidden="true" className="invisible">{label}</span>
-        <span className="transport-btn-label">{label}</span>
+        {label}
       </button>
       {error && (
         <p role="alert" className="sample-upload-error">{translateServerError(t, error)}</p>
