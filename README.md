@@ -146,9 +146,6 @@ The team has confirmed full user flows in Chrome (latest stable), Brave, and Saf
 - [x] Passwords are hashed and salted with bcrypt, and protected routes verify JWTs.
 - [x] Email and password authentication is available for both signup and login.
 - [x] All forms and user inputs are properly validated in both the frontend and backend.
-
-Remaining validation work: validate session-action fields and synchronisation payloads, safely reject malformed session accept/reject requests, and validate uploaded images beyond their file signatures. Credential validation, frontend profile checks, and sanitised server errors are already implemented.
-
 - [x] HTTPS is used for frontend-to-backend requests and the nginx-to-backend connection; browser WebSockets use WSS in the HTTPS deployment.
 
 #### README requirements
