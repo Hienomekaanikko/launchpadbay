@@ -172,6 +172,7 @@
   "launchpad": {
     "loading": "Loading…",
     "syncing": "Syncing with your partner… {{seconds}} s",
+    "clickToRejoin": "Click to rejoin the session",
     "split": "SPLIT ½",
     "vol": "VOL",
     "lp": "LP",

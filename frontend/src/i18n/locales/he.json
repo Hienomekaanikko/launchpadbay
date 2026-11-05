@@ -172,6 +172,7 @@
   "launchpad": {
     "loading": "טוען…",
     "syncing": "מסנכרן עם השותף… {{seconds}} שניות",
+    "clickToRejoin": "לחצו כדי לחזור לסשן",
     "split": "פיצול ½",
     "vol": ".וול",
     "lp": "מסנן",
