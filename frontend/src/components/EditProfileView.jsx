@@ -126,7 +126,7 @@ function ProfileForm({ token, profile, inSession, onProfileChange, onTokenChange
       setConfirmPassword('')
       setCurrentPassword('')
 
-      if (saved.email) {
+      if (saved.email && profile.hasPassword) {
         setSuccess({
           key: saved.username
             ? (passwordChanged ? 'profile.usernameEmailPasswordSaved' : 'profile.usernameEmailSaved')
