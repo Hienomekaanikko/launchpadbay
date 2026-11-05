@@ -14,9 +14,9 @@ Key features:
 - Themes (background image + body styling + per-pad sounds) are served from the backend/database rather than bundled into the frontend build, so new themes/sounds can be added without a frontend rebuild.
 - User accounts with registration, email/password login, profile editing, avatars, friendships, and a GitHub OAuth flow.
 - Live presence, private/session chat, and two-user collaborative launchpad sessions with join requests and shared performance controls.
-- One-command containerised setup (`make up`) covering the frontend, backend, MySQL, Prometheus, and Grafana, with automatic migrations and seed data.
+- One-command containerised setup (`make up`) covering the frontend, backend, MySQL, Prometheus, Grafana, Alertmanager, and Blackbox Exporter, with automatic migrations and seed data.
 
-The [Features](#features) section describes the current implementation. Outstanding work and verification are tracked in the [Checklist](#checklist), including the pending GitHub login demonstration, translation/RTL coverage, browser checks, and monitoring alerts.
+The [Features](#features) section describes the current implementation. Outstanding work and verification are tracked in the [Checklist](#checklist), including the pending GitHub login demonstration, translation/RTL coverage, and browser checks.
 
 ## Team Information
 
@@ -48,8 +48,8 @@ Responsibilities overlap across features. The [Individual Contributions](#indivi
 - **Real-time communication:** `@fastify/websocket` and the browser WebSocket API handle presence, chat, session membership, and shared launchpad actions. Connection tracking and reconnection handling keep these features integrated.
 - **Auth:** `bcrypt` hashes and salts passwords; `@fastify/jwt` signs and verifies application tokens. GitHub OAuth provides a second login flow that issues the same application JWT.
 - **Languages:** `i18next` and `react-i18next` centralise English, Finnish, Hebrew, and Mandarin translations and support switching the document language and direction. Complete translation/RTL validation remains pending.
-- **Containerisation:** Docker Compose runs the frontend, backend, MySQL, Prometheus, and Grafana. A `Makefile` wraps startup, certificate generation, and shutdown.
-- **Monitoring:** Prometheus collects backend process and HTTP request metrics; a provisioned Grafana dashboard displays them. Alerting remains pending.
+- **Containerisation:** Docker Compose runs the application, MySQL, and the monitoring services: Prometheus, Grafana, Alertmanager, and Blackbox Exporter. A `Makefile` wraps startup, certificate generation, and shutdown.
+- **Monitoring:** Prometheus collects backend process and HTTP request metrics and Blackbox Exporter's HTTPS database health probes. A provisioned Grafana dashboard displays metrics and health status, and Grafana lists the Prometheus-managed alert rules. Alertmanager sends failure and recovery notifications to Discord using an environment-backed Compose secret.
 
 ## Database Schema
 
@@ -114,7 +114,7 @@ The entries below describe implemented features. Pending validation and missing 
 | Shared UI and responsive layouts | Reusable Tailwind components and theme tokens, plus a navbar and layouts for desktop and smaller screens. Cross-browser and accessibility verification remain pending. | `msuokas`, `timurray` |
 | Policy pages | Open project-specific Privacy Policy and Terms of Service content from the footer. Final content review remains pending. | `timurray` |
 | Containerised deployment | Start application and monitoring services with `make up`, generate TLS certificates, apply migrations, and seed data. | `msuokas`, `timurray` |
-| Monitoring | Export process and HTTP metrics, scrape them with Prometheus, and display a provisioned Grafana dashboard. Alerting rules remain pending. | `timurray` |
+| Monitoring | Export process and HTTP metrics, probe HTTPS/database health with Blackbox Exporter, and display metrics and health status in a provisioned Grafana dashboard. Prometheus evaluates alerts; Alertmanager delivers failure and recovery notifications to Discord. | `timurray` |
 
 ## Checklist
 
@@ -124,7 +124,7 @@ The entries below describe implemented features. Pending validation and missing 
 
 - [x] The project is a web application with a frontend, backend, and database.
 - [x] Git history contains commits from all four team members, meaningful commit messages, and contributions across different parts of the project.
-- [x] Containerised deployment is available through one command: `make up` starts the frontend, backend, MySQL, Prometheus, and Grafana.
+- [x] Containerised deployment is available through one command: `make up` starts the frontend, backend, MySQL, Prometheus, Grafana, Alertmanager, and Blackbox Exporter.
 - [ ] The website is compatible with the latest stable version of Google Chrome.
 - [ ] No warnings or errors appear in the browser console.
 
@@ -346,21 +346,19 @@ Responsible teammates: mbonsdor
 
 Implementation: GitHub authorisation redirect, state-cookie validation, authorisation-code exchange, local account creation/lookup, and the same application JWT flow used by password login. See `backend/authGithub.js` and the login/callback frontend integration.
 
-#### Devops — 0/2 points; alerting pending
+#### Devops — 2/2 points; implemented and locally tested
 
-##### Major: Monitoring system with Prometheus and Grafana. — 0/2 points; alerting pending
+##### Major: Monitoring system with Prometheus and Grafana. — 2/2 points; implemented and locally tested
 
 Responsible teammates: timurray
 
 - [x] Set up Prometheus to collect metrics.
 - [x] Configure exporters and integrations.
 - [x] Create custom Grafana dashboards.
-- [?] Set up alerting rules.
+- [x] Set up alerting rules.
 - [x] Secure access to Grafana.
 
-Implementation: backend process and HTTP metrics, HTTPS scraping, provisioned dashboards/datasource, and Grafana login with its password supplied through `.env`, disabled signup, and a host port bound to localhost.
-
-> Add alerting rules and, if useful, example Prometheus queries.
+Implementation: Prometheus collects backend process and HTTP metrics over HTTPS. Blackbox Exporter probes the HTTPS database health endpoint. Prometheus evaluates backend availability and health-check alerts; Grafana displays the metrics and alert states. Alertmanager sends failure and recovery notifications to Discord, using a webhook supplied through a Compose secret. Backend and database outage/recovery tests have been verified locally. Grafana uses administrator authentication, disabled signup, and a localhost-only host port.
 
 #### Modules of choice — 0/2 points; custom-module acceptance pending
 
@@ -397,9 +395,9 @@ See [launchpad notes](frontend/src/launchpad/launchpad_notes.md) for architectur
 | Web | 9 | 9 | 12 |
 | Accessibility and Internationalization | 2 | 3 | 3 |
 | User Management | 2 | 3 | 3 |
-| DevOps | 0 | 2 | 2 |
+| DevOps | 2 | 2 | 2 |
 | Modules of choice | 0 | 2 | 2 |
-| **Total** | **13** | **19** | **22** |
+| **Total** | **15** | **19** | **22** |
 
 ## Individual Contributions
 
@@ -425,7 +423,7 @@ These summaries follow the authored changes in the repository and the role assig
 
 ### timurray: Project Manager / Developer
 
-- **Implemented:** HTTPS certificates and proxy configuration; environment-file setup and credential/port hardening; backend metrics and Prometheus/Grafana services, provisioning, and dashboards; the CI workflow for frontend lint/build and backend dependency installation; responsive layouts and the navbar; and Privacy Policy/Terms of Service pages.
+- **Implemented:** HTTPS certificates and proxy configuration; environment-file setup and credential/port hardening; backend metrics, Prometheus/Grafana provisioning and dashboards, Blackbox Exporter health probes, and Alertmanager failure/recovery notifications to Discord; the CI workflow for frontend lint/build and backend dependency installation; responsive layouts and the navbar; and Privacy Policy/Terms of Service pages.
 - **Key areas:** `Makefile`, `docker-compose.yml`, `backend/metrics.js`, `monitoring/`, `.github/workflows/basic.yml`, nginx/Vite configuration, `AppNavbar.jsx`, responsive styles, and policy components/content.
 - **Challenge and solution:** HTTPS needed consistent trust and hostnames across the browser, nginx, backend, and monitoring scraper. Generated certificates, mounted CA files, and proxy/scraper configuration connect these components. Responsive layout work accommodates the pad grid, controls, navbar, and overlays on smaller screens.
 
@@ -435,8 +433,9 @@ These summaries follow the authored changes in the repository and the role assig
 
 - Docker with Docker Compose v2 or later, running before setup (Docker Desktop on macOS, or Docker Engine with the Compose plugin on Linux).
 - A macOS or Linux shell with `make` and `curl`. On Windows, run the Makefile from a Linux environment such as WSL with Docker integration enabled.
-- Internet access for the initial image/dependency downloads, mkcert, and GitHub OAuth.
+- Internet access for the initial image/dependency downloads, mkcert, GitHub OAuth, and Discord alert notifications.
 - A GitHub OAuth App's client ID and secret for the configured login flow; setup is described below.
+- A Discord channel webhook URL for monitoring notifications. Create one through Discord's Server Settings → Integrations → Webhooks and select the destination channel.
 - For development commands on the host: Node.js 22.12 or later within the Node.js 22 release line, with npm. The container images and CI use Node.js 22; the locked Vite and Prisma versions require at least 22.12 on that release line. A host Node.js installation is not required for the container-only run.
 
 ### Configure the environment
@@ -461,6 +460,7 @@ If that file already contains a working configuration, edit the existing file in
 | `GITHUB_CALLBACK_URL` | `https://localhost:8443/api/auth/github/callback` for the local setup. |
 | `FRONTEND_URL` | `https://localhost:8443` for the local setup. |
 | `GRAFANA_ADMIN_USER`, `GRAFANA_ADMIN_PASSWORD` | The monitoring dashboard's administrator login. |
+| `DISCORD_WEBHOOK_URL` | Discord channel webhook URL for alert notifications. Compose exposes this value to Alertmanager as `/run/secrets/discord_webhook_url`. Keep the real URL in the ignored environment files; `.env.example` contains an empty placeholder. |
 
 The backend requires the GitHub OAuth variables at startup, including when you intend to use password login. Example placeholders are not working OAuth credentials.
 
@@ -471,7 +471,7 @@ cp .env.example .env
 chmod 600 .env
 ```
 
-`make` preserves an existing project `.env`. If it is absent, `make` copies `$HOME/.env.launchpadbay` to `.env` with owner-only permissions. Later edits to the home-directory file are not automatically copied over an existing `.env`; update the project file as well when changing configuration. Environment files are ignored by Git.
+`make` preserves an existing project `.env`. If it is absent, `make` copies `$HOME/.env.launchpadbay` to `.env` with owner-only permissions. Later edits to the home-directory file are not automatically copied over an existing `.env`; update the project file as well when changing configuration, or run `make -B .env` to replace it with the home-directory copy. Environment files are ignored by Git.
 
 ### Configure GitHub OAuth
 
@@ -516,11 +516,11 @@ Open **https://localhost:8443** after trusting the CA. Startup also prints the l
 |---|---|
 | `make` or `make up` | Build (if needed) and start application and monitoring services in the background |
 | `make dev` | Build (if needed), start services, install frontend dependencies, and run Vite for live reload during development |
-| `make down` | Stop and remove containers, preserving the MySQL, Prometheus, and Grafana volumes and uploaded avatar files |
+| `make down` | Stop and remove containers, preserving the MySQL, Prometheus, Grafana, and Alertmanager volumes and uploaded avatar files |
 | `make re` | `down` then `up` |
-| `make fclean` | Stop/remove containers, delete the MySQL/Prometheus/Grafana volumes and service images, remove `certs/`, and delete uploaded avatar files in `backend/uploads/images/avatars/` |
+| `make fclean` | Stop/remove containers, delete the MySQL/Prometheus/Grafana/Alertmanager volumes and service images, remove `certs/`, and delete uploaded avatar files in `backend/uploads/images/avatars/` |
 
-- `docker compose logs -f backend` (or `frontend`, `mysql`, `prometheus`, `grafana`) — tail logs
+- `docker compose logs -f backend` (or `frontend`, `mysql`, `prometheus`, `grafana`, `alertmanager`, `blackbox`) — tail logs
 - `docker compose ps` — see what's running
 
 ### Architecture
@@ -528,24 +528,75 @@ Open **https://localhost:8443** after trusting the CA. Startup also prints the l
 - **`frontend/`** — Vite/React SPA. Built and served by nginx in production (`frontend/Dockerfile`, `frontend/nginx.conf`), which also proxies `/api/*` to the backend — one origin, no CORS.
 - **`backend/`** — Fastify + Prisma. `server.js` is the entry point; authentication, profiles, friendships, chat, and sessions are split into feature-specific files. Sound/theme files live in the bind-mounted `backend/uploads/` directory and are served through `@fastify/static`. Real-time events use `@fastify/websocket`.
 - **`mysql`** — MySQL 8, data in the `mysql_data` volume.
-- **`prometheus`** — Scrapes backend metrics over HTTPS using `certs/ca.pem`. Stores metric history in `prometheus_data`.
+- **`prometheus`** — Scrapes backend metrics over HTTPS using `certs/ca.pem`, collects Blackbox probe results, and evaluates alert rules. Stores metric history in `prometheus_data`.
 - **`grafana`** — Queries Prometheus and loads its connection and dashboard from `monitoring/grafana/`. Stores accounts and local settings in `grafana_data`.
+- **`blackbox`** — Probes `https://backend:3000/health/db` when requested by Prometheus, verifying the backend certificate and requiring HTTP 200. That endpoint runs a database query. The exporter listens on port `9115` inside the Compose network.
+- **`alertmanager`** — Receives alerts from Prometheus and groups/routes failure and recovery notifications to Discord. Reads the webhook from the `discord_webhook_url` Compose secret and stores notification state and silences in `alertmanager_data`.
 
-Ports: frontend HTTPS `8443`, MySQL `3307`, Grafana `3001`, and Prometheus `9090` on host (avoids clashing with a native MySQL install; containers reach it at `mysql:3306`).
-Grafana and Prometheus are bound to `127.0.0.1`.
+Ports: frontend HTTPS `8443`, MySQL `3307`, Grafana `3001`, Prometheus `9090`, and Alertmanager `9093` on host (avoids clashing with a native MySQL install; containers reach it at `mysql:3306`).
+Grafana, Prometheus, and Alertmanager are bound to `127.0.0.1`. Blackbox Exporter has no published host port.
 
 ### Monitoring
 
-Start monitoring with the application using `make up`.
+Set `DISCORD_WEBHOOK_URL` in the environment configuration, then start monitoring with the application using `make up`. The webhook value is passed through a Compose secret; the Alertmanager configuration contains the secret's file path.
 
 | Interface | URL |
 |---|---|
 | Grafana | http://localhost:3001 |
 | Prometheus queries | http://localhost:9090/query |
 | Prometheus targets | http://localhost:9090/targets |
+| Prometheus alert rules | http://localhost:9090/alerts |
+| Alertmanager | http://localhost:9093 |
 
-To keep Grafana dashboard edits in Git, save the dashboard and export it as Resource JSON with instance sharing disabled. Save it as `monitoring/grafana/dashboards/launchpadbay.json` replacing the existing file. Commit the file.
-Saving in Grafana alone does not update the repository but will update local setup unless setup is completely reset with `make fclean`.
+The backend exposes Node.js process metrics and HTTP request counters/histograms through `/metrics`. Prometheus scrapes those metrics and requests a Blackbox HTTP probe every 15 seconds. Blackbox uses the `http_backend` module to check the HTTPS `/health/db` endpoint with a five-second timeout, the project's trusted CA, and an expected HTTP 200 response.
+
+Useful Prometheus queries:
+
+| Query | Meaning |
+|---|---|
+| `up{job="backend"}` | Whether Prometheus can scrape backend metrics: `1` means successful, `0` means failed. |
+| `up{job="backend_health"}` | Whether Prometheus successfully receives a probe response from Blackbox Exporter. |
+| `probe_success{job="backend_health"}` | Whether the actual HTTPS/database health check succeeds: `1` means successful, `0` means failed. |
+
+A successful scrape of the exporter and a successful probe are separate results. For example, during a database outage, backend metrics and the exporter can remain reachable while `probe_success` becomes `0`.
+
+Alert rules live in `monitoring/prometheus/alerts.yml` and are evaluated every 15 seconds:
+
+| Alert | Condition | Pending period |
+|---|---|---|
+| `BackendMetricsUnavailable` | `up{job="backend"} == 0` | 15 seconds |
+| `BackendHealthCheckFailed` | `probe_success{job="backend_health"} == 0` | 15 seconds |
+
+Grafana displays these as read-only, data source-managed rules under Alerting → Alert rules. Prometheus forwards firing alerts to Alertmanager. The Discord receiver waits 10 seconds before its first notification, processes grouped updates every 30 seconds, repeats unresolved notifications hourly, and sends recovery notifications. These timings are in `monitoring/alertmanager/alertmanager.yml`; notification delivery also includes scrape and rule-evaluation delays.
+
+Validate configuration without sending a notification:
+
+```bash
+docker compose config --quiet
+docker compose run --rm --no-deps --entrypoint promtool prometheus check config /etc/prometheus/prometheus.yml
+docker compose run --rm --no-deps --entrypoint amtool alertmanager check-config /etc/alertmanager/alertmanager.yml
+```
+
+After changing Prometheus configuration or rules, reload the running process with:
+
+```bash
+docker compose kill -s SIGHUP prometheus
+```
+
+`SIGHUP` reloads the configuration while Prometheus keeps running. Use the same signal with `alertmanager` after changing its routing configuration.
+
+Failure and recovery checks have been verified locally. To repeat them, keep Prometheus, Blackbox Exporter, and Alertmanager running, test one outage at a time, and restore each service after the test:
+
+| Test | Stop command | Expected result | Restore command |
+|---|---|---|---|
+| Backend outage | `docker compose stop backend` | Backend metrics become unreachable and the health probe fails; both alert rules fire. | `docker compose start backend` |
+| Database outage | `docker compose stop mysql` | Backend metrics and the exporter remain reachable, but the health probe fails; only `BackendHealthCheckFailed` fires. | `docker compose start mysql` |
+
+For each test, confirm pending → firing in Prometheus/Grafana and a failure message in Discord. After restoration, wait for MySQL/backend readiness and successful probes, then confirm the rules return to inactive and a recovery message arrives in Discord. `docker compose ps` shows container state and MySQL health. If Prometheus is restarted during a firing alert, Alertmanager can retain the previous alert until its last advertised expiry rather than receiving an immediate recovery update.
+
+The provisioned dashboard includes backend availability, memory, CPU, request rate, response-time and error panels, plus an Instant Stat panel for `probe_success{job="backend_health"}`. The health panel maps `1` to green “Nominal” and `0` to red “Helsinki, we have a problem”.
+
+To keep Grafana dashboard edits in Git, save the dashboard and choose Export → Export as code. Select V2 Resource and JSON, with instance sharing disabled. Save it as `monitoring/grafana/dashboards/launchpadbay.json`, replacing the existing file, and commit it. Saving in Grafana alone updates the local Grafana database; the exported file makes the changes reproducible after a fresh installation. Personal home-dashboard preferences are stored separately in `grafana_data` and are not included in the dashboard export.
 
 ### Auth
 
