@@ -3,7 +3,7 @@ import { collectDefaultMetrics, Counter, Histogram, Registry } from "@prometheus
 export function registerMetrics(fastify) {
     const registry = new Registry()
 
-    collectDefaultMetrics({ register: registry}) //REMOVE: collects Node.js metrics like memory, CPU, etc.
+    collectDefaultMetrics({ register: registry}) 
 
     const requests = new Counter({
         name: 'http_requests_total',
@@ -23,7 +23,7 @@ export function registerMetrics(fastify) {
     fastify.addHook('onResponse', async (request, reply) => {
         const route = request.routeOptions.url
 
-        if (route === '/metrics') return //REMOVE: If there are other endpoints to ignore we can add here.
+        if (route === '/metrics') return
 
         const labels = {
             method: request.method,
@@ -36,6 +36,6 @@ export function registerMetrics(fastify) {
     })
 
     fastify.get('/metrics', async (_request, reply) => {
-        return reply.type(registry.contentType).send(await registry.metrics()) //REMOVE: returns metrics for Prometheus to read.
+        return reply.type(registry.contentType).send(await registry.metrics())
     })
 }

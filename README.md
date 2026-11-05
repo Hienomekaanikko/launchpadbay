@@ -131,9 +131,6 @@ The entries below describe implemented features. Pending validation and missing 
 The team has confirmed full user flows in Chrome (latest stable), Brave, and Safari, with a clean application console during normal use. Intentional authentication failures, such as a wrong password or an unknown email address, return HTTP 401 with `invalid_credentials` and display a translated validation message. DevTools can show these rejected requests as errors; they are expected, handled authentication responses.
 
 - [x] Privacy Policy and Terms of Service are accessible from footer controls and contain project-specific information rather than empty placeholder pages.
-
-> Policy docs need to be extended with final specs.
-
 - [x] Multiple users can be logged in and active at the same time.
 - [x] Real-time updates are reflected across connected users where applicable.
 - [x] Concurrent actions by different users have been verified to work without conflicts or performance issues.
