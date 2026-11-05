@@ -62,6 +62,7 @@
   "lobby": {
     "sections": "Lobby sections",
     "pendingRequests": "Friend requests: {{count}}",
+    "unreadSessionMessages": "Unread session messages",
     "online": "Online",
     "sessions": "Sessions",
     "sessionChat": "Session-chat",

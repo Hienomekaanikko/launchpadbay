@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import GlassPanel from './GlassPanel.jsx'
 import MessageBubble from './MessageBubble.jsx'
@@ -6,11 +6,12 @@ import MessageComposer from './MessageComposer.jsx'
 import UserRow from './UserRow.jsx'
 import FriendRequestRow from './FriendRequestRow.jsx'
 import SessionRow from './SessionRow.jsx'
+import NotificationDot from './NotificationDot.jsx'
 import useStickToBottom from '../useStickToBottom.js'
 
 function LobbyTab({ selected, children, onClick }) {
   return (
-    <button type="button" aria-pressed={selected} onClick={onClick} className={`flex min-h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg px-2 text-xs font-medium transition-colors sm:text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${selected ? 'bg-white/15 text-white shadow-sm' : 'text-white/65 hover:bg-white/5 hover:text-white'}`}>
+    <button type="button" aria-pressed={selected} onClick={onClick} className={`relative flex min-h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg px-2 text-xs font-medium transition-colors sm:text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${selected ? 'bg-white/15 text-white shadow-sm' : 'text-white/65 hover:bg-white/5 hover:text-white'}`}>
       {children}
     </button>
   )
@@ -104,16 +105,26 @@ function SessionChat({ messages, onSendMessage }) {
   )
 }
 
-export default function LobbyView({ online, unread, canAddFriend, onAddFriendClick, activeSession, sessions, onJoinClick, onCancelClick, onProfileClick, onChatClick, sessionMessages, onSendSessionMessage, friends, incoming, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen }) {
+export default function LobbyView({ online, unread, canAddFriend, onAddFriendClick, activeSession, sessions, onJoinClick, onCancelClick, onProfileClick, onChatClick, sessionMessages, sessionUnread, onSessionRead, onSendSessionMessage, friends, incoming, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen }) {
   const { t } = useTranslation()
   const [tab, setTab] = useState('online')
   const currentSession = sessions.find((session) => session.id === activeSession)
+
+  useEffect(() => {
+    if (tab === 'sessions' && activeSession) onSessionRead()
+  }, [tab, activeSession, onSessionRead])
 
   return (
     <GlassPanel className="flex min-h-0 flex-col overflow-hidden bg-surface/30 p-5 text-white">
       <div role="group" aria-label={t('lobby.sections')} className="mb-5 flex shrink-0 gap-1 rounded-xl bg-black/15 p-1">
         <LobbyTab selected={tab === 'online'} onClick={() => setTab('online')}>{t('lobby.online')}</LobbyTab>
-        <LobbyTab selected={tab === 'sessions'} onClick={() => setTab('sessions')}>{t('lobby.sessions')}</LobbyTab>
+        <LobbyTab selected={tab === 'sessions'} onClick={() => setTab('sessions')}>
+          {t('lobby.sessions')}
+          {sessionUnread && tab !== 'sessions' && <>
+            <NotificationDot className="top-1.5 end-2.5" />
+            <span className="sr-only">{t('lobby.unreadSessionMessages')}</span>
+          </>}
+        </LobbyTab>
         <LobbyTab selected={tab === 'friends'} onClick={() => {
           if (tab !== 'friends') onFriendsOpen()
           setTab('friends')

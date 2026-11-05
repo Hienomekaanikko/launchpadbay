@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import Icon from './Icon.jsx'
+import NotificationDot from './NotificationDot.jsx'
 
 function RowIconButton({ icon, label, onClick, dot = false }) {
   return (
@@ -11,7 +12,7 @@ function RowIconButton({ icon, label, onClick, dot = false }) {
     >
       <span className="relative inline-flex size-4 shrink-0">
         <Icon name={icon} className="size-4" />
-        {dot && <span className="absolute -top-1.5 -end-1.5 size-2 rounded-full bg-brand" aria-hidden="true" />}
+        {dot && <NotificationDot className="-top-1.5 -end-1.5" />}
       </span>
     </button>
   )

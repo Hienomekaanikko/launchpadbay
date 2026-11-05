@@ -62,6 +62,7 @@
   "lobby": {
     "sections": "אזורי הלובי",
     "pendingRequests": "בקשות חברות: {{count}}",
+    "unreadSessionMessages": "הודעות סשן שלא נקראו",
     "online": "מחוברים",
     "sessions": "סשנים",
     "sessionChat": "צ'אט סשן",

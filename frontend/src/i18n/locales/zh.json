@@ -62,6 +62,7 @@
   "lobby": {
     "sections": "大厅栏目",
     "pendingRequests": "好友请求：{{count}}",
+    "unreadSessionMessages": "未读会话消息",
     "online": "在线",
     "sessions": "会话",
     "sessionChat": "会话聊天",

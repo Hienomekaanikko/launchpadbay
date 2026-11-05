@@ -256,7 +256,7 @@ function App() {
         playMode={playMode}
         loggedIn={loggedIn}
         username={username}
-        hasUnread={chat.unread.length > 0}
+        hasUnread={chat.unread.length > 0 || chat.sessionUnread}
         lobbyOpen={lobbyMode}
         profileOpen={profileMode}
         editingProfile={Boolean(editingProfile)}
@@ -308,6 +308,8 @@ function App() {
               onProfileClick={handleProfileClick}
               onChatClick={chat.openChat}
               sessionMessages={chat.sessionMessages}
+              sessionUnread={chat.sessionUnread}
+              onSessionRead={chat.markSessionRead}
               onSendSessionMessage={chat.sendSession}
               friends={friendsWithStatus}
               incoming={friendsState.incoming}

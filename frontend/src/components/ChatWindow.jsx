@@ -5,6 +5,7 @@ import Icon from './Icon.jsx'
 import MessageBubble from './MessageBubble.jsx'
 import MessageComposer from './MessageComposer.jsx'
 import UserProfileDetails from './UserProfileDetails.jsx'
+import NotificationDot from './NotificationDot.jsx'
 import useStickToBottom from '../useStickToBottom.js'
 
 const ERROR_KEYS = {
@@ -39,7 +40,7 @@ export default function ChatWindow({ token, socket, recipient, recipientOnline, 
       <header className="flex shrink-0 items-center gap-3 border-b border-white/10 px-5 py-4">
         <button type="button" onClick={() => onChatClick(recipient)} aria-label={t(unread ? 'friends.chatWithUnread' : 'friends.chatWith', { username: recipient.username })} aria-pressed={!viewingProfile} className={`relative flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-2xl ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${viewingProfile ? 'bg-black/15' : 'bg-white/15'}`}>
           <Icon name="chat" className="size-5 text-white/80" />
-          {unread && <span aria-hidden="true" className="absolute top-1.5 end-1.5 size-2 rounded-full bg-brand" />}
+          {unread && <NotificationDot className="top-1.5 end-1.5" />}
         </button>
         <div className="min-w-0 flex-1">
           <h2 id={headingId} className="text-base font-semibold">

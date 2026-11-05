@@ -62,6 +62,7 @@
   "lobby": {
     "sections": "Aulan osiot",
     "pendingRequests": "Kaveripyyntöjä: {{count}}",
+    "unreadSessionMessages": "Lukemattomia istuntoviestejä",
     "online": "Paikalla",
     "sessions": "Sessiot",
     "sessionChat": "Sessiokeskustelu",
