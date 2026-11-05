@@ -163,7 +163,7 @@ The team has confirmed full user flows in Chrome (latest stable), Brave, and Saf
 
 - [x] Modules lists the achieved modules, requirements, implementation evidence, justifications, and point calculation in this checklist.
 - [x] Each selected module has its contributing team member(s) clearly identified.
-- [ ] Individual Contributions gives every member's specific work and the challenges they faced and overcame.
+- [x] Individual Contributions gives every member's specific work and the challenges they faced and overcame.
 
 
 ### Modules
