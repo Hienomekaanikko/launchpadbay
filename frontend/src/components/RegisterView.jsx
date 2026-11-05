@@ -82,11 +82,11 @@ export default function RegisterView({ setRegisterView, setShowLogin }) {
         <div className="flex flex-col gap-4">
           <div>
             <label htmlFor="register-username" className={labelClass}>{t('register.username')}</label>
-            <Input id="register-username" className={fieldClass} type="text" placeholder="username" maxLength={USERNAME_MAX_LENGTH} value={username} onChange={(e) => setUsername(e.target.value)} />
+            <Input id="register-username" className={fieldClass} type="text" placeholder={t('register.username')} maxLength={USERNAME_MAX_LENGTH} value={username} onChange={(e) => setUsername(e.target.value)} />
           </div>
           <div>
             <label htmlFor="register-email" className={labelClass}>{t('register.email')}</label>
-            <Input id="register-email" className={fieldClass} type="email" placeholder="name@launchpad.bay" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input id="register-email" className={fieldClass} type="email" placeholder={t('register.email')} value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
             <label htmlFor="register-password" className={labelClass}>{t('register.password')}</label>

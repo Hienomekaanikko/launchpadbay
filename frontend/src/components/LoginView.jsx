@@ -52,7 +52,7 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
         <div className="flex flex-col gap-4">
           <div>
             <label htmlFor="login-email" className={labelClass}>{t('login.email')}</label>
-            <Input id="login-email" className={fieldClass} type="email" placeholder="name@launchpad.bay" value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input id="login-email" className={fieldClass} type="email" placeholder={t('login.email')} value={email} onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
             <label htmlFor="login-password" className={labelClass}>{t('login.password')}</label>
