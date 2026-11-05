@@ -2,7 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { translateServerError } from '../i18n/serverErrors.js'
 import { updateProfile, deleteAccount } from '../auth.js'
-import { USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH } from '../validation.js'
+import {
+  checkUsername, checkEmail, checkNewPassword,
+  USERNAME_MIN_LENGTH, USERNAME_MAX_LENGTH, PASSWORD_MAX_BYTES
+} from '../validation.js'
 import GlassPanel from './GlassPanel.jsx'
 import Input from './Input.jsx'
 import AvatarUploadPopup from './AvatarUploadPopup.jsx'
@@ -16,6 +19,9 @@ const disabledButtonClass = 'disabled:opacity-50 disabled:cursor-default disable
 const buttonClass = 'flex min-h-12 w-full cursor-pointer items-center justify-center rounded-xl px-4 py-3 text-sm font-medium normal-case text-white/90 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand'
 const actionButtonClass = `${buttonClass} bg-black/15 hover:bg-black/25`
 const deleteButtonClass = `${buttonClass} bg-error/60 hover:bg-error/70`
+
+const normalizeInput = (value) => value.trim().normalize('NFC')
+const isPasswordTooLong = (value) => new TextEncoder().encode(value).length > PASSWORD_MAX_BYTES
 
 function Field({ id, label, note, ...inputProps }) {
   return (
@@ -59,8 +65,8 @@ function ProfileForm({ token, profile, inSession, onProfileChange, onTokenChange
   const [serverError, setServerError] = useState(null)
   const [success, setSuccess] = useState(null)
 
-  const nextUsername = username.trim().normalize('NFC')
-  const nextEmail = email.trim().normalize('NFC')
+  const nextUsername = normalizeInput(username)
+  const nextEmail = normalizeInput(email)
   const usernameChanged = !inSession && Boolean(nextUsername) && nextUsername !== profile.username
   const emailChanged = Boolean(nextEmail) && nextEmail !== profile.email
   const passwordChanged = profile.hasPassword && newPassword.length > 0
@@ -79,7 +85,8 @@ function ProfileForm({ token, profile, inSession, onProfileChange, onTokenChange
     if (emailChanged) changes.email = nextEmail
     if (passwordChanged) changes.newPassword = newPassword
 
-    if (changes.email !== undefined && email !== confirmEmail) {
+    if (changes.email !== undefined
+        && normalizeInput(email) !== normalizeInput(confirmEmail)) {
       setClientError('profile.emailMismatch')
       return
     }
@@ -90,6 +97,19 @@ function ProfileForm({ token, profile, inSession, onProfileChange, onTokenChange
     const needsPassword = profile.hasPassword && (changes.email !== undefined || changes.newPassword !== undefined)
     if (needsPassword && !currentPassword) {
       setClientError('profile.currentPasswordRequired')
+      return
+    }
+
+    const ruleError = (changes.username !== undefined && checkUsername(changes.username))
+      || (changes.email !== undefined && checkEmail(changes.email))
+      || (changes.newPassword !== undefined && checkNewPassword(changes.newPassword))
+    if (ruleError) {
+      setServerError(ruleError)
+      return
+    }
+
+    if (needsPassword && isPasswordTooLong(currentPassword)) {
+      setServerError({ code: 'current_password_incorrect' })
       return
     }
     if (needsPassword) changes.currentPassword = currentPassword
@@ -105,9 +125,20 @@ function ProfileForm({ token, profile, inSession, onProfileChange, onTokenChange
       setNewPassword('')
       setConfirmPassword('')
       setCurrentPassword('')
-      if (saved.email) setSuccess({ key: 'profile.emailSaved', params: { email: saved.email } })
-      else if (passwordChanged && !saved.username) setSuccess({ key: 'profile.passwordChanged' })
-      else setSuccess({ key: 'profile.saved' })
+
+      if (saved.email) {
+        setSuccess({
+          key: saved.username
+            ? (passwordChanged ? 'profile.usernameEmailPasswordSaved' : 'profile.usernameEmailSaved')
+            : (passwordChanged ? 'profile.emailPasswordSaved' : 'profile.emailSaved'),
+          params: { email: saved.email }
+        })
+      } else if (passwordChanged) {
+        setSuccess({ key: saved.username ? 'profile.usernamePasswordChanged' : 'profile.passwordChanged' })
+      } else {
+        setSuccess({ key: 'profile.saved' })
+      }
+
     } catch (err) {
       setServerError(err)
     }
@@ -163,6 +194,14 @@ function DeleteSection({ token, profile, inSession, onAccountDeleted }) {
     setServerError(null)
     if (!value) {
       setClientError('common.fieldsRequired')
+      return
+    }
+    if (profile.hasPassword && isPasswordTooLong(value)) {
+      setServerError({ code: 'password_incorrect' })
+      return
+    }
+    if (!profile.hasPassword && normalizeInput(value) !== profile.username) {
+      setServerError({ code: 'username_mismatch' })
       return
     }
     try {
