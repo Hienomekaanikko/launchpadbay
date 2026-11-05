@@ -59,6 +59,20 @@ services:
     depends_on:
       - backend
 
+  alertmanager:
+    image: prom/alertmanager:v0.34.2
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    ports:
+      - "127.0.0.1:9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    secrets:
+      - discord_webhook_url
+
   grafana:
     image: grafana/grafana:13.2.2
     restart: unless-stopped
@@ -79,3 +93,8 @@ volumes:
   mysql_data:
   prometheus_data:
   grafana_data:
+  alertmanager_data:
+
+secrets:
+  discord_webhook_url:
+    environment: DISCORD_WEBHOOK_URL

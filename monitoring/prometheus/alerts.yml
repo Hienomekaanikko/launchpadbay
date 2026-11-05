@@ -3,7 +3,7 @@ groups:
     rules:
       - alert: BackendMetricsUnavailable
         expr: up{job="backend"} == 0
-        for : 1m
+        for : 15s
         labels:
           severity: critical
         annotations:
