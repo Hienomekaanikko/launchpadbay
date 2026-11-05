@@ -16,7 +16,7 @@ Key features:
 - Live presence, private/session chat, and two-user collaborative launchpad sessions with join requests and shared performance controls.
 - One-command containerised setup (`make up`) covering the frontend, backend, MySQL, Prometheus, Grafana, Alertmanager, and Blackbox Exporter, with automatic migrations and seed data.
 
-The [Features](#features) section describes the current implementation. Outstanding work and verification are tracked in the [Checklist](#checklist), including the pending GitHub login demonstration, translation/RTL coverage, and browser checks.
+The [Features](#features) section describes the current implementation. Outstanding work and verification are tracked in the [Checklist](#checklist), including the pending GitHub login demonstration and device-responsiveness review.
 
 ## Team Information
 
@@ -47,7 +47,7 @@ Responsibilities overlap across features. The [Individual Contributions](#indivi
 - **Audio:** The Web Audio API provides decoded sample buffers, scheduled looping sources, gain controls, and low-pass filters. The custom engine separates playback, musical timing, channel state, and effects so controls can share a common timing model.
 - **Real-time communication:** `@fastify/websocket` and the browser WebSocket API handle presence, chat, session membership, and shared launchpad actions. Connection tracking and reconnection handling keep these features integrated.
 - **Auth:** `bcrypt` hashes and salts passwords; `@fastify/jwt` signs and verifies application tokens. GitHub OAuth provides a second login flow that issues the same application JWT.
-- **Languages:** `i18next` and `react-i18next` centralise English, Finnish, Hebrew, and Mandarin translations and support switching the document language and direction. Complete translation/RTL validation remains pending.
+- **Languages:** `i18next` and `react-i18next` centralise English, Finnish, Hebrew, and Mandarin translations and support switching the document language and direction. Translation coverage, language switching, and the Hebrew RTL layout have been verified locally.
 - **Containerisation:** Docker Compose runs the application, MySQL, and the monitoring services: Prometheus, Grafana, Alertmanager, and Blackbox Exporter. A `Makefile` wraps startup, certificate generation, and shutdown.
 - **Monitoring:** Prometheus collects backend process and HTTP request metrics and Blackbox Exporter's HTTPS database health probes. A provisioned Grafana dashboard displays metrics and health status, and Grafana lists the Prometheus-managed alert rules. Alertmanager sends failure and recovery notifications to Discord using an environment-backed Compose secret.
 
@@ -110,8 +110,8 @@ The entries below describe implemented features. Pending validation and missing 
 | Live lobby | Display connected users and active sessions, with presence updates and session join requests. | `ykadosh`, `msuokas` |
 | Collaborative sessions | Host a two-user session, request/cancel a join, accept/reject a guest, leave a session, and share pad, split, and stutter actions. A joining partner requests a launchpad state snapshot. | `ykadosh`, `msuokas`; underlying audio engine by `mbonsdor` |
 | Chat | Exchange private and session messages with unread indicators and delivery-error feedback. Private messages are stored in MySQL; the frontend does not restore their history after a reload. | `ykadosh`, `msuokas` |
-| Languages and RTL | Switch between English, Finnish, Hebrew, and Mandarin. Hebrew changes the document direction; full translation coverage and RTL validation remain pending. | `mbonsdor` |
-| Shared UI and responsive layouts | Reusable Tailwind components and theme tokens, plus a navbar and layouts for desktop and smaller screens. Cross-browser and accessibility verification remain pending. | `msuokas`, `timurray` |
+| Languages and RTL | Switch between English, Finnish, Hebrew, and Mandarin, with stored language selection and translated UI text, placeholders, and errors. Language support, the Hebrew RTL layout, and switching between LTR and RTL have been verified locally. | `mbonsdor` |
+| Shared UI and responsive layouts | Reusable Tailwind components and theme tokens, plus a navbar and layouts for desktop and smaller screens. The team has tested the main flows in Chrome, Brave, and Safari. Accessibility and device-layout verification remain pending. | `msuokas`, `timurray` |
 | Policy pages | Open project-specific Privacy Policy and Terms of Service content from the footer. Final content review remains pending. | `timurray` |
 | Containerised deployment | Start application and monitoring services with `make up`, generate TLS certificates, apply migrations, and seed data. | `msuokas`, `timurray` |
 | Monitoring | Export process and HTTP metrics, probe HTTPS/database health with Blackbox Exporter, and display metrics and health status in a provisioned Grafana dashboard. Prometheus evaluates alerts; Alertmanager delivers failure and recovery notifications to Discord. | `timurray` |
@@ -125,10 +125,10 @@ The entries below describe implemented features. Pending validation and missing 
 - [x] The project is a web application with a frontend, backend, and database.
 - [x] Git history contains commits from all four team members, meaningful commit messages, and contributions across different parts of the project.
 - [x] Containerised deployment is available through one command: `make up` starts the frontend, backend, MySQL, Prometheus, Grafana, Alertmanager, and Blackbox Exporter.
-- [ ] The website is compatible with the latest stable version of Google Chrome.
-- [ ] No warnings or errors appear in the browser console.
+- [x] The website is compatible with the latest stable version of Google Chrome.
+- [x] Normal user flows produce no unexpected application warnings or uncaught errors in the browser console.
 
-> We need to document the browser results when ready. Check the console results.
+The team has confirmed full user flows in Chrome (latest stable), Brave, and Safari, with a clean application console during normal use. Intentional authentication failures, such as a wrong password or an unknown email address, return HTTP 401 with `invalid_credentials` and display a translated validation message. DevTools can show these rejected requests as errors; they are expected, handled authentication responses.
 
 - [x] Privacy Policy and Terms of Service are accessible from footer controls and contain project-specific information rather than empty placeholder pages.
 
@@ -176,7 +176,7 @@ The entries below describe implemented features. Pending validation and missing 
 - [ ] Each selected module has its contributing team member(s) clearly identified.
 - [x] Individual Contributions gives every member's specific work and the challenges they faced and overcame.
 
-> Pending: agree the remaining module ownership, including additional-browser checks and any optional public API or file-management work.
+> Pending: agree the remaining module ownership, including any optional public API or file-management work.
 
 #### EVAL CHECKS - THIS SECTION WILL BE REMOVED
 
@@ -201,6 +201,8 @@ These are evaluation targets not already covered by the mandatory implementation
 ### Modules
 
 `[x]` marks completed, `[ ]` missing or incomplete, `[-]` not applicable, and `[?]` pending completion, verification, or acceptance. Pending requirements do not count as achieved points. The pending-inclusive tally assumes all `[?]` requirements are completed and accepted; any remaining `[ ]` requirement keeps a module out of that tally. The public API and file-upload modules are explicitly excluded from the pending-inclusive tally.
+
+<a id="modules-web"></a>
 
 #### Web — 9/12 points; partially complete
 
@@ -286,22 +288,22 @@ Existing scope: authenticated avatar uploads accept JPEG, PNG, and WebP MIME typ
 
 > If allowed the upload of wav files (.lpd file?) then I think this could work.
 
-#### Accessibility and Internationalization — 0/3 points; completion and verification pending
+<a id="modules-accessibility-and-internationalization"></a>
 
-##### Minor: Support for multiple languages (at least 3 languages). — 0/1 point; full translation coverage pending
+#### Accessibility and Internationalization — 3/3 points; implemented and locally tested
+
+##### Minor: Support for multiple languages (at least 3 languages). — 1/1 point; implemented and locally tested
 
 Responsible teammates: mbonsdor
 
 - [x] Implement i18n (internationalization) system.
 - [x] At least 3 complete language translations.
 - [x] Language switcher in the UI.
-- [?] All user-facing text must be translatable.
+- [x] All user-facing text must be translatable.
 
-Implementation: i18next resources for English, Finnish, Hebrew, and Mandarin, a language switcher, and stored language selection. The locale files have matching translation keys.
+Implementation: i18next resources for English, Finnish, Hebrew, and Mandarin, a language switcher, and stored language selection. All four locale files have 175 matching, populated entries with matching interpolation placeholders. Login and registration placeholders use translated labels, and server errors are translated when rendered. Resource resolution without English fallback, error translations, stored-language initialisation, and document language/direction updates have been verified locally.
 
-> I think we should consider the final labels. It is a digital interface so doesn't exactly follow the rules of physical. Maybe even just for Hebrew and or Mandarin? Would be easy. Sucks to do something just for evaluation.
-
-##### Minor: Right-to-left (RTL) language support. — 1/1 point; incomplete, review pending
+##### Minor: Right-to-left (RTL) language support. — 1/1 point; implemented and locally tested
 
 Responsible teammates: mbonsdor
 
@@ -310,20 +312,30 @@ Responsible teammates: mbonsdor
 - [x] RTL-specific UI adjustments where needed.
 - [x] Seamless switching between LTR and RTL.
 
-Implementation: Hebrew changes the document language and direction immediately, and some layout positioning uses logical CSS properties. We treat the LaunchPad as a musical device which would be standardised in one format globally.
+Implementation: Hebrew changes the document language and direction immediately, and layout positioning uses logical CSS properties. The team has confirmed the Hebrew RTL layout and seamless switching between LTR and RTL. The LaunchPad retains its standardised musical-device layout across languages.
 
-##### Minor: Support for additional browsers. — 0/1 point; awaiting verification
+##### Minor: Support for additional browsers. — 1/1 point; implemented and tested by the team
 
-Responsible teammates: TBD
+Responsible teammates: team-wide verification; timurray develops in Brave, and teammates develop in Chrome and Safari.
 
-- [?] Full compatibility with at least 2 additional browsers (Firefox, Safari, Edge, etc.).
-- [?] Test and fix all features in each browser.
-- [?] Document any browser-specific limitations.
-- [?] Consistent UI/UX across all supported browsers.
+- [x] Full compatibility with at least 2 additional browsers (Firefox, Safari, Edge, etc.).
+- [x] Test and fix all features in each browser.
+- [x] Document any browser-specific limitations.
+- [x] Consistent UI/UX across all supported browsers.
 
-> Just missing validation and the point about documentation.
+Selected browsers: Google Chrome is the mandatory baseline; Brave and Safari are the two additional browsers. The team has developed and tested the full user flows across these browsers, including login/profile/avatar changes, friends/chat, shared sessions, and launchpad audio controls. No browser-specific functional quirks have been reported.
 
-Pending: finish compatibility checks, resolve any failures, and document the results and any browser-specific limitations. The pending-inclusive point assumes all these requirements are completed.
+| Browser | Role | Team verification |
+|---|---|---|
+| Google Chrome | Mandatory baseline | The team confirms testing with the latest stable version, including normal-use console checks; no specific functional quirks reported. |
+| Brave | Additional browser | Used by timurray for development and full-flow testing; no specific functional quirks reported. |
+| Safari | Additional browser | Used by teammates for development and full-flow testing; no specific functional quirks reported. |
+
+Primary use cases are desktop and tablet browsers. Additional phone testing in Safari and Brave shows that visible browser controls, such as the address and navigation bars, can reduce the space available to the application. This viewport constraint is recorded as an observed limitation; check that controls and dialogs remain reachable as browser controls expand or collapse and in portrait and landscape orientations. Responsive usability on smaller screens remains part of the mandatory requirements.
+
+The latest-stable Chrome and normal-use console checks are confirmed. Exact browser version numbers, operating systems, and device details have not yet been recorded; add these to make the test results reproducible. The mandatory device-responsiveness check remains tracked separately above.
+
+<a id="modules-user-management"></a>
 
 #### User Management — 3/3 points; OAuth verification pending
 
@@ -346,6 +358,8 @@ Responsible teammates: mbonsdor
 
 Implementation: GitHub authorisation redirect, state-cookie validation, authorisation-code exchange, local account creation/lookup, and the same application JWT flow used by password login. See `backend/authGithub.js` and the login/callback frontend integration.
 
+<a id="modules-devops"></a>
+
 #### Devops — 2/2 points; implemented and locally tested
 
 ##### Major: Monitoring system with Prometheus and Grafana. — 2/2 points; implemented and locally tested
@@ -359,6 +373,8 @@ Responsible teammates: timurray
 - [x] Secure access to Grafana.
 
 Implementation: Prometheus collects backend process and HTTP metrics over HTTPS. Blackbox Exporter probes the HTTPS database health endpoint. Prometheus evaluates backend availability and health-check alerts; Grafana displays the metrics and alert states. Alertmanager sends failure and recovery notifications to Discord, using a webhook supplied through a Compose secret. Backend and database outage/recovery tests have been verified locally. Grafana uses administrator authentication, disabled signup, and a localhost-only host port.
+
+<a id="modules-of-choice"></a>
 
 #### Modules of choice — 0/2 points; custom-module acceptance pending
 
@@ -390,14 +406,14 @@ See [launchpad notes](frontend/src/launchpad/launchpad_notes.md) for architectur
 
 #### Module point totals
 
-| Subject category | Achieved | Pending | Possible |
+| Subject category | Achieved | Including pending | Possible |
 |---|---:|---:|---:|
-| Web | 9 | 9 | 12 |
-| Accessibility and Internationalization | 2 | 3 | 3 |
-| User Management | 2 | 3 | 3 |
-| DevOps | 2 | 2 | 2 |
-| Modules of choice | 0 | 2 | 2 |
-| **Total** | **15** | **19** | **22** |
+| [Web](#modules-web) | 9 | 9 | 12 |
+| [Accessibility and Internationalization](#modules-accessibility-and-internationalization) | 3 | 3 | 3 |
+| [User Management](#modules-user-management) | 2 | 3 | 3 |
+| [DevOps](#modules-devops) | 2 | 2 | 2 |
+| [Modules of choice](#modules-of-choice) | 0 | 2 | 2 |
+| **Total** | **16** | **19** | **22** |
 
 ## Individual Contributions
 
