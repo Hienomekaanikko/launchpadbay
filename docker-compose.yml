@@ -54,9 +54,33 @@ services:
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./certs/ca.pem:/etc/prometheus/certs/ca.pem:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus_data:/prometheus
     depends_on:
       - backend
+
+  alertmanager:
+    image: prom/alertmanager:v0.34.2
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+    ports:
+      - "127.0.0.1:9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    secrets:
+      - discord_webhook_url
+
+  blackbox:
+    image: prom/blackbox-exporter:v0.29.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/blackbox/blackbox.yml
+    volumes:
+      - ./monitoring/blackbox/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+      - ./certs/ca.pem:/etc/blackbox/ca.pem:ro
 
   grafana:
     image: grafana/grafana:13.2.2
@@ -78,3 +102,8 @@ volumes:
   mysql_data:
   prometheus_data:
   grafana_data:
+  alertmanager_data:
+
+secrets:
+  discord_webhook_url:
+    environment: DISCORD_WEBHOOK_URL

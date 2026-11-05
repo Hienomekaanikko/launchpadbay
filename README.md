@@ -14,9 +14,9 @@ Key features:
 - Themes (background image + body styling + per-pad sounds) are served from the backend/database rather than bundled into the frontend build, so new themes/sounds can be added without a frontend rebuild.
 - User accounts with registration, email/password login, profile editing, avatars, friendships, and a GitHub OAuth flow.
 - Live presence, private/session chat, and two-user collaborative launchpad sessions with join requests and shared performance controls.
-- One-command containerised setup (`make up`) covering the frontend, backend, MySQL, Prometheus, and Grafana, with automatic migrations and seed data.
+- One-command containerised setup (`make up`) covering the frontend, backend, MySQL, Prometheus, Grafana, Alertmanager, and Blackbox Exporter, with automatic migrations and seed data.
 
-The [Features](#features) section describes the current implementation. Outstanding work and verification are tracked in the [Checklist](#checklist), including the pending GitHub login demonstration, translation/RTL coverage, browser checks, and monitoring alerts.
+The [Features](#features) section describes the current implementation. Outstanding work and verification are tracked in the [Checklist](#checklist).
 
 ## Team Information
 
@@ -47,9 +47,9 @@ Responsibilities overlap across features. The [Individual Contributions](#indivi
 - **Audio:** The Web Audio API provides decoded sample buffers, scheduled looping sources, gain controls, and low-pass filters. The custom engine separates playback, musical timing, channel state, and effects so controls can share a common timing model.
 - **Real-time communication:** `@fastify/websocket` and the browser WebSocket API handle presence, chat, session membership, and shared launchpad actions. Connection tracking and reconnection handling keep these features integrated.
 - **Auth:** `bcrypt` hashes and salts passwords; `@fastify/jwt` signs and verifies application tokens. GitHub OAuth provides a second login flow that issues the same application JWT.
-- **Languages:** `i18next` and `react-i18next` centralise English, Finnish, Hebrew, and Mandarin translations and support switching the document language and direction. Complete translation/RTL validation remains pending.
-- **Containerisation:** Docker Compose runs the frontend, backend, MySQL, Prometheus, and Grafana. A `Makefile` wraps startup, certificate generation, and shutdown.
-- **Monitoring:** Prometheus collects backend process and HTTP request metrics; a provisioned Grafana dashboard displays them. Alerting remains pending.
+- **Languages:** `i18next` and `react-i18next` centralise English, Finnish, Hebrew, and Mandarin translations and support switching the document language and direction. Translation coverage, language switching, and the Hebrew RTL layout have been verified locally.
+- **Containerisation:** Docker Compose runs the application, MySQL, and the monitoring services: Prometheus, Grafana, Alertmanager, and Blackbox Exporter. A `Makefile` wraps startup, certificate generation, and shutdown.
+- **Monitoring:** Prometheus collects backend process and HTTP request metrics and Blackbox Exporter's HTTPS database health probes. A provisioned Grafana dashboard displays metrics and health status, and Grafana lists the Prometheus-managed alert rules. Alertmanager sends failure and recovery notifications to Discord using an environment-backed Compose secret.
 
 ## Database Schema
 
@@ -104,17 +104,17 @@ The entries below describe implemented features. Pending validation and missing 
 | Launchpad and audio engine | 25 pads across five channels, scheduled loops and clip transitions, per-channel volume/filter controls, split timing, and stutter effects. Guest users can play without an account. | `msuokas`, `mbonsdor`; responsive layout by `timurray` |
 | Backend theme loading | Themes, backgrounds, and sample URLs come from MySQL through `GET /api/themes`. Loading retries accommodate a slow-starting backend. The launchpad currently loads the first returned theme. | `msuokas`, `mbonsdor` |
 | Registration and password login | Register with a username, email, and password; log in with email and password. Bcrypt protects passwords, JWTs authenticate requests, and the frontend stores the session in `localStorage`. Full input validation remains an open checklist item. | `msuokas` |
-| GitHub OAuth | Authorisation redirect, state-cookie validation, code exchange, local account lookup/creation, and application JWT delivery are implemented. A successful live login demonstration remains pending. | `mbonsdor` |
+| GitHub OAuth | Authorisation redirect, state-cookie validation, code exchange, local account lookup/creation, and application JWT delivery are implemented. Successful GitHub login has been confirmed locally. | `mbonsdor` |
 | Profiles and avatars | View account information, edit email, change a password where applicable, upload an avatar or use the default image, and delete an account with confirmation. | `msuokas`, `mbonsdor` |
 | Friends | Send, accept, reject, and remove friend requests/connections; list friends and their online status. | `msuokas`; presence support by `ykadosh` |
 | Live lobby | Display connected users and active sessions, with presence updates and session join requests. | `ykadosh`, `msuokas` |
 | Collaborative sessions | Host a two-user session, request/cancel a join, accept/reject a guest, leave a session, and share pad, split, and stutter actions. A joining partner requests a launchpad state snapshot. | `ykadosh`, `msuokas`; underlying audio engine by `mbonsdor` |
 | Chat | Exchange private and session messages with unread indicators and delivery-error feedback. Private messages are stored in MySQL; the frontend does not restore their history after a reload. | `ykadosh`, `msuokas` |
-| Languages and RTL | Switch between English, Finnish, Hebrew, and Mandarin. Hebrew changes the document direction; full translation coverage and RTL validation remain pending. | `mbonsdor` |
-| Shared UI and responsive layouts | Reusable Tailwind components and theme tokens, plus a navbar and layouts for desktop and smaller screens. Cross-browser and accessibility verification remain pending. | `msuokas`, `timurray` |
+| Languages and RTL | Switch between English, Finnish, Hebrew, and Mandarin, with stored language selection and translated UI text, placeholders, and errors. Language support, the Hebrew RTL layout, and switching between LTR and RTL have been verified locally. | `mbonsdor` |
+| Shared UI and responsive layouts | Reusable Tailwind components and theme tokens, plus a navbar and layouts for desktop and smaller screens. The team has tested the main flows in Chrome, Brave, and Safari, and confirmed usable desktop, tablet, and phone layouts, readable text, reachable controls, keyboard navigation, and visible focus indicators. | `msuokas`, `timurray` |
 | Policy pages | Open project-specific Privacy Policy and Terms of Service content from the footer. Final content review remains pending. | `timurray` |
 | Containerised deployment | Start application and monitoring services with `make up`, generate TLS certificates, apply migrations, and seed data. | `msuokas`, `timurray` |
-| Monitoring | Export process and HTTP metrics, scrape them with Prometheus, and display a provisioned Grafana dashboard. Alerting rules remain pending. | `timurray` |
+| Monitoring | Export process and HTTP metrics, probe HTTPS/database health with Blackbox Exporter, and display metrics and health status in a provisioned Grafana dashboard. Prometheus evaluates alerts; Alertmanager delivers failure and recovery notifications to Discord. | `timurray` |
 
 ## Checklist
 
@@ -124,11 +124,11 @@ The entries below describe implemented features. Pending validation and missing 
 
 - [x] The project is a web application with a frontend, backend, and database.
 - [x] Git history contains commits from all four team members, meaningful commit messages, and contributions across different parts of the project.
-- [x] Containerised deployment is available through one command: `make up` starts the frontend, backend, MySQL, Prometheus, and Grafana.
-- [ ] The website is compatible with the latest stable version of Google Chrome.
-- [ ] No warnings or errors appear in the browser console.
+- [x] Containerised deployment is available through one command: `make up` starts the frontend, backend, MySQL, Prometheus, Grafana, Alertmanager, and Blackbox Exporter.
+- [x] The website is compatible with the latest stable version of Google Chrome.
+- [x] Normal user flows produce no unexpected application warnings or uncaught errors in the browser console.
 
-> We need to document the browser results when ready. Check the console results.
+The team has confirmed full user flows in Chrome (latest stable), Brave, and Safari, with a clean application console during normal use. Intentional authentication failures, such as a wrong password or an unknown email address, return HTTP 401 with `invalid_credentials` and display a translated validation message. DevTools can show these rejected requests as errors; they are expected, handled authentication responses.
 
 - [x] Privacy Policy and Terms of Service are accessible from footer controls and contain project-specific information rather than empty placeholder pages.
 
@@ -136,16 +136,12 @@ The entries below describe implemented features. Pending validation and missing 
 
 - [x] Multiple users can be logged in and active at the same time.
 - [x] Real-time updates are reflected across connected users where applicable.
-- [ ] Concurrent actions by different users have been verified to work without conflicts or performance issues.
-- [ ] Simultaneous user actions have been verified not to cause data corruption or race conditions.
-
-> We need to verify these then tick them off.
+- [x] Concurrent actions by different users have been verified to work without conflicts or performance issues.
+- [x] Simultaneous user actions have been verified not to cause data corruption or race conditions.
 
 #### Technical requirements
 
-- [ ] The frontend is clear, responsive, and accessible across different devices.
-
-> Validation, confirmation, testing.
+- [x] The frontend is clear, responsive, and accessible across different devices.
 
 - [x] A CSS framework or styling solution is used: Tailwind CSS with shared theme tokens and custom CSS.
 - [x] Credentials are read from local, Git-ignored `.env` files, and `.env.example` is provided. The Compose database URL now interpolates environment variables instead of containing a literal password.
@@ -173,10 +169,8 @@ The entries below describe implemented features. Pending validation and missing 
 - [x] Features List is complete, accurate, and identifies the contributors to each feature.
 
 - [x] Modules lists the selected and candidate modules, requirements, implementation evidence, justifications, and point calculation in this checklist.
-- [ ] Each selected module has its contributing team member(s) clearly identified.
+- [x] Each selected module has its contributing team member(s) clearly identified.
 - [x] Individual Contributions gives every member's specific work and the challenges they faced and overcame.
-
-> Pending: agree the remaining module ownership, including additional-browser checks and any optional public API or file-management work.
 
 #### EVAL CHECKS - THIS SECTION WILL BE REMOVED
 
@@ -200,9 +194,11 @@ These are evaluation targets not already covered by the mandatory implementation
 
 ### Modules
 
-`[x]` marks completed, `[ ]` missing or incomplete, `[-]` not applicable, and `[?]` pending completion, verification, or acceptance. Pending requirements do not count as achieved points. The pending-inclusive tally assumes all `[?]` requirements are completed and accepted; any remaining `[ ]` requirement keeps a module out of that tally. The public API and file-upload modules are explicitly excluded from the pending-inclusive tally.
+`[x]` marks completed, `[ ]` missing or incomplete, `[-]` not applicable, and `[?]` pending completion, verification, or acceptance. Pending requirements do not count as achieved points. The pending-inclusive tally assumes all `[?]` requirements are completed and accepted; any remaining `[ ]` requirement keeps a module out of that tally. The file-upload module is explicitly excluded from the pending-inclusive tally.
 
-#### Web — 9/12 points; partially complete
+<a id="modules-web"></a>
+
+#### Web — 9/10 points; partially complete
 
 ##### Major: Use a framework for both the frontend and backend. — 2/2 points; implemented
 
@@ -228,22 +224,9 @@ Responsible teammates: msuokas, ykadosh, mbonsdor
 
 - [x] A basic chat system (send/receive messages between users).
 - [x] A profile system (view user information).
-- [?] A friends system (add/remove friends, see friends list).
+- [x] A friends system (add/remove friends, see friends list).
 
-Implementation: private/session chat, the signed-in user's profile, and friend requests, acceptance, removal, and listing. Viewing another user's full profile is not implemented; confirm that the evaluator accepts the existing profile system under this wording.
-
-##### Major: A public API to interact with the database with a secured API key, rate limiting, documentation, and at least 5 endpoints: — 0/2 points; incomplete optional candidate
-
-Responsible teammates: TBD for the public API work; existing database-route contributors: msuokas, mbonsdor, ykadosh
-
-- [ ] GET /api/{something}
-- [ ] POST /api/{something}
-- [ ] PUT /api/{something}
-- [ ] DELETE /api/{something}
-
-Existing routes cover these methods and exceed five endpoints: for example, GET `/api/themes`, `/api/profile`, and `/api/friends`; POST `/api/friends/requests`; PUT `/api/profile/password`; and DELETE `/api/profile`.
-
-> PROBLEM. I realised late that we do these endpoints but they are not public, they are private. We'd need to document and expose the endpoints.
+Implementation: private/session chat, the signed-in user's profile, other users' public profiles integrated into the chat window (username, avatar, and membership date), and friend requests, acceptance, rejection, removal, and listing. The team has confirmed the friends flows work.
 
 ##### Minor: Use an ORM for the database. — 1/1 point; implemented
 
@@ -273,11 +256,11 @@ Implementation: Tailwind theme tokens in `frontend/src/index.css`, shared colour
 
 Responsible teammates: mbonsdor, msuokas for existing avatar/account flows; TBD for the full file-management system
 
-- [?] Support multiple file types (images, documents, etc.).
+- [ ] Support multiple file types (images, documents, etc.).
 - [ ] Client-side and server-side validation (type, size, format).
-- [x] Secure file storage with proper access control.
-- [x] File preview functionality where applicable.
-- [x] Progress indicators for uploads.
+- [ ] Secure file storage with proper access control.
+- [ ] File preview functionality where applicable.
+- [ ] Progress indicators for uploads.
 - [ ] Ability to delete uploaded files.
 
 Existing scope: authenticated avatar uploads accept JPEG, PNG, and WebP MIME types, use user-ID-based storage names, display the resulting avatar, and show an “Uploading…” status. Avatar images are intentionally publicly readable.
@@ -286,22 +269,22 @@ Existing scope: authenticated avatar uploads accept JPEG, PNG, and WebP MIME typ
 
 > If allowed the upload of wav files (.lpd file?) then I think this could work.
 
-#### Accessibility and Internationalization — 0/3 points; completion and verification pending
+<a id="modules-accessibility-and-internationalization"></a>
 
-##### Minor: Support for multiple languages (at least 3 languages). — 0/1 point; full translation coverage pending
+#### Accessibility and Internationalization — 3/3 points; implemented and locally tested
+
+##### Minor: Support for multiple languages (at least 3 languages). — 1/1 point; implemented and locally tested
 
 Responsible teammates: mbonsdor
 
 - [x] Implement i18n (internationalization) system.
 - [x] At least 3 complete language translations.
 - [x] Language switcher in the UI.
-- [?] All user-facing text must be translatable.
+- [x] All user-facing text must be translatable.
 
-Implementation: i18next resources for English, Finnish, Hebrew, and Mandarin, a language switcher, and stored language selection. The locale files have matching translation keys.
+Implementation: i18next resources for English, Finnish, Hebrew, and Mandarin, a language switcher, and stored language selection. All four locale files have 175 matching, populated entries with matching interpolation placeholders. Login and registration placeholders use translated labels, and server errors are translated when rendered. Resource resolution without English fallback, error translations, stored-language initialisation, and document language/direction updates have been verified locally.
 
-> I think we should consider the final labels. It is a digital interface so doesn't exactly follow the rules of physical. Maybe even just for Hebrew and or Mandarin? Would be easy. Sucks to do something just for evaluation.
-
-##### Minor: Right-to-left (RTL) language support. — 1/1 point; incomplete, review pending
+##### Minor: Right-to-left (RTL) language support. — 1/1 point; implemented and locally tested
 
 Responsible teammates: mbonsdor
 
@@ -310,22 +293,32 @@ Responsible teammates: mbonsdor
 - [x] RTL-specific UI adjustments where needed.
 - [x] Seamless switching between LTR and RTL.
 
-Implementation: Hebrew changes the document language and direction immediately, and some layout positioning uses logical CSS properties. We treat the LaunchPad as a musical device which would be standardised in one format globally.
+Implementation: Hebrew changes the document language and direction immediately, and layout positioning uses logical CSS properties. The team has confirmed the Hebrew RTL layout and seamless switching between LTR and RTL. The LaunchPad retains its standardised musical-device layout across languages.
 
-##### Minor: Support for additional browsers. — 0/1 point; awaiting verification
+##### Minor: Support for additional browsers. — 1/1 point; implemented and tested by the team
 
-Responsible teammates: TBD
+Responsible teammates: team-wide verification; timurray develops in Brave, and teammates develop in Chrome and Safari.
 
-- [?] Full compatibility with at least 2 additional browsers (Firefox, Safari, Edge, etc.).
-- [?] Test and fix all features in each browser.
-- [?] Document any browser-specific limitations.
-- [?] Consistent UI/UX across all supported browsers.
+- [x] Full compatibility with at least 2 additional browsers (Firefox, Safari, Edge, etc.).
+- [x] Test and fix all features in each browser.
+- [x] Document any browser-specific limitations.
+- [x] Consistent UI/UX across all supported browsers.
 
-> Just missing validation and the point about documentation.
+Selected browsers: Google Chrome is the mandatory baseline; Brave and Safari are the two additional browsers. The team has developed and tested the full user flows across these browsers, including login/profile/avatar changes, friends/chat, shared sessions, and launchpad audio controls. No browser-specific functional quirks have been reported.
 
-Pending: finish compatibility checks, resolve any failures, and document the results and any browser-specific limitations. The pending-inclusive point assumes all these requirements are completed.
+| Browser | Role | Team verification |
+|---|---|---|
+| Google Chrome | Mandatory baseline | The team confirms testing with the latest stable version, including normal-use console checks; no specific functional quirks reported. |
+| Brave | Additional browser | Used by timurray for development and full-flow testing; no specific functional quirks reported. |
+| Safari | Additional browser | Used by teammates for development and full-flow testing; no specific functional quirks reported. |
 
-#### User Management — 3/3 points; OAuth verification pending
+Primary use cases are desktop and tablet browsers. Additional phone testing in Safari and Brave shows that visible browser controls, such as the address and navigation bars, can reduce the space available to the application. This viewport constraint is recorded as an observed limitation; check that controls and dialogs remain reachable as browser controls expand or collapse and in portrait and landscape orientations. Responsive usability on smaller screens remains part of the mandatory requirements.
+
+The latest-stable Chrome and normal-use console checks are confirmed. Exact browser version numbers, operating systems, and device details have not yet been recorded; add these to make the test results reproducible. The mandatory device-responsiveness check is also confirmed above.
+
+<a id="modules-user-management"></a>
+
+#### User Management — 3/3 points; implemented and locally tested
 
 ##### Major: Standard user management and authentication. — 2/2 points; implemented
 
@@ -338,37 +331,39 @@ Responsible teammates: msuokas, mbonsdor, ykadosh
 
 Implementation: profile/email editing, password changes for password accounts, uploaded/default avatars, friends with online status, and the profile panel.
 
-##### Minor: Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.). — 1/1 point; pending live verification
+##### Minor: Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.). — 1/1 point; implemented and locally tested
 
 Responsible teammates: mbonsdor
 
 - [x] Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.).
 
-Implementation: GitHub authorisation redirect, state-cookie validation, authorisation-code exchange, local account creation/lookup, and the same application JWT flow used by password login. See `backend/authGithub.js` and the login/callback frontend integration.
+Implementation: GitHub authorisation redirect, state-cookie validation, authorisation-code exchange, local account creation/lookup, and the same application JWT flow used by password login. Successful GitHub login has been confirmed locally. See `backend/authGithub.js` and the login/callback frontend integration.
 
-#### Devops — 0/2 points; alerting pending
+<a id="modules-devops"></a>
 
-##### Major: Monitoring system with Prometheus and Grafana. — 0/2 points; alerting pending
+#### Devops — 2/2 points; implemented and locally tested
+
+##### Major: Monitoring system with Prometheus and Grafana. — 2/2 points; implemented and locally tested
 
 Responsible teammates: timurray
 
 - [x] Set up Prometheus to collect metrics.
 - [x] Configure exporters and integrations.
 - [x] Create custom Grafana dashboards.
-- [?] Set up alerting rules.
+- [x] Set up alerting rules.
 - [x] Secure access to Grafana.
 
-Implementation: backend process and HTTP metrics, HTTPS scraping, provisioned dashboards/datasource, and Grafana login with its password supplied through `.env`, disabled signup, and a host port bound to localhost.
+Implementation: Prometheus collects backend process and HTTP metrics over HTTPS. Blackbox Exporter probes the HTTPS database health endpoint. Prometheus evaluates backend availability and health-check alerts; Grafana displays the metrics and alert states. Alertmanager sends failure and recovery notifications to Discord, using a webhook supplied through a Compose secret. Backend and database outage/recovery tests have been verified locally. Grafana uses administrator authentication, disabled signup, and a localhost-only host port.
 
-> Add alerting rules and, if useful, example Prometheus queries.
+<a id="modules-of-choice"></a>
 
-#### Modules of choice — 0/2 points; custom-module acceptance pending
+#### Modules of choice — 2/2 points; implemented and locally tested
 
-##### Major: Implement a custom module that is not listed above. — 0/2 points; pending evaluator acceptance of the audio engine
+##### Major: Implement a custom module that is not listed above. — 2/2 points; implemented and locally tested
 
 Responsible teammates: mbonsdor, msuokas
 
-- [?] The module must be substantial and demonstrate technical complexity.
+- [x] The module must be substantial and demonstrate technical complexity.
 - [x] You must provide proper justification in your README.md explaining:
   - [x] Why you chose this module.
   - [x] What technical challenges it addresses.
@@ -378,7 +373,7 @@ Responsible teammates: mbonsdor, msuokas
 - [x] Be creative and think outside the box.
 - [x] The module should be relevant to your project context.
 
-**Proposed module: Custom Web Audio sampler and performance engine.**
+**Custom module: Web Audio sampler and performance engine.**
 
 **Why it was chosen:** LaunchpadBay is a playable browser-based music instrument. Its central feature needs a sampler and performance controls that support musical timing rather than independent, immediate sound triggers.
 
@@ -386,20 +381,20 @@ Responsible teammates: mbonsdor, msuokas
 
 **Value to the project:** Users can combine the 25 pads across five channels, make timed clip transitions, and perform split/stutter effects while controlling each channel's mix in the browser.
 
-**Why Major status is proposed:** This is a multi-part playback and timing system implemented across `engine.js`, `audio.js`, `clock.js`, `channel.js`, `split.js`, and `stutter.js`, with distinct state, scheduling, signal-processing, and resource-lifecycle responsibilities. It works locally without a partner; network action delivery and shared workspace synchronisation remain the scope of the separate collaboration module. The scope goes beyond simply attaching a sound to each button.
+**Why it merits Major status:** This is a multi-part playback and timing system implemented across `engine.js`, `audio.js`, `clock.js`, `channel.js`, `split.js`, and `stutter.js`, with distinct state, scheduling, signal-processing, and resource-lifecycle responsibilities. It works locally without a partner; network action delivery and shared workspace synchronisation remain the scope of the separate collaboration module. The scope goes beyond simply attaching a sound to each button.
 
 See [launchpad notes](frontend/src/launchpad/launchpad_notes.md) for architecture and timing details.
 
 #### Module point totals
 
-| Subject category | Achieved | Pending | Possible |
+| Subject category | Achieved | Including pending | Possible |
 |---|---:|---:|---:|
-| Web | 9 | 9 | 12 |
-| Accessibility and Internationalization | 2 | 3 | 3 |
-| User Management | 2 | 3 | 3 |
-| DevOps | 0 | 2 | 2 |
-| Modules of choice | 0 | 2 | 2 |
-| **Total** | **13** | **19** | **22** |
+| [Web](#modules-web) | 9 | 9 | 10 |
+| [Accessibility and Internationalization](#modules-accessibility-and-internationalization) | 3 | 3 | 3 |
+| [User Management](#modules-user-management) | 3 | 3 | 3 |
+| [DevOps](#modules-devops) | 2 | 2 | 2 |
+| [Modules of choice](#modules-of-choice) | 2 | 2 | 2 |
+| **Total** | **19** | **19** | **20** |
 
 ## Individual Contributions
 
@@ -425,7 +420,7 @@ These summaries follow the authored changes in the repository and the role assig
 
 ### timurray: Project Manager / Developer
 
-- **Implemented:** HTTPS certificates and proxy configuration; environment-file setup and credential/port hardening; backend metrics and Prometheus/Grafana services, provisioning, and dashboards; the CI workflow for frontend lint/build and backend dependency installation; responsive layouts and the navbar; and Privacy Policy/Terms of Service pages.
+- **Implemented:** HTTPS certificates and proxy configuration; environment-file setup and credential/port hardening; backend metrics, Prometheus/Grafana provisioning and dashboards, Blackbox Exporter health probes, and Alertmanager failure/recovery notifications to Discord; the CI workflow for frontend lint/build and backend dependency installation; responsive layouts and the navbar; and Privacy Policy/Terms of Service pages.
 - **Key areas:** `Makefile`, `docker-compose.yml`, `backend/metrics.js`, `monitoring/`, `.github/workflows/basic.yml`, nginx/Vite configuration, `AppNavbar.jsx`, responsive styles, and policy components/content.
 - **Challenge and solution:** HTTPS needed consistent trust and hostnames across the browser, nginx, backend, and monitoring scraper. Generated certificates, mounted CA files, and proxy/scraper configuration connect these components. Responsive layout work accommodates the pad grid, controls, navbar, and overlays on smaller screens.
 
@@ -435,8 +430,9 @@ These summaries follow the authored changes in the repository and the role assig
 
 - Docker with Docker Compose v2 or later, running before setup (Docker Desktop on macOS, or Docker Engine with the Compose plugin on Linux).
 - A macOS or Linux shell with `make` and `curl`. On Windows, run the Makefile from a Linux environment such as WSL with Docker integration enabled.
-- Internet access for the initial image/dependency downloads, mkcert, and GitHub OAuth.
+- Internet access for the initial image/dependency downloads, mkcert, GitHub OAuth, and Discord alert notifications.
 - A GitHub OAuth App's client ID and secret for the configured login flow; setup is described below.
+- A Discord channel webhook URL for monitoring notifications. Create one through Discord's Server Settings → Integrations → Webhooks and select the destination channel.
 - For development commands on the host: Node.js 22.12 or later within the Node.js 22 release line, with npm. The container images and CI use Node.js 22; the locked Vite and Prisma versions require at least 22.12 on that release line. A host Node.js installation is not required for the container-only run.
 
 ### Configure the environment
@@ -461,6 +457,7 @@ If that file already contains a working configuration, edit the existing file in
 | `GITHUB_CALLBACK_URL` | `https://localhost:8443/api/auth/github/callback` for the local setup. |
 | `FRONTEND_URL` | `https://localhost:8443` for the local setup. |
 | `GRAFANA_ADMIN_USER`, `GRAFANA_ADMIN_PASSWORD` | The monitoring dashboard's administrator login. |
+| `DISCORD_WEBHOOK_URL` | Discord channel webhook URL for alert notifications. Compose exposes this value to Alertmanager as `/run/secrets/discord_webhook_url`. Keep the real URL in the ignored environment files; `.env.example` contains an empty placeholder. |
 
 The backend requires the GitHub OAuth variables at startup, including when you intend to use password login. Example placeholders are not working OAuth credentials.
 
@@ -471,7 +468,7 @@ cp .env.example .env
 chmod 600 .env
 ```
 
-`make` preserves an existing project `.env`. If it is absent, `make` copies `$HOME/.env.launchpadbay` to `.env` with owner-only permissions. Later edits to the home-directory file are not automatically copied over an existing `.env`; update the project file as well when changing configuration. Environment files are ignored by Git.
+`make` preserves an existing project `.env`. If it is absent, `make` copies `$HOME/.env.launchpadbay` to `.env` with owner-only permissions. Later edits to the home-directory file are not automatically copied over an existing `.env`; update the project file as well when changing configuration, or run `make -B .env` to replace it with the home-directory copy. Environment files are ignored by Git.
 
 ### Configure GitHub OAuth
 
@@ -516,11 +513,11 @@ Open **https://localhost:8443** after trusting the CA. Startup also prints the l
 |---|---|
 | `make` or `make up` | Build (if needed) and start application and monitoring services in the background |
 | `make dev` | Build (if needed), start services, install frontend dependencies, and run Vite for live reload during development |
-| `make down` | Stop and remove containers, preserving the MySQL, Prometheus, and Grafana volumes and uploaded avatar files |
+| `make down` | Stop and remove containers, preserving the MySQL, Prometheus, Grafana, and Alertmanager volumes and uploaded avatar files |
 | `make re` | `down` then `up` |
-| `make fclean` | Stop/remove containers, delete the MySQL/Prometheus/Grafana volumes and service images, remove `certs/`, and delete uploaded avatar files in `backend/uploads/images/avatars/` |
+| `make fclean` | Stop/remove containers, delete the MySQL/Prometheus/Grafana/Alertmanager volumes and service images, remove `certs/`, and delete uploaded avatar files in `backend/uploads/images/avatars/` |
 
-- `docker compose logs -f backend` (or `frontend`, `mysql`, `prometheus`, `grafana`) — tail logs
+- `docker compose logs -f backend` (or `frontend`, `mysql`, `prometheus`, `grafana`, `alertmanager`, `blackbox`) — tail logs
 - `docker compose ps` — see what's running
 
 ### Architecture
@@ -528,24 +525,75 @@ Open **https://localhost:8443** after trusting the CA. Startup also prints the l
 - **`frontend/`** — Vite/React SPA. Built and served by nginx in production (`frontend/Dockerfile`, `frontend/nginx.conf`), which also proxies `/api/*` to the backend — one origin, no CORS.
 - **`backend/`** — Fastify + Prisma. `server.js` is the entry point; authentication, profiles, friendships, chat, and sessions are split into feature-specific files. Sound/theme files live in the bind-mounted `backend/uploads/` directory and are served through `@fastify/static`. Real-time events use `@fastify/websocket`.
 - **`mysql`** — MySQL 8, data in the `mysql_data` volume.
-- **`prometheus`** — Scrapes backend metrics over HTTPS using `certs/ca.pem`. Stores metric history in `prometheus_data`.
+- **`prometheus`** — Scrapes backend metrics over HTTPS using `certs/ca.pem`, collects Blackbox probe results, and evaluates alert rules. Stores metric history in `prometheus_data`.
 - **`grafana`** — Queries Prometheus and loads its connection and dashboard from `monitoring/grafana/`. Stores accounts and local settings in `grafana_data`.
+- **`blackbox`** — Probes `https://backend:3000/health/db` when requested by Prometheus, verifying the backend certificate and requiring HTTP 200. That endpoint runs a database query. The exporter listens on port `9115` inside the Compose network.
+- **`alertmanager`** — Receives alerts from Prometheus and groups/routes failure and recovery notifications to Discord. Reads the webhook from the `discord_webhook_url` Compose secret and stores notification state and silences in `alertmanager_data`.
 
-Ports: frontend HTTPS `8443`, MySQL `3307`, Grafana `3001`, and Prometheus `9090` on host (avoids clashing with a native MySQL install; containers reach it at `mysql:3306`).
-Grafana and Prometheus are bound to `127.0.0.1`.
+Ports: frontend HTTPS `8443`, MySQL `3307`, Grafana `3001`, Prometheus `9090`, and Alertmanager `9093` on host (avoids clashing with a native MySQL install; containers reach it at `mysql:3306`).
+Grafana, Prometheus, and Alertmanager are bound to `127.0.0.1`. Blackbox Exporter has no published host port.
 
 ### Monitoring
 
-Start monitoring with the application using `make up`.
+Set `DISCORD_WEBHOOK_URL` in the environment configuration, then start monitoring with the application using `make up`. The webhook value is passed through a Compose secret; the Alertmanager configuration contains the secret's file path.
 
 | Interface | URL |
 |---|---|
 | Grafana | http://localhost:3001 |
 | Prometheus queries | http://localhost:9090/query |
 | Prometheus targets | http://localhost:9090/targets |
+| Prometheus alert rules | http://localhost:9090/alerts |
+| Alertmanager | http://localhost:9093 |
 
-To keep Grafana dashboard edits in Git, save the dashboard and export it as Resource JSON with instance sharing disabled. Save it as `monitoring/grafana/dashboards/launchpadbay.json` replacing the existing file. Commit the file.
-Saving in Grafana alone does not update the repository but will update local setup unless setup is completely reset with `make fclean`.
+The backend exposes Node.js process metrics and HTTP request counters/histograms through `/metrics`. Prometheus scrapes those metrics and requests a Blackbox HTTP probe every 15 seconds. Blackbox uses the `http_backend` module to check the HTTPS `/health/db` endpoint with a five-second timeout, the project's trusted CA, and an expected HTTP 200 response.
+
+Useful Prometheus queries:
+
+| Query | Meaning |
+|---|---|
+| `up{job="backend"}` | Whether Prometheus can scrape backend metrics: `1` means successful, `0` means failed. |
+| `up{job="backend_health"}` | Whether Prometheus successfully receives a probe response from Blackbox Exporter. |
+| `probe_success{job="backend_health"}` | Whether the actual HTTPS/database health check succeeds: `1` means successful, `0` means failed. |
+
+A successful scrape of the exporter and a successful probe are separate results. For example, during a database outage, backend metrics and the exporter can remain reachable while `probe_success` becomes `0`.
+
+Alert rules live in `monitoring/prometheus/alerts.yml` and are evaluated every 15 seconds:
+
+| Alert | Condition | Pending period |
+|---|---|---|
+| `BackendMetricsUnavailable` | `up{job="backend"} == 0` | 15 seconds |
+| `BackendHealthCheckFailed` | `probe_success{job="backend_health"} == 0` | 15 seconds |
+
+Grafana displays these as read-only, data source-managed rules under Alerting → Alert rules. Prometheus forwards firing alerts to Alertmanager. The Discord receiver waits 10 seconds before its first notification, processes grouped updates every 30 seconds, repeats unresolved notifications hourly, and sends recovery notifications. These timings are in `monitoring/alertmanager/alertmanager.yml`; notification delivery also includes scrape and rule-evaluation delays.
+
+Validate configuration without sending a notification:
+
+```bash
+docker compose config --quiet
+docker compose run --rm --no-deps --entrypoint promtool prometheus check config /etc/prometheus/prometheus.yml
+docker compose run --rm --no-deps --entrypoint amtool alertmanager check-config /etc/alertmanager/alertmanager.yml
+```
+
+After changing Prometheus configuration or rules, reload the running process with:
+
+```bash
+docker compose kill -s SIGHUP prometheus
+```
+
+`SIGHUP` reloads the configuration while Prometheus keeps running. Use the same signal with `alertmanager` after changing its routing configuration.
+
+Failure and recovery checks have been verified locally. To repeat them, keep Prometheus, Blackbox Exporter, and Alertmanager running, test one outage at a time, and restore each service after the test:
+
+| Test | Stop command | Expected result | Restore command |
+|---|---|---|---|
+| Backend outage | `docker compose stop backend` | Backend metrics become unreachable and the health probe fails; both alert rules fire. | `docker compose start backend` |
+| Database outage | `docker compose stop mysql` | Backend metrics and the exporter remain reachable, but the health probe fails; only `BackendHealthCheckFailed` fires. | `docker compose start mysql` |
+
+For each test, confirm pending → firing in Prometheus/Grafana and a failure message in Discord. After restoration, wait for MySQL/backend readiness and successful probes, then confirm the rules return to inactive and a recovery message arrives in Discord. `docker compose ps` shows container state and MySQL health. If Prometheus is restarted during a firing alert, Alertmanager can retain the previous alert until its last advertised expiry rather than receiving an immediate recovery update.
+
+The provisioned dashboard includes backend availability, memory, CPU, request rate, response-time and error panels, plus an Instant Stat panel for `probe_success{job="backend_health"}`. The health panel maps `1` to green “Nominal” and `0` to red “Helsinki, we have a problem”.
+
+To keep Grafana dashboard edits in Git, save the dashboard and choose Export → Export as code. Select V2 Resource and JSON, with instance sharing disabled. Save it as `monitoring/grafana/dashboards/launchpadbay.json`, replacing the existing file, and commit it. Saving in Grafana alone updates the local Grafana database; the exported file makes the changes reproducible after a fresh installation. Personal home-dashboard preferences are stored separately in `grafana_data` and are not included in the dashboard export.
 
 ### Auth
 

@@ -1,7 +1,7 @@
 # Dependencies
-node_modules
+node_modules/
 
-# Env files
+# Environment files and local overrides
 .env
 .env.*
 !.env.example
@@ -9,36 +9,26 @@ env.launchpadbay
 *.local
 
 # Build output
-dist
-dist-ssr
+dist/
 
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-# Editor directories and files
+# Editor and OS files (keep shared VS Code extension recommendations)
 .vscode/*
-.cursor/
 !.vscode/extensions.json
-.idea
+.cursor/
+.idea/
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
 *.sw?
-frontend/jsconfig.json
 
-# local images
-backend/uploads/images/avatars/
+# Uploaded user avatars
+/backend/uploads/images/avatars/
 
-# Certs
+# Generated TLS certificates and private keys
 /certs/
 
-# local notes
-OAUTH_FLOW.md
+# Local project notes
+/OAUTH_FLOW.md

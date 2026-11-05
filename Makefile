@@ -23,6 +23,7 @@ up: .env certs
 	@printf '\nLaunchpadbay:\t https://$(LAN_IP):8443 and https://localhost:8443\n'
 	@printf 'Grafana:\t http://localhost:3001\n'
 	@printf 'Prometheus:\t http://localhost:9090\n'
+	@printf 'Alertmanager:\t http://localhost:9093\n'
 
 .env:
 	@if [ ! -f "$(HOME)/.env.launchpadbay" ]; then \

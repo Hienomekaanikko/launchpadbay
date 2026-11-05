@@ -1,0 +1,12 @@
+route:
+  receiver: discord
+  group_by: ['alertname', 'job']
+  group_wait: 10s
+  group_interval: 30s
+  repeat_interval: 1h
+
+receivers:
+  - name: discord
+    discord_configs:
+      - webhook_url_file: /run/secrets/discord_webhook_url
+        send_resolved: true
