@@ -119,8 +119,8 @@ export default function LobbyView({ online, unread, canAddFriend, onAddFriendCli
           setTab('friends')
         }}>
           {t('profile.friends')}
-          {incoming.length > 0 && <span className="rounded-full bg-brand px-1.5 py-0.5 text-[11px] font-bold leading-none text-black">
-            <span aria-hidden="true">{incoming.length > 99 ? '99+' : incoming.length}</span>
+          {incoming.length > 0 && <span className="relative -top-px inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-bold leading-none tabular-nums text-black">
+            <span aria-hidden="true" className="block translate-y-px">{incoming.length > 99 ? '99+' : incoming.length}</span>
             <span className="sr-only">{t('lobby.pendingRequests', { count: incoming.length })}</span>
           </span>}
         </LobbyTab>
