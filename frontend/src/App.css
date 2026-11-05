@@ -129,6 +129,11 @@
     width: min(380px, calc(100vw - 32px));
   }
 
+  /* Leave half the 16px panel gap above the viewport midpoint. */
+  .app-panels.app-panels-lobby {
+    bottom: calc(50dvh + 8px);
+  }
+
   .chat-scrollbar {
     --chat-scrollbar-thumb: rgba(255, 255, 255, 0.3);
     scrollbar-width: thin;

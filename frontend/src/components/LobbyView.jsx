@@ -92,8 +92,8 @@ function SessionChat({ messages, onSendMessage }) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div ref={listRef} onScroll={onScroll} className="chat-scrollbar h-[30vh] min-h-24 max-h-48 overflow-y-auto flex flex-col gap-2">
+    <div className="flex min-h-0 flex-col gap-2">
+      <div ref={listRef} onScroll={onScroll} className="chat-scrollbar h-[30vh] min-h-0 max-h-48 overflow-y-auto flex flex-col gap-2">
         {messages.length === 0
           ? <div className="text-white/60 text-xs text-center py-2">{t('lobby.noMessages')}</div>
           : messages.map((message) => message.system
@@ -115,7 +115,7 @@ export default function LobbyView({ online, unread, canAddFriend, onAddFriendCli
   }, [tab, activeSession, onSessionRead])
 
   return (
-    <GlassPanel className="flex min-h-0 flex-col overflow-hidden bg-surface/30 p-5 text-white">
+    <GlassPanel className="flex min-h-0 max-h-full flex-col overflow-hidden bg-surface/30 p-5 text-white">
       <div role="group" aria-label={t('lobby.sections')} className="mb-5 flex shrink-0 gap-1 rounded-xl bg-black/15 p-1">
         <LobbyTab selected={tab === 'online'} onClick={() => setTab('online')}>{t('lobby.online')}</LobbyTab>
         <LobbyTab selected={tab === 'sessions'} onClick={() => setTab('sessions')}>
@@ -136,11 +136,11 @@ export default function LobbyView({ online, unread, canAddFriend, onAddFriendCli
           </span>}
         </LobbyTab>
       </div>
-      <div className="min-h-0 overflow-y-auto">
+      <div className="chat-scrollbar flex min-h-0 flex-col overflow-y-auto">
         {tab === 'online' && <PlayersOnline online={online} unread={unread} onProfileClick={onProfileClick} onChatClick={onChatClick} canAddFriend={canAddFriend} onAddFriendClick={onAddFriendClick} />}
         {tab === 'sessions' && (activeSession
-          ? <section aria-labelledby="lobby-session-chat-heading">
-              <h3 id="lobby-session-chat-heading" className="mb-3 break-words text-xs font-medium uppercase tracking-wide text-white/60">{currentSession?.creatorName ? t('session.name', { username: currentSession.creatorName }) : activeSession}</h3>
+          ? <section aria-labelledby="lobby-session-chat-heading" className="flex min-h-0 flex-col">
+              <h3 id="lobby-session-chat-heading" className="mb-3 shrink-0 break-words text-xs font-medium uppercase tracking-wide text-white/60">{currentSession?.creatorName ? t('session.name', { username: currentSession.creatorName }) : activeSession}</h3>
               <SessionChat messages={sessionMessages} onSendMessage={onSendSessionMessage} />
             </section>
           : <SessionsList sessions={sessions} onJoinClick={onJoinClick} onCancelClick={onCancelClick} />)}

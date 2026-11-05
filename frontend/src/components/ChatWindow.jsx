@@ -36,7 +36,7 @@ export default function ChatWindow({ token, socket, recipient, recipientOnline, 
   }
 
   return (
-    <GlassPanel role="dialog" aria-labelledby={headingId} className="fixed bottom-6 end-4 z-30 flex h-[480px] max-h-[calc(100svh-var(--app-nav-height)-2rem)] w-[380px] max-w-[calc(100vw-2rem)] flex-col bg-surface/30 p-0 text-white sm:end-[max(16px,calc((100vw-1120px)/2+24px))]">
+    <GlassPanel role="dialog" aria-labelledby={headingId} className="fixed bottom-6 end-4 z-30 flex h-[480px] min-h-0 max-h-[calc(50dvh-1.5rem-8px)] w-[380px] max-w-[calc(100vw-2rem)] flex-col overflow-hidden bg-surface/30 p-0 text-white sm:end-[max(16px,calc((100vw-1120px)/2+24px))]">
       <header className="flex shrink-0 items-center gap-3 border-b border-white/10 px-5 py-4">
         <button type="button" onClick={() => onChatClick(recipient)} aria-label={t(unread ? 'friends.chatWithUnread' : 'friends.chatWith', { username: recipient.username })} aria-pressed={!viewingProfile} className={`relative flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-2xl ring-1 ring-inset ring-white/10 transition-colors hover:bg-white/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${viewingProfile ? 'bg-black/15' : 'bg-white/15'}`}>
           <Icon name="chat" className="size-5 text-white/80" />
@@ -60,7 +60,7 @@ export default function ChatWindow({ token, socket, recipient, recipientOnline, 
       {viewingProfile && (
         <UserProfileDetails token={token} socket={socket} recipient={recipient} friendStatus={friendStatus} onAddFriendClick={onAddFriendClick} onRemoveClick={onRemoveClick} />
       )}
-      <div className={viewingProfile ? 'hidden' : 'flex min-h-0 flex-1 flex-col'}>
+      <div className={viewingProfile ? 'hidden' : 'chat-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto [scrollbar-gutter:auto]'}>
         <div ref={listRef} onScroll={onScroll} className="chat-scrollbar flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-5 py-5 [overflow-wrap:anywhere]">
           {messages.length === 0
             ? <div className="flex flex-1 flex-col items-center justify-center gap-4 py-6 text-center">
