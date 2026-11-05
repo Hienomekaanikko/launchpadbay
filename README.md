@@ -112,7 +112,7 @@ The entries below describe implemented features. Pending validation and missing 
 | Chat | Exchange private and session messages with unread indicators and delivery-error feedback. Private messages are stored in MySQL; the frontend does not restore their history after a reload. | `ykadosh`, `msuokas` |
 | Languages and RTL | Switch between English, Finnish, Hebrew, and Mandarin, with stored language selection and translated UI text, placeholders, and errors. Language support, the Hebrew RTL layout, and switching between LTR and RTL have been verified locally. | `mbonsdor` |
 | Shared UI and responsive layouts | Reusable Tailwind components and theme tokens, plus a navbar and layouts for desktop and smaller screens. The team has tested the main flows in Chrome, Brave, and Safari, and confirmed usable desktop, tablet, and phone layouts, readable text, reachable controls, keyboard navigation, and visible focus indicators. | `msuokas`, `timurray` |
-| Policy pages | Open project-specific Privacy Policy and Terms of Service content from the footer. Final content review remains pending. | `timurray` |
+| Policy pages | Open project-specific Privacy Policy and Terms of Service content from the footer in all four languages. The documents cover the local student demonstration, data handling, account deletion, acceptable use, and example operator/contact details. | `timurray` |
 | Containerised deployment | Start application and monitoring services with `make up`, generate TLS certificates, apply migrations, and seed data. | `msuokas`, `timurray` |
 | Monitoring | Export process and HTTP metrics, probe HTTPS/database health with Blackbox Exporter, and display metrics and health status in a provisioned Grafana dashboard. Prometheus evaluates alerts; Alertmanager delivers failure and recovery notifications to Discord. | `timurray` |
 
@@ -146,6 +146,9 @@ The team has confirmed full user flows in Chrome (latest stable), Brave, and Saf
 - [x] Passwords are hashed and salted with bcrypt, and protected routes verify JWTs.
 - [x] Email and password authentication is available for both signup and login.
 - [x] All forms and user inputs are properly validated in both the frontend and backend.
+
+Remaining validation work: validate session-action fields and synchronisation payloads, safely reject malformed session accept/reject requests, and validate uploaded images beyond their file signatures. Credential validation, frontend profile checks, and sanitised server errors are already implemented.
+
 - [x] HTTPS is used for frontend-to-backend requests and the nginx-to-backend connection; browser WebSockets use WSS in the HTTPS deployment.
 
 #### README requirements
@@ -161,37 +164,18 @@ The team has confirmed full user flows in Chrome (latest stable), Brave, and Saf
 - [x] Database Schema describes tables, fields, data types, and relationships.
 - [x] Features List is complete, accurate, and identifies the contributors to each feature.
 
-- [x] Modules lists the selected and candidate modules, requirements, implementation evidence, justifications, and point calculation in this checklist.
+- [x] Modules lists the achieved modules, requirements, implementation evidence, justifications, and point calculation in this checklist.
 - [x] Each selected module has its contributing team member(s) clearly identified.
-- [x] Individual Contributions gives every member's specific work and the challenges they faced and overcame.
+- [ ] Individual Contributions gives every member's specific work and the challenges they faced and overcame.
 
-#### EVAL CHECKS - THIS SECTION WILL BE REMOVED
-
-These are evaluation targets not already covered by the mandatory implementation requirements above. They do not add module points.
-
-- [ ] All team members are present and participate in the evaluation.
-- [ ] Each member can individually explain their role, contributions, and at least one feature or module they personally implemented.
-- [ ] At least two different members can coherently explain the project concept, technology choices, and how the team coordinated its work.
-- [ ] Members can explain each other's work and show how their contributions were integrated.
-- [ ] The team can explain its architecture, technical decisions, challenges, solutions, and development trade-offs.
-
-> Pending: these require preparation and confirmation with the team during a rehearsal or the evaluation itself.
-
-- [x] Code has a readable structure with separate backend feature files, frontend components/hooks, and audio engine, clock, channel, and effects files.
-- [ ] Deployment has been demonstrated from a fresh clone of the submitted repository in an empty directory, without relying on untracked assets or local-only configuration beyond the documented setup.
-- [ ] Any testing or automation scripts used during evaluation have been reviewed with the evaluator.
-- [ ] The main user flows have been demonstrated together without critical failures, including reasonable handling of unexpected or bad usage.
-- [ ] The team can demonstrate its learning, explain the project's creative choices, and make a small code modification if requested.
-
-> Pending: complete a defence rehearsal and fresh-clone run. The known validation failures must be addressed before the unexpected-input check can pass.
 
 ### Modules
 
-`[x]` marks completed, `[ ]` missing or incomplete, `[-]` not applicable, and `[?]` pending completion, verification, or acceptance. Pending requirements do not count as achieved points. The pending-inclusive tally assumes all `[?]` requirements are completed and accepted; any remaining `[ ]` requirement keeps a module out of that tally. The file-upload module is explicitly excluded from the pending-inclusive tally.
+`[x]` marks completed, `[ ]` missing or incomplete, and `[-]` not applicable. Only achieved modules are included in the point tally: 2 points per Major module and 1 point per Minor module.
 
 <a id="modules-web"></a>
 
-#### Web — 9/10 points; partially complete
+#### Web — 9 points; implemented
 
 ##### Major: Use a framework for both the frontend and backend. — 2/2 points; implemented
 
@@ -245,26 +229,9 @@ Responsible teammates: msuokas, timurray
 
 Implementation: Tailwind theme tokens in `frontend/src/index.css`, shared colours and typography, an SVG icon system, and at least 12 reusable components: `NavButton`, `FormButton`, `CloseButton`, `Input`, `Modal`, `GlassPanel`, `Icon`, `Tag`, `UserRow`, `FriendRequestRow`, `SessionRow`, and `MessageBubble`.
 
-##### Minor: File upload and management system. — 0/1 point; incomplete optional candidate
-
-Responsible teammates: mbonsdor, msuokas for existing avatar/account flows; TBD for the full file-management system
-
-- [ ] Support multiple file types (images, documents, etc.).
-- [ ] Client-side and server-side validation (type, size, format).
-- [ ] Secure file storage with proper access control.
-- [ ] File preview functionality where applicable.
-- [ ] Progress indicators for uploads.
-- [ ] Ability to delete uploaded files.
-
-Existing scope: authenticated avatar uploads accept JPEG, PNG, and WebP MIME types, use user-ID-based storage names, display the resulting avatar, and show an “Uploading…” status. Avatar images are intentionally publicly readable.
-
-> LLM analysis "Missing: complete client-side type/size/format checks, server-side validation of actual image content, and a dedicated uploaded-file deletion action. Replacing an avatar or deleting the entire account is not treated here as a complete file-management interface. The broader theme/sound upload manager remains unimplemented, so avatar upload is only claimed as part of user management."
-
-> If allowed the upload of wav files (.lpd file?) then I think this could work.
-
 <a id="modules-accessibility-and-internationalization"></a>
 
-#### Accessibility and Internationalization — 3/3 points; implemented and locally tested
+#### Accessibility and Internationalization — 3 points; implemented and locally tested
 
 ##### Minor: Support for multiple languages (at least 3 languages). — 1/1 point; implemented and locally tested
 
@@ -275,7 +242,7 @@ Responsible teammates: mbonsdor
 - [x] Language switcher in the UI.
 - [x] All user-facing text must be translatable.
 
-Implementation: i18next resources for English, Finnish, Hebrew, and Mandarin, a language switcher, and stored language selection. All four locale files have 175 matching, populated entries with matching interpolation placeholders. Login and registration placeholders use translated labels, and server errors are translated when rendered. Resource resolution without English fallback, error translations, stored-language initialisation, and document language/direction updates have been verified locally.
+Implementation: i18next resources for English, Finnish, Hebrew, and Mandarin, a language switcher, and stored language selection. All four locale files have matching, populated entries with matching interpolation placeholders. Login and registration placeholders use translated labels, and server errors are translated when rendered. Resource resolution without English fallback, error translations, stored-language initialisation, and document language/direction updates have been verified locally.
 
 ##### Minor: Right-to-left (RTL) language support. — 1/1 point; implemented and locally tested
 
@@ -307,11 +274,11 @@ Selected browsers: Google Chrome is the mandatory baseline; Brave and Safari are
 
 Primary use cases are desktop and tablet browsers. Additional phone testing in Safari and Brave shows that visible browser controls, such as the address and navigation bars, can reduce the space available to the application. This viewport constraint is recorded as an observed limitation; check that controls and dialogs remain reachable as browser controls expand or collapse and in portrait and landscape orientations. Responsive usability on smaller screens remains part of the mandatory requirements.
 
-The latest-stable Chrome and normal-use console checks are confirmed. Exact browser version numbers, operating systems, and device details have not yet been recorded; add these to make the test results reproducible. The mandatory device-responsiveness check is also confirmed above.
+The latest-stable Chrome and normal use console checks are confirmed.
 
 <a id="modules-user-management"></a>
 
-#### User Management — 3/3 points; implemented and locally tested
+#### User Management — 3 points; implemented and locally tested
 
 ##### Major: Standard user management and authentication. — 2/2 points; implemented
 
@@ -334,7 +301,7 @@ Implementation: GitHub authorisation redirect, state-cookie validation, authoris
 
 <a id="modules-devops"></a>
 
-#### Devops — 2/2 points; implemented and locally tested
+#### DevOps — 2 points; implemented and locally tested
 
 ##### Major: Monitoring system with Prometheus and Grafana. — 2/2 points; implemented and locally tested
 
@@ -350,7 +317,7 @@ Implementation: Prometheus collects backend process and HTTP metrics over HTTPS.
 
 <a id="modules-of-choice"></a>
 
-#### Modules of choice — 2/2 points; implemented and locally tested
+#### Modules of choice — 2 points; implemented and locally tested
 
 ##### Major: Implement a custom module that is not listed above. — 2/2 points; implemented and locally tested
 
@@ -380,14 +347,16 @@ See [launchpad notes](frontend/src/launchpad/launchpad_notes.md) for architectur
 
 #### Module point totals
 
-| Subject category | Achieved | Including pending | Possible |
-|---|---:|---:|---:|
-| [Web](#modules-web) | 9 | 9 | 10 |
-| [Accessibility and Internationalization](#modules-accessibility-and-internationalization) | 3 | 3 | 3 |
-| [User Management](#modules-user-management) | 3 | 3 | 3 |
-| [DevOps](#modules-devops) | 2 | 2 | 2 |
-| [Modules of choice](#modules-of-choice) | 2 | 2 | 2 |
-| **Total** | **19** | **19** | **20** |
+| Subject category | Achieved points |
+|---|---:|
+| [Web](#modules-web) | 9 |
+| [Accessibility and Internationalization](#modules-accessibility-and-internationalization) | 3 |
+| [User Management](#modules-user-management) | 3 |
+| [DevOps](#modules-devops) | 2 |
+| [Modules of choice](#modules-of-choice) | 2 |
+| **Total** | **19** |
+
+The 13 achieved modules comprise 6 Major modules (12 points) and 7 Minor modules (7 points).
 
 ## Individual Contributions
 
@@ -403,7 +372,7 @@ These summaries follow the authored changes in the repository and the role assig
 
 - **Implemented:** Audio engine refactoring into playback, timing, channel-state, effects, and UI modules; GitHub OAuth and related user-schema changes; default/uploaded/GitHub avatars; English, Finnish, Hebrew, and Mandarin language resources and switching; Hebrew RTL adjustments; and application title/favicon updates.
 - **Key areas:** `frontend/src/launchpad/`, `backend/authGithub.js`, `backend/avatars.js`, avatar/profile components, `frontend/src/i18n/`, and the language switcher.
-- **Challenge and solution:** TODO
+- **Challenge and solution:** my challenge could be something like this: My biggest challenge was figuring out the underlying logic of the prototype while learning a new language. The approach involved incrementally refactoring it with heavy use of LLMs, while trying not to break anything. In the future, I’d consider doing a full analysis first and then rebuilding it from the ground up.
 
 ### ykadosh: Technical Lead / Developer
 
@@ -423,7 +392,7 @@ These summaries follow the authored changes in the repository and the role assig
 
 - **Implemented:** HTTPS certificates and proxy configuration; environment-file setup and credential/port hardening; backend metrics, Prometheus/Grafana provisioning and dashboards, Blackbox Exporter health probes, and Alertmanager failure/recovery notifications to Discord; the CI workflow for frontend lint/build and backend dependency installation; responsive layouts and the navbar; and Privacy Policy/Terms of Service pages.
 - **Key areas:** `Makefile`, `docker-compose.yml`, `backend/metrics.js`, `monitoring/`, `.github/workflows/basic.yml`, nginx/Vite configuration, `AppNavbar.jsx`, responsive styles, and policy components/content.
-- **Challenge and solution:** HTTPS needed consistent trust and hostnames across the browser, nginx, backend, and monitoring scraper. Generated certificates, mounted CA files, and proxy/scraper configuration connect these components. Responsive layout work accommodates the pad grid, controls, navbar, and overlays on smaller screens.
+- **Challenge and solution:** HTTPS needed consistent trust and hostnames across the browser, nginx, backend, and monitoring scraper. Generated certificates, mounted CA files, and proxy/scraper configuration connect these components. Responsive layout work accommodates the pad grid, controls, navbar, and overlays on smaller screens. Many difficulties as well with typos and understanding tailwind that required much checking and assistance.
 
 ## Instructions
 
@@ -645,7 +614,7 @@ The backend enforces these rules in `backend/validation.js`; update this section
     - No local password; sign-in is handled by GitHub OAuth
 - **Account Management**
     - Profile editing page supports modification of username and email
-    - Account deletion: possible from the same page page, after providing username
+    - Account deletion: possible from the same page, after providing username
 
 ### Working on the backend/database
 
