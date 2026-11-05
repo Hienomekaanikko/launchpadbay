@@ -1,15 +1,38 @@
 global:
   scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
 
 scrape_configs:
-  - job_name: prometheus #REMOVE: prometheus monitoring itself
+  - job_name: prometheus
     static_configs:
       - targets: ["localhost:9090"]
 
-  - job_name: backend #REMOVE: prometheus monitoring backend
+  - job_name: backend
     scheme: https
     metrics_path: /metrics
     tls_config:
       ca_file: /etc/prometheus/certs/ca.pem
     static_configs:
       - targets: ["backend:3000"]
+
+  - job_name: backend_health
+    metrics_path: /probe
+    params:
+      module: [http_backend]
+    static_configs:
+      - targets: ['https://backend:3000/health/db']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: blackbox:9115
