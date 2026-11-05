@@ -86,7 +86,7 @@ body {
   backdrop-filter: blur(15px);
 }
 
-/* Active tiles keep the same steady glass-and-colour appearance as hover. */
+/* Hovered and active tiles share the label spacing. */
 .lpad .btn:hover a,
 .lpad .btn.active a {
   letter-spacing: 2px;
@@ -172,6 +172,12 @@ body {
   background: var(--tile-color);
   box-shadow: 0 0 5px var(--tile-color), 0 0 15px var(--tile-color), 0 0 30px var(--tile-color), 0 0 60px var(--tile-color);
   transition: background 0.6s ease, box-shadow 0.6s ease;
+}
+
+/* Preview idle tiles at half glow; playing and blinking tiles keep their state brightness. */
+.lpad .btn:hover:not(.active):not(.blink)::before,
+.lpad .btn:hover:not(.active):not(.blink)::after {
+  opacity: 0.5;
 }
 
 /* Loading state — sound not yet ready */
