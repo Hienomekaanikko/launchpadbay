@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import GlassPanel from './GlassPanel.jsx'
 import MessageBubble from './MessageBubble.jsx'
@@ -6,11 +6,12 @@ import MessageComposer from './MessageComposer.jsx'
 import UserRow from './UserRow.jsx'
 import FriendRequestRow from './FriendRequestRow.jsx'
 import SessionRow from './SessionRow.jsx'
+import NotificationDot from './NotificationDot.jsx'
 import useStickToBottom from '../useStickToBottom.js'
 
 function LobbyTab({ selected, children, onClick }) {
   return (
-    <button type="button" aria-pressed={selected} onClick={onClick} className={`flex min-h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg px-2 text-xs font-medium transition-colors sm:text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${selected ? 'bg-white/15 text-white shadow-sm' : 'text-white/65 hover:bg-white/5 hover:text-white'}`}>
+    <button type="button" aria-pressed={selected} onClick={onClick} className={`relative flex min-h-11 min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 rounded-lg px-2 text-xs font-medium transition-colors sm:text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand ${selected ? 'bg-white/15 text-white shadow-sm' : 'text-white/65 hover:bg-white/5 hover:text-white'}`}>
       {children}
     </button>
   )
@@ -91,8 +92,8 @@ function SessionChat({ messages, onSendMessage }) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <div ref={listRef} onScroll={onScroll} className="chat-scrollbar h-[30vh] min-h-24 max-h-48 overflow-y-auto flex flex-col gap-2">
+    <div className="flex min-h-0 flex-col gap-2">
+      <div ref={listRef} onScroll={onScroll} className="chat-scrollbar h-[30vh] min-h-0 max-h-48 overflow-y-auto flex flex-col gap-2">
         {messages.length === 0
           ? <div className="text-white/60 text-xs text-center py-2">{t('lobby.noMessages')}</div>
           : messages.map((message) => message.system
@@ -104,32 +105,42 @@ function SessionChat({ messages, onSendMessage }) {
   )
 }
 
-export default function LobbyView({ online, unread, canAddFriend, onAddFriendClick, activeSession, sessions, onJoinClick, onCancelClick, onProfileClick, onChatClick, sessionMessages, onSendSessionMessage, friends, incoming, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen }) {
+export default function LobbyView({ online, unread, canAddFriend, onAddFriendClick, activeSession, sessions, onJoinClick, onCancelClick, onProfileClick, onChatClick, sessionMessages, sessionUnread, onSessionRead, onSendSessionMessage, friends, incoming, onAcceptClick, onRejectClick, onRemoveClick, onFriendsOpen }) {
   const { t } = useTranslation()
   const [tab, setTab] = useState('online')
   const currentSession = sessions.find((session) => session.id === activeSession)
 
+  useEffect(() => {
+    if (tab === 'sessions' && activeSession) onSessionRead()
+  }, [tab, activeSession, onSessionRead])
+
   return (
-    <GlassPanel className="flex min-h-0 flex-col overflow-hidden bg-surface/30 p-5 text-white">
+    <GlassPanel className="flex min-h-0 max-h-full flex-col overflow-hidden bg-surface/30 p-5 text-white">
       <div role="group" aria-label={t('lobby.sections')} className="mb-5 flex shrink-0 gap-1 rounded-xl bg-black/15 p-1">
         <LobbyTab selected={tab === 'online'} onClick={() => setTab('online')}>{t('lobby.online')}</LobbyTab>
-        <LobbyTab selected={tab === 'sessions'} onClick={() => setTab('sessions')}>{t('lobby.sessions')}</LobbyTab>
+        <LobbyTab selected={tab === 'sessions'} onClick={() => setTab('sessions')}>
+          {t('lobby.sessions')}
+          {sessionUnread && tab !== 'sessions' && <>
+            <NotificationDot className="top-1.5 end-2.5" />
+            <span className="sr-only">{t('lobby.unreadSessionMessages')}</span>
+          </>}
+        </LobbyTab>
         <LobbyTab selected={tab === 'friends'} onClick={() => {
           if (tab !== 'friends') onFriendsOpen()
           setTab('friends')
         }}>
           {t('profile.friends')}
-          {incoming.length > 0 && <span className="rounded-full bg-brand px-1.5 py-0.5 text-[11px] font-bold leading-none text-black">
-            <span aria-hidden="true">{incoming.length > 99 ? '99+' : incoming.length}</span>
+          {incoming.length > 0 && <span className="relative -top-px inline-flex h-[18px] min-w-[18px] shrink-0 items-center justify-center rounded-full bg-brand px-1 text-[11px] font-bold leading-none tabular-nums text-black">
+            <span aria-hidden="true" className="block translate-y-px">{incoming.length > 99 ? '99+' : incoming.length}</span>
             <span className="sr-only">{t('lobby.pendingRequests', { count: incoming.length })}</span>
           </span>}
         </LobbyTab>
       </div>
-      <div className="min-h-0 overflow-y-auto">
+      <div className="chat-scrollbar flex min-h-0 flex-col overflow-y-auto">
         {tab === 'online' && <PlayersOnline online={online} unread={unread} onProfileClick={onProfileClick} onChatClick={onChatClick} canAddFriend={canAddFriend} onAddFriendClick={onAddFriendClick} />}
         {tab === 'sessions' && (activeSession
-          ? <section aria-labelledby="lobby-session-chat-heading">
-              <h3 id="lobby-session-chat-heading" className="mb-3 break-words text-xs font-medium uppercase tracking-wide text-white/60">{currentSession?.creatorName ? t('session.name', { username: currentSession.creatorName }) : activeSession}</h3>
+          ? <section aria-labelledby="lobby-session-chat-heading" className="flex min-h-0 flex-col">
+              <h3 id="lobby-session-chat-heading" className="mb-3 shrink-0 break-words text-xs font-medium uppercase tracking-wide text-white/60">{currentSession?.creatorName ? t('session.name', { username: currentSession.creatorName }) : activeSession}</h3>
               <SessionChat messages={sessionMessages} onSendMessage={onSendSessionMessage} />
             </section>
           : <SessionsList sessions={sessions} onJoinClick={onJoinClick} onCancelClick={onCancelClick} />)}

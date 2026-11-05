@@ -131,9 +131,6 @@ The entries below describe implemented features. Pending validation and missing 
 The team has confirmed full user flows in Chrome (latest stable), Brave, and Safari, with a clean application console during normal use. Intentional authentication failures, such as a wrong password or an unknown email address, return HTTP 401 with `invalid_credentials` and display a translated validation message. DevTools can show these rejected requests as errors; they are expected, handled authentication responses.
 
 - [x] Privacy Policy and Terms of Service are accessible from footer controls and contain project-specific information rather than empty placeholder pages.
-
-> Policy docs need to be extended with final specs.
-
 - [x] Multiple users can be logged in and active at the same time.
 - [x] Real-time updates are reflected across connected users where applicable.
 - [x] Concurrent actions by different users have been verified to work without conflicts or performance issues.
@@ -692,7 +689,8 @@ make dev
 - [React documentation](https://react.dev/)
 - [Prometheus documentation](https://prometheus.io/docs/introduction/overview/)
 - [Grafana documentation](https://grafana.com/docs/grafana/latest/)
+- [EU guidance on fair contract terms (Your Europe)](https://europa.eu/youreurope/citizens/consumers/unfair-treatment/unfair-contract-terms/indexamp_en.htm).
 
-**AI usage:** AI (Claude) was used as a learning and research tool throughout the project — to understand unfamiliar concepts (e.g. Prisma 7's driver-adapter requirement, Docker Compose healthcheck/`depends_on` semantics) and to explore current best practices before implementing them, rather than to generate unreviewed code wholesale. It was also used directly to diagnose and fix a real startup-ordering bug between the backend and MySQL containers, and to help draft this README from the project's actual code and Git history. Codex was used to compare the implementation with the subject and evaluation sheet, assemble the requirements checklist, and draft the audio engine's custom-module justification.
+**AI usage:** AI (Claude) was used as a learning and research tool throughout the project — to understand unfamiliar concepts (e.g. Prisma 7's driver-adapter requirement, Docker Compose healthcheck/`depends_on` semantics) and to explore current best practices before implementing them, rather than to generate unreviewed code wholesale. It was also used directly to diagnose and fix a real startup ordering bug between the backend and MySQL containers, and to help draft this README from the project's actual code and Git history. Codex was used to compare the implementation with the subject and evaluation sheet and assemble the requirements checklist. LLMs also helped draft and refine Finnish, Hebrew, and Mandarin translations, including the Privacy Policy and Terms of Service, and explain Tailwind utility classes and their effects on layout, spacing, alignment, and responsive styling.
 
 ---

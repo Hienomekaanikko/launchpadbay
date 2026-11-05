@@ -62,6 +62,7 @@
   "lobby": {
     "sections": "Aulan osiot",
     "pendingRequests": "Kaveripyyntöjä: {{count}}",
+    "unreadSessionMessages": "Lukemattomia istuntoviestejä",
     "online": "Paikalla",
     "sessions": "Sessiot",
     "sessionChat": "Sessiokeskustelu",
@@ -190,13 +191,63 @@
       "sections": [
         {
           "id": "about",
-          "title": "Tietoja",
-          "text": "Launchpad Bay on selainpohjainen musiikkisovellus."
+          "title": "Tietoa tästä selosteesta",
+          "text": "Launchpad Bay on selainpohjainen musiikkisovellus, joka on kehitetty osana 42-opetussuunnitelmaa opiskelijaprojektin paikallisia esittelyjä varten. Launchpad Bay Inc. on projektissa käytetty kuvitteellisen ylläpitäjän nimi. Tässä selosteessa kerrotaan, miten sovellus käsittelee tietoja, kun soitat musiikkia, luot tilin tai käytät yhteisöominaisuuksia. Voit soittaa launchpadilla luomatta tiliä. Päivitetty viimeksi: 5. marraskuuta 2026."
         },
         {
           "id": "information",
-          "title": "Tietojen käsittely",
-          "text": "Käsittelemme käyttämiesi ominaisuuksien mukaan käyttäjänimeäsi, sähköpostiosoitettasi, salasanan tiivistettä, avataria, GitHub-tilin tunnistetta, kaverisuhteita ja chat-viestejä."
+          "title": "Käsittelemämme tiedot",
+          "text": "Tiliominaisuuksia varten tallennamme käyttäjätunnisteesi, käyttäjänimesi, mahdollisesti antamasi sähköpostiosoitteen, tilin luontipäivän ja avatarisi. Salasanatileille tallennetaan myös salasanan tiiviste ja GitHub-tileille GitHub-tilin tunniste. Yhteisöominaisuuksissa käsitellään kaveripyyntöjä, kaverisuhteita, paikallaolotietoa, istuntoihin osallistumista, jaettuja launchpad-toimintoja ja viestejä. Palvelinlokit voivat sisältää IP-osoitteita, pyydettyjä URL-osoitteita, aikaleimoja, vastauskoodeja ja virhetietoja."
+        },
+        {
+          "id": "purposes",
+          "title": "Miten käytämme tietoja",
+          "text": "Käytämme tilitietoja rekisteröitymiseen ja sisäänkirjautumiseen, profiilisi ylläpitämiseen ja tilisi suojaamiseen. Käytämme kaverisuhteisiin, paikallaoloon, istuntoihin ja viesteihin liittyviä tietoja käyttäjien yhdistämiseen ja heidän valitsemiensa yhteisö- ja yhteissoitto-ominaisuuksien toteuttamiseen. Tekniset lokit ja valvontatiedot auttavat havaitsemaan häiriöitä, selvittämään virheitä, rajoittamaan väärinkäyttöön liittyviä pyyntöjä ja ylläpitämään sovellusta."
+        },
+        {
+          "id": "visibility",
+          "title": "Mitä muut käyttäjät näkevät",
+          "text": "Muut sisäänkirjautuneet käyttäjät voivat nähdä käyttäjänimesi, avatarisi, liittymispäiväsi, paikallaolosi ja saatavilla olevat istunnot. Sähköpostiosoitettasi ja salasanasi tiivistettä ei sisällytetä muille näytettävään profiiliisi. Avatarikuvat ovat julkisesti kaikkien niiden URL-osoitteen tietävien saatavilla, joten älä käytä avatarina kuvaa, jonka haluat pitää yksityisenä. Kaveripyynnöt näkyvät niihin liittyville tileille. Jaetut launchpad-toiminnot ja istunnon chat-viestit välitetään kyseisen istunnon käyttäjille."
+        },
+        {
+          "id": "messages",
+          "title": "Yksityisviestit ja istuntoviestit",
+          "text": "Yksityisviestit välitetään lähettäjälle ja vastaanottajalle, ja ne tallennetaan heidän tilitunnisteidensa ja aikaleiman kanssa. Ne säilyvät tallennettuina, vaikka nykyinen chat-käyttöliittymä ei enää näyttäisi niitä. Istuntoviestit välitetään istunnon osallistujille, eikä niitä tallenneta sovelluksen viestitietokantaan. Palvelin käsittelee viestit, eikä niitä salata päästä päähän. Henkilöt, joilla on palvelimen tai tietokannan ylläpito-oikeudet, voivat päästä käsiksi tallennettuihin tietoihin. Vastaanottajat voivat myös kopioida viestejä sovelluksen ulkopuolelle."
+        },
+        {
+          "id": "browser-storage",
+          "title": "Selaimen tallennustila ja evästeet",
+          "text": "Käytämme selaimen paikallista tallennustilaa kirjautumistunnisteesi, käyttäjätunnisteesi, käyttäjänimesi ja valitsemasi kielen muistamiseen. Kirjautumistunnisteet vanhenevat vuorokaudessa. Uloskirjautuminen poistaa tallennetut kirjautumistiedot. Kielivalintasi säilyy, kunnes muutat sitä tai tyhjennät tallennustilan. Selaimen istuntokohtaiseen tallennustilaan tallennettava väliaikainen välilehtitunniste auttaa hallitsemaan useita välilehtiä. GitHub-kirjautuminen käyttää suojattua HttpOnly-evästettä sen varmistamiseen, että kirjautumispyyntö on peräisin selaimestasi. Eväste vanhenee kymmenessä minuutissa ja poistetaan, kun kirjautumisen paluupyyntö käsitellään. Selaimen tallennustilan tyhjentäminen ei poista tiliäsi tai palvelimelle tallennettuja viestejä."
+        },
+        {
+          "id": "github",
+          "title": "Kirjautuminen GitHubilla",
+          "text": "Jos valitset GitHub-kirjautumisen, selaimesi siirtyy GitHubiin kirjautumisen hyväksymistä varten. Saamme GitHub-tilisi tunnisteen, käyttäjänimen, GitHubin mahdollisesti palauttaman sähköpostiosoitteen ja avataritiedot Launchpad Bay -tilisi luomista tai löytämistä varten. Sovellus voi kopioida GitHub-avatarisi omaan tallennustilaansa tilin luomisen yhteydessä. Emme saa GitHub-salasanaasi emmekä tallenna GitHubin käyttöoikeustunnistetta tilitietokantaan. GitHub käsittelee tietoja oman tietosuojaselosteensa mukaisesti."
+        },
+        {
+          "id": "external-services",
+          "title": "Ulkoiset resurssit",
+          "text": "Sovellus lataa kirjasimensa Google Fontsista ja GitHub-kirjautumiskuvakkeen SVG Reposta. Kun selaimesi pyytää näitä resursseja, palveluntarjoajat saavat yhteyteen liittyviä tietoja, kuten IP-osoitteesi ja selainpyynnön otsaketietoja. Nämä pyynnöt ovat erillisiä GitHub-todennuksesta, ja niihin sovelletaan kunkin palveluntarjoajan omia tietosuojakäytäntöjä."
+        },
+        {
+          "id": "security",
+          "title": "Tietoturva ja valvonta",
+          "text": "Salasanat tallennetaan suolattuina bcrypt-tiivisteinä luettavien salasanojen sijaan. Projektin mukana toimitettu käyttöönottoratkaisu käyttää HTTPS:ää ja suojattuja WebSocket-yhteyksiä tiedonsiirron suojaamiseen, ja tiliominaisuudet edellyttävät todennusta. Toiminnan valvonta tallentaa pyyntömääriä, vasteaikoja ja palvelimen resurssien käyttöä. Valvontamittareiden tunnisteet eivät sisällä viestien sisältöä, sähköpostiosoitteita tai käyttäjänimiä. Nämä suojatoimet vähentävät riskejä, mutta eivät voi taata täydellistä tietoturvaa."
+        },
+        {
+          "id": "retention",
+          "title": "Tietojen säilytys ja tilin poistaminen",
+          "text": "Tilitiedoilla, kaverisuhteilla ja yksityisviesteillä ei ole nykyisessä sovelluksessa automaattista vanhenemisaikaa. Voit poistaa tilisi Muokkaa profiilia -näkymästä poistuttuasi kaikista aktiivisista istunnoista ja vahvistettuasi salasanasi tai pelkkää GitHub-kirjautumista käyttävän tilin tapauksessa käyttäjänimesi. Tilin poistaminen poistaa tilin, sen kaverisuhteet, sen lähettämät ja vastaanottamat yksityisviestit sekä siihen liittyvät avataritiedostot. Avatarin vaihtaminen poistaa myös vanhemmat avataritiedostot. Poistaminen ei hävitä muiden käyttäjien säilyttämiä kopioita tai palvelinlokeihin jo kirjattuja merkintöjä. Projektissa ei ole määritetty palvelinlokeille kiinteää poistoaikaa. Prometheus-valvontatiedot on määritetty säilytettäviksi viidentoista päivän ajan."
+        },
+        {
+          "id": "choices",
+          "title": "Valintasi",
+          "text": "Voit käyttää launchpadia ilman tiliä, muokata profiiliasi, vaihtaa avatarisi, hallita kaverisuhteita, kirjautua ulos tai poistaa tilisi. Pelkkää GitHub-kirjautumista käyttävillä tileillä ei ole vaihdettavaa paikallista salasanaa. Sovellettavan tietosuojalainsäädännön mukaan sinulla voi olla myös oikeus tutustua henkilötietoihisi, oikaista tai poistaa niitä, saada niistä kopio, rajoittaa tai vastustaa niiden käsittelyä sekä tehdä valitus tietosuojaviranomaiselle."
+        },
+        {
+          "id": "contact",
+          "title": "Tietosuojakysymykset ja -pyynnöt",
+          "text": "Launchpad Bay Inc:n esittelyssä käytetty yhteysosoite on support@launchpadbay.com. Tämä on esimerkkiosoite, ei projektin toimiva tukikanava. Jos sinulla on todellisia tietosuojakysymyksiä tai paikallisessa esittelyssä käytettyjä tietoja koskevia pyyntöjä, ota yhteyttä esittelyä pitävään projektiryhmään."
         }
       ]
     },
@@ -205,13 +256,53 @@
       "sections": [
         {
           "id": "about",
-          "title": "Tietoja",
-          "text": "Launchpad Bay on selainpohjainen launchpad musiikin soittamiseen, sekä tili- ja yhteisöominaisuuksia."
+          "title": "Tietoa näistä ehdoista",
+          "text": "Launchpad Bay on selainpohjainen musiikkisovellus, joka on kehitetty osana 42-opetussuunnitelmaa opiskelijaprojektin paikallisia esittelyjä varten. Launchpad Bay Inc. on projektissa käytetty kuvitteellisen ylläpitäjän nimi. Nämä ehdot kuvaavat launchpadin, tilien, profiilien, kaverisuhteiden, viestien ja jaettujen istuntojen käyttöä. Esittely on käytettävissä ilman tilausta tai ostosta. Päivitetty viimeksi: 5. marraskuuta 2026."
+        },
+        {
+          "id": "accounts",
+          "title": "Tilit ja pääsy",
+          "text": "Voit soittaa launchpadilla ilman tiliä. Tili- ja yhteisöominaisuudet edellyttävät rekisteröitymistä tai GitHub-kirjautumista. Käytä tiliä, johon sinulla on käyttöoikeus, pidä salasanasi ja kirjautumistietosi yksityisinä ja kirjaudu ulos yhteiskäyttöiseltä laitteelta. Älä esiinny toisena henkilönä tai käytä toisen käyttäjän tiliä ilman lupaa. GitHub hallinnoi pääsyä GitHub-tileihin omien ehtojensa mukaisesti."
         },
         {
           "id": "acceptable-use",
           "title": "Hyväksyttävä käyttö",
-          "text": "Älä altista muita käyttäjiä roskapostille, laittomalla sisällöllä äläkä yrittämällä häiritä sovelluksen toimintaa."
+          "text": "Kohtele muita käyttäjiä kunnioittavasti. Älä häiritse, uhkaile, esiinny toisena henkilönä tai lähetä roskapostia. Älä jaa toisen yksityisiä tietoja ilman lupaa äläkä lataa tai lähetä laitonta, haitallista tai muiden oikeuksia loukkaavaa sisältöä. Älä yritä kiertää todennusta tai pyyntörajoituksia, päästä tietoihin, joita sinulla ei ole oikeutta nähdä, tai tarkoituksellisesti häiritä toisen käyttäjän istuntoa tai sovellusta. Jos havaitset testauksessa ongelman, ilmoita siitä esittelyä pitävälle projektiryhmälle käyttämättä sitä muita käyttäjiä vastaan."
+        },
+        {
+          "id": "content",
+          "title": "Sisältösi ja käyttöluvat",
+          "text": "Lataa vain sellaisia avatareja ja lähetä vain sellaista sisältöä, jota sinulla on oikeus käyttää ja jakaa. Säilytät omat oikeutesi sisältöösi. Lähettämällä sisältöä annat projektiryhmälle luvan tallentaa, näyttää ja välittää sitä käyttämiesi ominaisuuksien toteuttamiseksi tietosuojaselosteessa kuvattujen säilytys- ja poistokäytäntöjen mukaisesti. Älä käytä avatarina kuvaa, jonka haluat pitää yksityisenä: avatarikuvien URL-osoitteet ovat julkisesti käytettävissä. Muut käyttäjät voivat kopioida saamiaan viestejä."
+        },
+        {
+          "id": "music",
+          "title": "Musiikki ja kolmansien osapuolten oikeudet",
+          "text": "Kunnioita tekijöiden oikeuksia käyttäessäsi ääniä, kuvia ja muuta materiaalia. Äänen saatavuus tässä esittelyssä ei itsessään anna lupaa levittää tai myydä sitä tai käyttää sitä julkaistavassa äänitteessä. Tarkista materiaalin käyttöluvat ennen sitä sisältävän työn jakamista tai julkaisemista. Nämä ehdot eivät siirrä sinulle kolmansien osapuolten musiikin, kuvien, ohjelmistojen tai muiden resurssien omistusoikeuksia."
+        },
+        {
+          "id": "social-features",
+          "title": "Viestit ja jaetut istunnot",
+          "text": "Kaverisuhteet ja jaetut istunnot ovat vapaaehtoisia. Istunnon isäntä voi hyväksyä tai hylätä liittymispyynnön, ja osallistujat voivat poistua istunnosta. Yksityisviestien vastaanottajan on oltava paikalla, ja sovellus tallentaa yksityisviestit. Istuntoviestit välitetään osallistujille tallentamatta niitä viestitietokantaan. Chat ei ole päästä päähän salattu. Yhteyskatkokset, selaimen toiminta tai palvelinvirheet voivat keskeyttää viestien toimituksen ja synkronoinnin, joten älä luota tähän esittelyyn välttämättömässä viestinnässä tai tärkeän työn ainoana säilytyspaikkana."
+        },
+        {
+          "id": "privacy",
+          "title": "Tietosuoja ja ulkoiset palvelut",
+          "text": "Tietosuojaseloste kertoo, mitä tietoja sovellus käsittelee, mitä muut käyttäjät näkevät sekä miten selaimen tallennustila, tietojen säilytys ja poistaminen toimivat. GitHub-kirjautuminen, Google Fonts ja ulkoisesta palvelusta ladattava GitHub-kuvake käyttävät kolmansien osapuolten palveluja, joilla on omat ehtonsa ja tietosuojakäytäntönsä. Tutustu tietosuojaselosteeseen ennen henkilötietojen antamista tai yhteisöominaisuuksien käyttöä."
+        },
+        {
+          "id": "deletion",
+          "title": "Käytön lopettaminen ja tilin poistaminen",
+          "text": "Voit lopettaa sovelluksen käytön, poistua istunnosta tai kirjautua ulos milloin tahansa. Poistaaksesi tilisi poistu kaikista aktiivisista istunnoista, valitse Muokkaa profiilia -näkymässä Poista tili ja suorita vahvistus. Poistaminen poistaa tilisi, siihen liittyvät kaverisuhteet, lähetetyt ja vastaanotetut yksityisviestit sekä avataritiedostot. Se ei poista muiden käyttäjien sovelluksen ulkopuolella säilyttämiä kopioita tai olemassa olevia palvelinlokimerkintöjä. Selaimen tallennustilan tyhjentäminen tai uloskirjautuminen ei poista tiliäsi. Katso lisätietoja tietojen säilytyksestä tietosuojaselosteesta."
+        },
+        {
+          "id": "availability",
+          "title": "Esittelyn saatavuus",
+          "text": "Kyseessä on opetuskäyttöön tarkoitettu esittely, ei palvelu, jolle taataan keskeytymätön toiminta, jatkuva tuki tai pysyvä tallennustila. Ominaisuudet voivat olla keskeneräisiä, ja esittelyjä voidaan keskeyttää, nollata tai lopettaa kehityksen, ylläpidon tai arvioinnin vuoksi. Säilytä tärkeistä tiedoista erilliset kopiot. Mikään näissä ehdoissa ei sulje pois vastuuta tai rajoita oikeuksia silloin, kun sovellettava laki kieltää sen."
+        },
+        {
+          "id": "contact",
+          "title": "Kysymykset ja ilmoitukset",
+          "text": "Launchpad Bay Inc:n esittelyssä käytetty yhteysosoite on support@launchpadbay.com. Tämä on esimerkkiosoite, ei projektin toimiva tukikanava. Jos sinulla on todellisia kysymyksiä tai haluat ilmoittaa väärinkäytöstä tai paikallisen esittelyn teknisistä ongelmista, ota yhteyttä esittelyä pitävään projektiryhmään."
         }
       ]
     }

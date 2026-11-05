@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { onMessage, sendMessage } from './useSocket.js'
 
 // keeps a message well under the backend's byte cap, even with multi-byte characters
@@ -15,6 +15,7 @@ export default function useChat(socket, userId, activeSession) {
   const [unread, setUnread] = useState([]) // ids of users whose new messages we haven't seen
   const [chatError, setChatError] = useState(null) // { to, reason } of the last failed private message, 'to' is an id
   const [sessionMessages, setSessionMessages] = useState([])
+  const [sessionReadCount, setSessionReadCount] = useState(0)
   const [sessionNotice, setSessionNotice] = useState(null) // latest joined/left line, shown briefly on top of everything
   // the socket listener needs the open user panel, but is only set up once per socket
   const activeChatRef = useRef(null)
@@ -61,6 +62,7 @@ export default function useChat(socket, userId, activeSession) {
   // every session starts with an empty chat; a reconnect within the same session keeps it
   useEffect(() => {
     setSessionMessages([])
+    setSessionReadCount(0)
   }, [activeSession])
 
   useEffect(() => {
@@ -101,6 +103,11 @@ export default function useChat(socket, userId, activeSession) {
     sendMessage(socket, { type: 'session_chat', text })
   }
 
+  const sessionMessageCount = sessionMessages.length
+  const markSessionRead = useCallback(() => {
+    setSessionReadCount(sessionMessageCount)
+  }, [sessionMessageCount])
+
   return {
     conversations,
     activeChat,
@@ -108,6 +115,8 @@ export default function useChat(socket, userId, activeSession) {
     // only the open chat's error is shown
     error: chatError && chatError.to === activeChat?.id ? chatError.reason : null,
     sessionMessages,
+    sessionUnread: Boolean(activeSession) && sessionMessages.slice(sessionReadCount).some((message) => !message.fromMe && !message.system),
+    markSessionRead,
     sessionNotice,
     openChat: (user) => showChat(user),
     openProfile: (user) => showChat(user, 'profile'),
@@ -115,6 +124,9 @@ export default function useChat(socket, userId, activeSession) {
     sendPrivate,
     sendSession,
     // the host keeps its session when a new player joins; their chat starts fresh
-    clearSessionChat: () => setSessionMessages([]),
+    clearSessionChat: () => {
+      setSessionMessages([])
+      setSessionReadCount(0)
+    },
   }
 }

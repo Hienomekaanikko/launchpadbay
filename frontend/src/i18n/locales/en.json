@@ -62,6 +62,7 @@
   "lobby": {
     "sections": "Lobby sections",
     "pendingRequests": "Friend requests: {{count}}",
+    "unreadSessionMessages": "Unread session messages",
     "online": "Online",
     "sessions": "Sessions",
     "sessionChat": "Session-chat",
@@ -190,13 +191,63 @@
       "sections": [
         {
           "id": "about",
-          "title": "About",
-          "text": "Launchpad Bay is a browser-based music application."
+          "title": "About this policy",
+          "text": "Launchpad Bay is a browser-based music application developed as part of the 42 curriculum for local student-project demonstrations. Launchpad Bay Inc. is the fictional operator name used for this project. This policy explains how the application handles information when you play music, create an account, or use its social features. You can play the launchpad without creating an account. Last updated: 5 November 2026."
         },
         {
           "id": "information",
-          "title": "Information Processing",
-          "text": "Depending on the features you use, we process your username, email address, password hash, avatar, GitHub account identifier, friendship connections, and chat messages."
+          "title": "Information we process",
+          "text": "For account features, we store your user ID, username, email address where provided, account creation date, and avatar. Password accounts also have a password hash; GitHub accounts have a GitHub account identifier. Social features process friend requests, friendships, online status, session membership, shared launchpad actions, and messages. Server logs can contain IP addresses, requested URLs, timestamps, response codes, and error information."
+        },
+        {
+          "id": "purposes",
+          "title": "How we use information",
+          "text": "We use account information to register and sign you in, maintain your profile, and protect access to your account. We use friendship, presence, session, and message information to connect users and deliver the social and shared music features they choose to use. Technical logs and monitoring data help us detect failures, investigate errors, limit abusive requests, and maintain the application."
+        },
+        {
+          "id": "visibility",
+          "title": "What other users can see",
+          "text": "Other signed-in users can see your username, avatar, membership date, online presence, and available sessions. Your email address and password hash are not included in other users' profiles. Avatar images are publicly accessible to anyone with their image URL, so do not use an avatar you wish to keep private. Friend requests are shared with the accounts involved. Shared launchpad actions and session chat are delivered to the users in that session."
+        },
+        {
+          "id": "messages",
+          "title": "Direct and session messages",
+          "text": "Direct messages are delivered to the sender and recipient and saved with their account IDs and a timestamp. They remain stored even when the current chat interface no longer displays them. Session messages are relayed to session participants and are not saved to the application's message database. Messages are processed by the server and are not end-to-end encrypted; people with administrative access to the server or database may access stored data. Recipients can also copy messages outside the application."
+        },
+        {
+          "id": "browser-storage",
+          "title": "Browser storage and cookies",
+          "text": "We use local storage to remember your login token, user ID, username, and chosen language. Login tokens expire after one day; logging out removes the stored login details. Your language preference remains until changed or cleared. A temporary tab identifier in session storage helps manage multiple tabs. GitHub login uses a secure, HTTP-only cookie to check that the login request originated in your browser; it expires after ten minutes and is cleared when the callback is handled. Clearing browser storage does not delete your account or messages stored on the server."
+        },
+        {
+          "id": "github",
+          "title": "Signing in with GitHub",
+          "text": "If you choose GitHub login, your browser visits GitHub to authorise the login. We receive your GitHub account identifier, username, any email address returned by GitHub, and avatar information to create or find your Launchpad Bay account. The application may copy your GitHub avatar to its own storage when creating the account. We do not receive your GitHub password or store the GitHub access token in the account database. GitHub handles information under its own privacy policy."
+        },
+        {
+          "id": "external-services",
+          "title": "External resources",
+          "text": "The application loads its font from Google Fonts and the GitHub sign-in icon from SVG Repo. When your browser requests these resources, those providers receive connection information such as your IP address and browser request headers. These requests are separate from GitHub authentication and are subject to each provider's privacy practices."
+        },
+        {
+          "id": "security",
+          "title": "Security and monitoring",
+          "text": "Passwords are stored as salted bcrypt hashes rather than readable passwords. The supplied deployment uses HTTPS and secure WebSocket connections to protect data in transit, and account features require authentication. Operational monitoring records request counts, response times, and server resource usage. Monitoring labels do not include message contents, email addresses, or usernames. These safeguards reduce risk but cannot guarantee absolute security."
+        },
+        {
+          "id": "retention",
+          "title": "Retention and account deletion",
+          "text": "Account records, friendships, and direct messages have no automatic expiry in the current application. You can delete your account from Edit profile after leaving any active session and confirming your password or, for a GitHub-only account, your username. Account deletion removes the account, its friendships, its sent and received direct messages, and associated avatar files. Replacing an avatar also removes older avatar files. Deletion does not erase copies held by other users or entries already recorded in server logs. No fixed server-log deletion period is configured by this project. Prometheus monitoring data is configured to be retained for fifteen days."
+        },
+        {
+          "id": "choices",
+          "title": "Your choices",
+          "text": "You can use the launchpad without an account, edit your profile, change your avatar, manage friendships, log out, or delete your account. GitHub-only accounts do not have a local password to change. Depending on applicable data protection law, you may also have rights to access, correct, erase, or obtain a copy of your personal data, restrict or object to its processing, and complain to a data protection authority."
+        },
+        {
+          "id": "contact",
+          "title": "Privacy questions and requests",
+          "text": "The demonstration contact for Launchpad Bay Inc. is support@launchpadbay.com. This is an example address, not a working support channel for this project. For actual privacy questions or requests about information used during a local demonstration, contact the project team presenting that demonstration."
         }
       ]
     },
@@ -205,13 +256,53 @@
       "sections": [
         {
           "id": "about",
-          "title": "About",
-          "text": "Launchpad Bay is a browser-based launchpad for playing music, with account and social features."
+          "title": "About these terms",
+          "text": "Launchpad Bay is a browser-based music application developed as part of the 42 curriculum for local student-project demonstrations. Launchpad Bay Inc. is the fictional operator name used for this project. These terms describe the use of its launchpad, accounts, profiles, friendships, messaging, and shared sessions. This demonstration is provided without a subscription or purchase. Last updated: 5 November 2026."
+        },
+        {
+          "id": "accounts",
+          "title": "Accounts and access",
+          "text": "You can play the launchpad without an account. Account and social features require registration or GitHub sign-in. Use an account you are authorised to access, keep your password and login details private, and log out when using a shared device. Do not impersonate another person or access another user's account without permission. GitHub controls access to GitHub accounts under its own terms."
         },
         {
           "id": "acceptable-use",
-          "title": "Acceptable Use",
-          "text": "Do not harm other users by spamming, uploading unlawful content, or attempting to disrupt the application."
+          "title": "Acceptable use",
+          "text": "Treat other users respectfully. Do not harass, threaten, impersonate, or spam others; share someone else's private information without permission; or upload or send unlawful, malicious, or infringing content. Do not attempt to bypass authentication or request limits, access data you are not entitled to see, or deliberately disrupt another user's session or the application. If you discover a problem during testing, report it to the presenting project team without exploiting it against other users."
+        },
+        {
+          "id": "content",
+          "title": "Your content and permissions",
+          "text": "Only upload avatars and send content that you have the right to use and share. You retain any rights you hold in your content. By submitting it, you give the project team permission to store, display, and deliver it as needed to provide the features you use, subject to the retention and deletion practices in the Privacy Policy. Do not use an avatar you wish to keep private: avatar image URLs are publicly accessible. Other users may copy messages they receive."
+        },
+        {
+          "id": "music",
+          "title": "Music and third-party rights",
+          "text": "Respect the rights of creators when using sounds, images, and other material. Access to a sound through this demonstration does not by itself give you permission to redistribute it, sell it, or use it in a published recording. Check the permissions for any material before sharing or publishing work that uses it. These terms do not transfer ownership of third-party music, images, software, or other resources to you."
+        },
+        {
+          "id": "social-features",
+          "title": "Messages and shared sessions",
+          "text": "Friendships and shared sessions are optional. A session host can accept or reject a join request, and participants can leave a session. Direct messages require the recipient to be online and are stored by the application; session messages are relayed to participants without being saved to the message database. Chat is not end-to-end encrypted. Delivery and synchronisation can be interrupted by disconnections, browser behaviour, or server errors, so do not rely on this demonstration for essential communications or as the only copy of important work."
+        },
+        {
+          "id": "privacy",
+          "title": "Privacy and external services",
+          "text": "The Privacy Policy explains the information the application processes, what other users can see, browser storage, retention, and deletion. GitHub sign-in, Google Fonts, and the externally hosted GitHub icon involve third-party services with their own terms and privacy practices. Review the Privacy Policy before providing personal information or using the social features."
+        },
+        {
+          "id": "deletion",
+          "title": "Leaving and deleting your account",
+          "text": "You can stop using the application, leave a session, or log out at any time. To delete your account, leave any active session and use Delete account in Edit profile, then complete the confirmation. Deletion removes your account, associated friendships, sent and received direct messages, and avatar files. It does not remove copies other users have kept outside the application or existing server-log entries. Clearing browser storage or logging out does not delete your account. See the Privacy Policy for further retention details."
+        },
+        {
+          "id": "availability",
+          "title": "Demonstration availability",
+          "text": "This is an educational demonstration rather than a service with guaranteed uptime, ongoing support, or permanent storage. Features may be incomplete, and demonstrations may be interrupted, reset, or ended for development, maintenance, or evaluation. Keep separate copies of anything important. Nothing in these terms excludes liability or limits rights where doing so is prohibited by applicable law."
+        },
+        {
+          "id": "contact",
+          "title": "Questions and reports",
+          "text": "The demonstration contact for Launchpad Bay Inc. is support@launchpadbay.com. This is an example address, not a working support channel for this project. For actual questions, reports of misuse, or technical problems during a local demonstration, contact the project team presenting that demonstration."
         }
       ]
     }

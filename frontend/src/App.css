@@ -1,6 +1,18 @@
 @layer base {
+  :root {
+    --app-min-width: 320px;
+    --app-layout-width: max(var(--app-min-width), 100vw);
+  }
+
+  html {
+    min-width: var(--app-min-width);
+    overflow-x: auto;
+  }
+
   body {
+    position: relative;
     margin: 0;
+    min-width: var(--app-min-width);
     min-height: 100svh;
   }
 
@@ -8,6 +20,7 @@
     --app-nav-height: 76px;
     display: flex;
     flex-direction: column;
+    min-width: var(--app-min-width);
     min-height: 100svh;
   }
 
@@ -120,13 +133,18 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
-    width: min(352px, calc(100vw - 32px));
+    width: min(352px, calc(var(--app-layout-width) - 32px));
     pointer-events: none;
   }
 
   .app-panels-profile,
   .app-panels-lobby {
-    width: min(380px, calc(100vw - 32px));
+    width: min(380px, calc(var(--app-layout-width) - 32px));
+  }
+
+  /* Leave half the 16px panel gap above the viewport midpoint. */
+  .app-panels.app-panels-lobby {
+    bottom: calc(50dvh + 8px);
   }
 
   .chat-scrollbar {
@@ -214,6 +232,7 @@
     .app-panels-lobby {
       inset-inline: 12px;
       bottom: 12px;
+      min-width: calc(var(--app-min-width) - 24px);
       width: auto;
     }
 
@@ -229,7 +248,7 @@
 
     .app-nav-user {
       flex: 0 1 auto;
-      max-width: 40vw;
+      max-width: calc(var(--app-layout-width) * 0.4);
     }
   }
 
@@ -255,6 +274,18 @@
 
     .app-nav-action {
       height: 38px;
+    }
+  }
+
+  /* Below the supported width, panels scroll with the 320px page. */
+  @media (width < 320px) {
+    html body {
+      height: 100dvh;
+      overflow: visible;
+    }
+
+    .app-panels {
+      position: absolute;
     }
   }
 }
