@@ -98,6 +98,10 @@
     "confirmNewEmail": "אימות האימייל החדש",
     "emailMismatch": "כתובות האימייל אינן תואמות",
     "emailSaved": "נשמר. מעכשיו מתחברים עם {{email}}",
+    "usernameEmailSaved": "נשמר. שם המשתמש שלך שונה; מעכשיו מתחברים עם {{email}}",
+    "emailPasswordSaved": "נשמר. הסיסמה שלך שונתה; מעכשיו מתחברים עם {{email}}",
+    "usernameEmailPasswordSaved": "נשמר. שם המשתמש והסיסמה שלך שונו; מעכשיו מתחברים עם {{email}}",
+    "usernamePasswordChanged": "נשמר. שם המשתמש והסיסמה שלך שונו",
     "usernameRules": "{{min}}–{{max}} תווים: אותיות, ספרות, _ ו־-",
     "leaveSessionToRename": "צא מהסשן כדי לשנות את שם המשתמש שלך.",
     "deleteConfirmLabel": "אישור מחיקה",
@@ -114,6 +118,7 @@
     "fileTooLarge": "הקובץ גדול מדי. הגודל המרבי הוא 2 MB.",
     "usernameTaken": "שם המשתמש כבר תפוס",
     "usernameUnchanged": "זה כבר שם המשתמש שלך",
+    "passwordUnchanged": "זו כבר הסיסמה שלך",
     "nothingToSave": "אין עדיין מה לשמור",
     "currentPasswordRequired": "הזן את הסיסמה הנוכחית כדי לשנות את האימייל או הסיסמה",
     "currentPasswordNote": "נדרשת לשינוי האימייל או הסיסמה"

@@ -98,6 +98,10 @@
     "confirmNewEmail": "Vahvista uusi sähköposti",
     "emailMismatch": "Sähköpostit eivät täsmää",
     "emailSaved": "Tallennettu. Kirjaudut nyt osoitteella {{email}}",
+    "usernameEmailSaved": "Tallennettu. Käyttäjänimesi on vaihdettu; kirjaudut nyt osoitteella {{email}}",
+    "emailPasswordSaved": "Tallennettu. Salasanasi on vaihdettu; kirjaudut nyt osoitteella {{email}}",
+    "usernameEmailPasswordSaved": "Tallennettu. Käyttäjänimesi ja salasanasi on vaihdettu; kirjaudut nyt osoitteella {{email}}",
+    "usernamePasswordChanged": "Tallennettu. Käyttäjänimesi ja salasanasi on vaihdettu",
     "usernameRules": "{{min}}–{{max}} merkkiä: kirjaimia, numeroita, _ ja -",
     "leaveSessionToRename": "Poistu sessiosta vaihtaaksesi käyttäjänimesi.",
     "deleteConfirmLabel": "Vahvista poisto",
@@ -114,6 +118,7 @@
     "fileTooLarge": "Tiedosto on liian suuri. Enimmäiskoko on 2 Mt.",
     "usernameTaken": "Käyttäjänimi on jo käytössä",
     "usernameUnchanged": "Tämä on jo käyttäjänimesi",
+    "passwordUnchanged": "Tämä on jo salasanasi",
     "nothingToSave": "Ei vielä mitään tallennettavaa",
     "currentPasswordRequired": "Anna nykyinen salasanasi vaihtaaksesi sähköpostin tai salasanan",
     "currentPasswordNote": "Tarvitaan sähköpostin tai salasanan vaihtoon"
