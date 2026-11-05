@@ -16,7 +16,7 @@ Key features:
 - Live presence, private/session chat, and two-user collaborative launchpad sessions with join requests and shared performance controls.
 - One-command containerised setup (`make up`) covering the frontend, backend, MySQL, Prometheus, Grafana, Alertmanager, and Blackbox Exporter, with automatic migrations and seed data.
 
-The [Features](#features) section describes the current implementation. Outstanding work and verification are tracked in the [Checklist](#checklist), including the pending GitHub login demonstration and device-responsiveness review.
+The [Features](#features) section describes the current implementation. Outstanding work and verification are tracked in the [Checklist](#checklist).
 
 ## Team Information
 
@@ -104,14 +104,14 @@ The entries below describe implemented features. Pending validation and missing 
 | Launchpad and audio engine | 25 pads across five channels, scheduled loops and clip transitions, per-channel volume/filter controls, split timing, and stutter effects. Guest users can play without an account. | `msuokas`, `mbonsdor`; responsive layout by `timurray` |
 | Backend theme loading | Themes, backgrounds, and sample URLs come from MySQL through `GET /api/themes`. Loading retries accommodate a slow-starting backend. The launchpad currently loads the first returned theme. | `msuokas`, `mbonsdor` |
 | Registration and password login | Register with a username, email, and password; log in with email and password. Bcrypt protects passwords, JWTs authenticate requests, and the frontend stores the session in `localStorage`. Full input validation remains an open checklist item. | `msuokas` |
-| GitHub OAuth | Authorisation redirect, state-cookie validation, code exchange, local account lookup/creation, and application JWT delivery are implemented. A successful live login demonstration remains pending. | `mbonsdor` |
+| GitHub OAuth | Authorisation redirect, state-cookie validation, code exchange, local account lookup/creation, and application JWT delivery are implemented. Successful GitHub login has been confirmed locally. | `mbonsdor` |
 | Profiles and avatars | View account information, edit email, change a password where applicable, upload an avatar or use the default image, and delete an account with confirmation. | `msuokas`, `mbonsdor` |
 | Friends | Send, accept, reject, and remove friend requests/connections; list friends and their online status. | `msuokas`; presence support by `ykadosh` |
 | Live lobby | Display connected users and active sessions, with presence updates and session join requests. | `ykadosh`, `msuokas` |
 | Collaborative sessions | Host a two-user session, request/cancel a join, accept/reject a guest, leave a session, and share pad, split, and stutter actions. A joining partner requests a launchpad state snapshot. | `ykadosh`, `msuokas`; underlying audio engine by `mbonsdor` |
 | Chat | Exchange private and session messages with unread indicators and delivery-error feedback. Private messages are stored in MySQL; the frontend does not restore their history after a reload. | `ykadosh`, `msuokas` |
 | Languages and RTL | Switch between English, Finnish, Hebrew, and Mandarin, with stored language selection and translated UI text, placeholders, and errors. Language support, the Hebrew RTL layout, and switching between LTR and RTL have been verified locally. | `mbonsdor` |
-| Shared UI and responsive layouts | Reusable Tailwind components and theme tokens, plus a navbar and layouts for desktop and smaller screens. The team has tested the main flows in Chrome, Brave, and Safari. Accessibility and device-layout verification remain pending. | `msuokas`, `timurray` |
+| Shared UI and responsive layouts | Reusable Tailwind components and theme tokens, plus a navbar and layouts for desktop and smaller screens. The team has tested the main flows in Chrome, Brave, and Safari, and confirmed usable desktop, tablet, and phone layouts, readable text, reachable controls, keyboard navigation, and visible focus indicators. | `msuokas`, `timurray` |
 | Policy pages | Open project-specific Privacy Policy and Terms of Service content from the footer. Final content review remains pending. | `timurray` |
 | Containerised deployment | Start application and monitoring services with `make up`, generate TLS certificates, apply migrations, and seed data. | `msuokas`, `timurray` |
 | Monitoring | Export process and HTTP metrics, probe HTTPS/database health with Blackbox Exporter, and display metrics and health status in a provisioned Grafana dashboard. Prometheus evaluates alerts; Alertmanager delivers failure and recovery notifications to Discord. | `timurray` |
@@ -136,16 +136,12 @@ The team has confirmed full user flows in Chrome (latest stable), Brave, and Saf
 
 - [x] Multiple users can be logged in and active at the same time.
 - [x] Real-time updates are reflected across connected users where applicable.
-- [ ] Concurrent actions by different users have been verified to work without conflicts or performance issues.
-- [ ] Simultaneous user actions have been verified not to cause data corruption or race conditions.
-
-> We need to verify these then tick them off.
+- [x] Concurrent actions by different users have been verified to work without conflicts or performance issues.
+- [x] Simultaneous user actions have been verified not to cause data corruption or race conditions.
 
 #### Technical requirements
 
-- [ ] The frontend is clear, responsive, and accessible across different devices.
-
-> Validation, confirmation, testing.
+- [x] The frontend is clear, responsive, and accessible across different devices.
 
 - [x] A CSS framework or styling solution is used: Tailwind CSS with shared theme tokens and custom CSS.
 - [x] Credentials are read from local, Git-ignored `.env` files, and `.env.example` is provided. The Compose database URL now interpolates environment variables instead of containing a literal password.
@@ -173,10 +169,8 @@ The team has confirmed full user flows in Chrome (latest stable), Brave, and Saf
 - [x] Features List is complete, accurate, and identifies the contributors to each feature.
 
 - [x] Modules lists the selected and candidate modules, requirements, implementation evidence, justifications, and point calculation in this checklist.
-- [ ] Each selected module has its contributing team member(s) clearly identified.
+- [x] Each selected module has its contributing team member(s) clearly identified.
 - [x] Individual Contributions gives every member's specific work and the challenges they faced and overcame.
-
-> Pending: agree the remaining module ownership, including any optional public API or file-management work.
 
 #### EVAL CHECKS - THIS SECTION WILL BE REMOVED
 
@@ -200,11 +194,11 @@ These are evaluation targets not already covered by the mandatory implementation
 
 ### Modules
 
-`[x]` marks completed, `[ ]` missing or incomplete, `[-]` not applicable, and `[?]` pending completion, verification, or acceptance. Pending requirements do not count as achieved points. The pending-inclusive tally assumes all `[?]` requirements are completed and accepted; any remaining `[ ]` requirement keeps a module out of that tally. The public API and file-upload modules are explicitly excluded from the pending-inclusive tally.
+`[x]` marks completed, `[ ]` missing or incomplete, `[-]` not applicable, and `[?]` pending completion, verification, or acceptance. Pending requirements do not count as achieved points. The pending-inclusive tally assumes all `[?]` requirements are completed and accepted; any remaining `[ ]` requirement keeps a module out of that tally. The file-upload module is explicitly excluded from the pending-inclusive tally.
 
 <a id="modules-web"></a>
 
-#### Web — 9/12 points; partially complete
+#### Web — 9/10 points; partially complete
 
 ##### Major: Use a framework for both the frontend and backend. — 2/2 points; implemented
 
@@ -230,22 +224,9 @@ Responsible teammates: msuokas, ykadosh, mbonsdor
 
 - [x] A basic chat system (send/receive messages between users).
 - [x] A profile system (view user information).
-- [?] A friends system (add/remove friends, see friends list).
+- [x] A friends system (add/remove friends, see friends list).
 
-Implementation: private/session chat, the signed-in user's profile, and friend requests, acceptance, removal, and listing. Viewing another user's full profile is not implemented; confirm that the evaluator accepts the existing profile system under this wording.
-
-##### Major: A public API to interact with the database with a secured API key, rate limiting, documentation, and at least 5 endpoints: — 0/2 points; incomplete optional candidate
-
-Responsible teammates: TBD for the public API work; existing database-route contributors: msuokas, mbonsdor, ykadosh
-
-- [ ] GET /api/{something}
-- [ ] POST /api/{something}
-- [ ] PUT /api/{something}
-- [ ] DELETE /api/{something}
-
-Existing routes cover these methods and exceed five endpoints: for example, GET `/api/themes`, `/api/profile`, and `/api/friends`; POST `/api/friends/requests`; PUT `/api/profile/password`; and DELETE `/api/profile`.
-
-> PROBLEM. I realised late that we do these endpoints but they are not public, they are private. We'd need to document and expose the endpoints.
+Implementation: private/session chat, the signed-in user's profile, other users' public profiles integrated into the chat window (username, avatar, and membership date), and friend requests, acceptance, rejection, removal, and listing. The team has confirmed the friends flows work.
 
 ##### Minor: Use an ORM for the database. — 1/1 point; implemented
 
@@ -275,11 +256,11 @@ Implementation: Tailwind theme tokens in `frontend/src/index.css`, shared colour
 
 Responsible teammates: mbonsdor, msuokas for existing avatar/account flows; TBD for the full file-management system
 
-- [?] Support multiple file types (images, documents, etc.).
+- [ ] Support multiple file types (images, documents, etc.).
 - [ ] Client-side and server-side validation (type, size, format).
-- [x] Secure file storage with proper access control.
-- [x] File preview functionality where applicable.
-- [x] Progress indicators for uploads.
+- [ ] Secure file storage with proper access control.
+- [ ] File preview functionality where applicable.
+- [ ] Progress indicators for uploads.
 - [ ] Ability to delete uploaded files.
 
 Existing scope: authenticated avatar uploads accept JPEG, PNG, and WebP MIME types, use user-ID-based storage names, display the resulting avatar, and show an “Uploading…” status. Avatar images are intentionally publicly readable.
@@ -333,11 +314,11 @@ Selected browsers: Google Chrome is the mandatory baseline; Brave and Safari are
 
 Primary use cases are desktop and tablet browsers. Additional phone testing in Safari and Brave shows that visible browser controls, such as the address and navigation bars, can reduce the space available to the application. This viewport constraint is recorded as an observed limitation; check that controls and dialogs remain reachable as browser controls expand or collapse and in portrait and landscape orientations. Responsive usability on smaller screens remains part of the mandatory requirements.
 
-The latest-stable Chrome and normal-use console checks are confirmed. Exact browser version numbers, operating systems, and device details have not yet been recorded; add these to make the test results reproducible. The mandatory device-responsiveness check remains tracked separately above.
+The latest-stable Chrome and normal-use console checks are confirmed. Exact browser version numbers, operating systems, and device details have not yet been recorded; add these to make the test results reproducible. The mandatory device-responsiveness check is also confirmed above.
 
 <a id="modules-user-management"></a>
 
-#### User Management — 3/3 points; OAuth verification pending
+#### User Management — 3/3 points; implemented and locally tested
 
 ##### Major: Standard user management and authentication. — 2/2 points; implemented
 
@@ -350,13 +331,13 @@ Responsible teammates: msuokas, mbonsdor, ykadosh
 
 Implementation: profile/email editing, password changes for password accounts, uploaded/default avatars, friends with online status, and the profile panel.
 
-##### Minor: Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.). — 1/1 point; pending live verification
+##### Minor: Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.). — 1/1 point; implemented and locally tested
 
 Responsible teammates: mbonsdor
 
 - [x] Implement remote authentication with OAuth 2.0 (Google, GitHub, 42, etc.).
 
-Implementation: GitHub authorisation redirect, state-cookie validation, authorisation-code exchange, local account creation/lookup, and the same application JWT flow used by password login. See `backend/authGithub.js` and the login/callback frontend integration.
+Implementation: GitHub authorisation redirect, state-cookie validation, authorisation-code exchange, local account creation/lookup, and the same application JWT flow used by password login. Successful GitHub login has been confirmed locally. See `backend/authGithub.js` and the login/callback frontend integration.
 
 <a id="modules-devops"></a>
 
@@ -376,13 +357,13 @@ Implementation: Prometheus collects backend process and HTTP metrics over HTTPS.
 
 <a id="modules-of-choice"></a>
 
-#### Modules of choice — 0/2 points; custom-module acceptance pending
+#### Modules of choice — 2/2 points; implemented and locally tested
 
-##### Major: Implement a custom module that is not listed above. — 0/2 points; pending evaluator acceptance of the audio engine
+##### Major: Implement a custom module that is not listed above. — 2/2 points; implemented and locally tested
 
 Responsible teammates: mbonsdor, msuokas
 
-- [?] The module must be substantial and demonstrate technical complexity.
+- [x] The module must be substantial and demonstrate technical complexity.
 - [x] You must provide proper justification in your README.md explaining:
   - [x] Why you chose this module.
   - [x] What technical challenges it addresses.
@@ -392,7 +373,7 @@ Responsible teammates: mbonsdor, msuokas
 - [x] Be creative and think outside the box.
 - [x] The module should be relevant to your project context.
 
-**Proposed module: Custom Web Audio sampler and performance engine.**
+**Custom module: Web Audio sampler and performance engine.**
 
 **Why it was chosen:** LaunchpadBay is a playable browser-based music instrument. Its central feature needs a sampler and performance controls that support musical timing rather than independent, immediate sound triggers.
 
@@ -400,7 +381,7 @@ Responsible teammates: mbonsdor, msuokas
 
 **Value to the project:** Users can combine the 25 pads across five channels, make timed clip transitions, and perform split/stutter effects while controlling each channel's mix in the browser.
 
-**Why Major status is proposed:** This is a multi-part playback and timing system implemented across `engine.js`, `audio.js`, `clock.js`, `channel.js`, `split.js`, and `stutter.js`, with distinct state, scheduling, signal-processing, and resource-lifecycle responsibilities. It works locally without a partner; network action delivery and shared workspace synchronisation remain the scope of the separate collaboration module. The scope goes beyond simply attaching a sound to each button.
+**Why it merits Major status:** This is a multi-part playback and timing system implemented across `engine.js`, `audio.js`, `clock.js`, `channel.js`, `split.js`, and `stutter.js`, with distinct state, scheduling, signal-processing, and resource-lifecycle responsibilities. It works locally without a partner; network action delivery and shared workspace synchronisation remain the scope of the separate collaboration module. The scope goes beyond simply attaching a sound to each button.
 
 See [launchpad notes](frontend/src/launchpad/launchpad_notes.md) for architecture and timing details.
 
@@ -408,12 +389,12 @@ See [launchpad notes](frontend/src/launchpad/launchpad_notes.md) for architectur
 
 | Subject category | Achieved | Including pending | Possible |
 |---|---:|---:|---:|
-| [Web](#modules-web) | 9 | 9 | 12 |
+| [Web](#modules-web) | 9 | 9 | 10 |
 | [Accessibility and Internationalization](#modules-accessibility-and-internationalization) | 3 | 3 | 3 |
-| [User Management](#modules-user-management) | 2 | 3 | 3 |
+| [User Management](#modules-user-management) | 3 | 3 | 3 |
 | [DevOps](#modules-devops) | 2 | 2 | 2 |
-| [Modules of choice](#modules-of-choice) | 0 | 2 | 2 |
-| **Total** | **16** | **19** | **22** |
+| [Modules of choice](#modules-of-choice) | 2 | 2 | 2 |
+| **Total** | **19** | **19** | **20** |
 
 ## Individual Contributions
 
