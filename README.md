@@ -372,7 +372,7 @@ These summaries follow the authored changes in the repository and the role assig
 
 - **Implemented:** Audio engine refactoring into playback, timing, channel-state, effects, and UI modules; GitHub OAuth and related user-schema changes; default/uploaded/GitHub avatars; English, Finnish, Hebrew, and Mandarin language resources and switching; Hebrew RTL adjustments; and application title/favicon updates.
 - **Key areas:** `frontend/src/launchpad/`, `backend/authGithub.js`, `backend/avatars.js`, avatar/profile components, `frontend/src/i18n/`, and the language switcher.
-- **Challenge and solution:** my challenge could be something like this: My biggest challenge was figuring out the underlying logic of the prototype while learning a new language. The approach involved incrementally refactoring it with heavy use of LLMs, while trying not to break anything. In the future, I’d consider doing a full analysis first and then rebuilding it from the ground up.
+- **Challenge and solution:** My biggest challenge was figuring out the underlying logic of the prototype while learning a new language. The approach involved incrementally refactoring it with heavy use of LLMs, while trying not to break anything. In the future, I’d consider doing a full analysis first and then rebuilding it from the ground up.
 
 ### ykadosh: Technical Lead / Developer
 
