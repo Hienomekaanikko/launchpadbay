@@ -397,7 +397,7 @@ These summaries follow the authored changes in the repository and the role assig
 
 - **Implemented:** Project bootstrap and initial landing/launchpad UI; initial sample-engine integration; Docker/MySQL/Prisma setup; user and friendship schema changes; bcrypt/JWT authentication; the Tailwind component system; friendship management and profile editing; and frontend integration for presence, chat, session joining, and shared launchpad actions.
 - **Key areas:** `backend/server.js`, `backend/friends.js`, `backend/profile.js`, Prisma migrations, `frontend/src/App.jsx`, shared components/hooks, and the original container setup.
-- **Challenge and solution:** TODO
+- **Challenge and solution:**  Keeping two players' launchpads in sync, especially after a page refresh. Browsers block audio until the user clicks, so a refreshed player's loop clock is stopped; applying the partner's actions at that point would start their loops out of phase. All shared actions go through the server, which echoes them to both players so they're applied in the same order. A refreshed player waits until their samples are loaded and the AudioContext is running (tracked with useSyncExternalStore), then requests a snapshot of the partner's state (SYNC_REQUEST / SYNC_STATE) and starts on the partner's next loop boundary.
 
 ### mbonsdor: Technical Lead / Developer
 
