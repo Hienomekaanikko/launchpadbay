@@ -9,3 +9,12 @@ groups:
         annotations:
           summary: "Backend metrics unavailable"
           description: "Prometheus cannot scrape {{ $labels.instance }}. Diagnose the backend or networking."
+
+      - alert: BackendHealthCheckFailed
+        expr: probe_success{job="backend_health"} == 0
+        for: 15s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend health check failed"
+          description: "The HTTPS database health check failed for {{ $labels.instance }}. Check the backend, database, and TLS connection."
