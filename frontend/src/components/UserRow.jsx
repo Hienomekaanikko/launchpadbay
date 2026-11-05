@@ -9,8 +9,10 @@ function RowIconButton({ icon, label, onClick, dot = false }) {
       aria-label={label}
       className="relative inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center p-1 rounded-full text-white/90 hover:text-white hover:bg-white/50 transition-colors"
     >
-      <Icon name={icon} className="w-4 h-4" />
-      {dot && <span className="absolute -top-0.5 -end-0.5 w-2 h-2 rounded-full bg-brand" aria-hidden="true" />}
+      <span className="relative inline-flex size-4 shrink-0">
+        <Icon name={icon} className="size-4" />
+        {dot && <span className="absolute -top-1.5 -end-1.5 size-2 rounded-full bg-brand" aria-hidden="true" />}
+      </span>
     </button>
   )
 }
