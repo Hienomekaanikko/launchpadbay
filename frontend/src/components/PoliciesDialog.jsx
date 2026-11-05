@@ -36,9 +36,9 @@ export default function PolicyDialog({ kind, onClose }) {
                 e.currentTarget.close()
               }
             }}
-            className="m-auto max-h-[calc(100dvh-2rem)] w-[min(calc(100vw-2rem),48rem)] overflow-y-auto rounded-[20px] border-0 border-t border-t-white/18 border-b border-b-white/8 bg-surface/30 p-0 text-white shadow-panel backdrop-blur-[15px] backdrop:bg-transparent backdrop:backdrop-blur-sm"
+            className="m-auto max-h-none w-[min(calc(100vw-2rem),40rem)] overflow-hidden rounded-[20px] border-0 border-t border-t-white/18 border-b border-b-white/8 bg-surface/30 p-0 text-white shadow-panel backdrop-blur-[15px] backdrop:bg-transparent backdrop:backdrop-blur-sm"
         >
-            <PolicyDocument kind={kind} titleRef={titleRef} />
+            <PolicyDocument kind={kind} titleRef={titleRef} onClose={() => dialogRef.current?.close()} />
         </dialog>
     )
 }
