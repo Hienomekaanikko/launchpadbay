@@ -98,9 +98,14 @@ function createLoop(buffer, loopLength) {
 }
 
 export function stopLoop(playback, when = 0) {
-     if (playback)
-       playback.stop(when)
- }
+    if (!playback)
+      return
+    try {
+      playback.stop(when)
+    } catch {
+      // already stopped, or `when` is invalid after a prior stop()
+    }
+}
 
 // Stop the previous loop and start a new one at the same `when`.
 export function launchLoop(previous, { channelId, buffer, loopLength, when }) {

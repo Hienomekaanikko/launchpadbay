@@ -98,6 +98,10 @@
     "confirmNewEmail": "确认新邮箱",
     "emailMismatch": "两次输入的邮箱不一致",
     "emailSaved": "已保存。今后请使用 {{email}} 登录",
+    "usernameEmailSaved": "已保存。用户名已更改；今后请使用 {{email}} 登录",
+    "emailPasswordSaved": "已保存。密码已修改；今后请使用 {{email}} 登录",
+    "usernameEmailPasswordSaved": "已保存。用户名和密码已修改；今后请使用 {{email}} 登录",
+    "usernamePasswordChanged": "已保存。用户名和密码已修改",
     "usernameRules": "{{min}}–{{max}} 个字符：字母、数字、_ 和 -",
     "leaveSessionToRename": "离开会话后才能更改用户名。",
     "deleteConfirmLabel": "确认删除",
@@ -114,6 +118,7 @@
     "fileTooLarge": "文件过大。最大大小为 2 MB。",
     "usernameTaken": "用户名已被占用",
     "usernameUnchanged": "这已经是你的用户名了",
+    "passwordUnchanged": "这已经是你的密码了",
     "nothingToSave": "还没有可保存的内容",
     "currentPasswordRequired": "请输入当前密码以更改邮箱或密码",
     "currentPasswordNote": "更改邮箱或密码时需要"

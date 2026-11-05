@@ -20,6 +20,7 @@ const SERVER_ERROR_KEYS = {
   email_taken: 'profile.emailTaken',
   password_incorrect: 'profile.passwordIncorrect',
   current_password_incorrect: 'profile.currentPasswordIncorrect',
+  password_unchanged: 'profile.passwordUnchanged',
   username_mismatch: 'profile.usernameMismatch',
   github_only_account: 'profile.githubOnlyAccount',
   leave_session_before_delete: 'profile.leaveSessionBeforeDelete',

@@ -98,6 +98,10 @@
     "confirmNewEmail": "Confirm new email",
     "emailMismatch": "Emails don't match",
     "emailSaved": "Saved. You now log in with {{email}}",
+    "usernameEmailSaved": "Saved. Your username is changed; you now log in with {{email}}",
+    "emailPasswordSaved": "Saved. You now log in with {{email}} and your password is changed",
+    "usernameEmailPasswordSaved": "Saved. Your username and password are changed; you now log in with {{email}}",
+    "usernamePasswordChanged": "Saved. Your username and password are changed",
     "usernameRules": "{{min}}–{{max}} characters: letters, numbers, _ and -",
     "leaveSessionToRename": "Leave your session to change your username.",
     "deleteConfirmLabel": "Confirm deletion",
@@ -114,6 +118,7 @@
     "fileTooLarge": "File is too large. Maximum size is 2MB.",
     "usernameTaken": "Username already taken",
     "usernameUnchanged": "That's already your username",
+    "passwordUnchanged": "That's already your password",
     "nothingToSave": "Nothing to save yet",
     "currentPasswordRequired": "Enter your current password to change your email or password",
     "currentPasswordNote": "Needed to change your email or password"

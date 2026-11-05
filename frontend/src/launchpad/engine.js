@@ -76,10 +76,26 @@ export function mountLaunchpad(container, themes) {
         delete startUiTimers[pad]
       }
       if (voice.playback) {
+        // stop() may throw if a grid stop was already scheduled (queue handoff);
+        // disconnect so the node goes silent even when that stop is still in the future
         stopLoop(voice.playback)
+        try {
+          voice.playback.disconnect()
+        } catch {
+          // already disconnected
+        }
         voice.playback = null
       }
       return voice
+    }
+
+    // Drop the queued pad only — no relaunch. Used when the whole row is stopping.
+    function clearQueuedPad(channelId) {
+      const channel = channels[channelId]
+      if (channel.state !== 'queued' || channel.queuedPad == null)
+        return
+      stopPad(channel.queuedPad)
+      lightChannel(channelId, { type: 'CANCEL_QUEUE' })
     }
 
     function cancelQueue(channelId) {
@@ -87,21 +103,22 @@ export function mountLaunchpad(container, themes) {
       if (channel.state !== 'queued' || channel.queuedPad == null)
         return
 
-      stopPad(channel.queuedPad)
+      // Keep-playing path: queueClip already scheduled stop(T) on the active pad,
+      // which can't be undone — capture T, clear the queue, then restart the
+      // outgoing loop at that same boundary so it stays in phase.
+      const queuedAt = channel.queuedAt
+      const activePad = channel.activePad
+      clearQueuedPad(channelId)
 
-      // A scheduled stop can't be undone: restart the outgoing loop at the same
-      // grid boundary instead, where offset 0 is in phase. Also covers stutter,
-      // where playback is null and the stutter node stops at queuedAt.
-      const outVoice = padVoices[channel.activePad]
-      if (outVoice && outVoice.buffer) {
+      const outVoice = padVoices[activePad]
+      if (outVoice && outVoice.buffer && queuedAt != null) {
         outVoice.playback = launchLoop(outVoice.playback, {
           channelId,
           buffer: outVoice.buffer,
           loopLength: clock.getLoopLength(),
-          when: channel.queuedAt,
+          when: queuedAt,
         })
       }
-      lightChannel(channelId, { type: 'CANCEL_QUEUE' })
     }
 
     function launchClipAt(voice, pad, when, onStart) {
@@ -167,7 +184,9 @@ export function mountLaunchpad(container, themes) {
     }
 
     function queueClip(channelId, pad, queueTime) {
-      cancelQueue(channelId)
+      // Retarget: drop the old queued pad only. cancelQueue would relaunch the
+      // active pad and orphan the source that already has stop(T) scheduled.
+      clearQueuedPad(channelId)
 
       const voice = padVoices[pad]
       if (!voice)
@@ -215,9 +234,10 @@ export function mountLaunchpad(container, themes) {
       const channel = channels[channelId]
 
       if (channel.activePad === pad) {
+        // Stop the row: drop any queue without the keep-playing relaunch, then silence
         if (channel.stutter.activeDivision !== 0)
           stutter.stopStutter(channelId)
-        cancelQueue(channelId)
+        clearQueuedPad(channelId)
         stopClip(pad)
       } else if (channel.state === 'queued' && channel.queuedPad === pad) {
         cancelQueue(channelId)

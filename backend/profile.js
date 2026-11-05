@@ -113,6 +113,9 @@ export default async function profileRoutes(fastify) {
 			if (parsedPassword.error) {
 				return reply.code(400).send({ error: parsedPassword.error, params: parsedPassword.params })
 			}
+			if (await bcrypt.compare(parsedPassword.value, user.password_hash)) {
+				return reply.code(400).send({ error: 'password_unchanged' })
+			}
 			data.password_hash = await bcrypt.hash(parsedPassword.value, 10)
 			// logs out every other session: their tokens carry the old version
 			data.token_version = { increment: 1 }
