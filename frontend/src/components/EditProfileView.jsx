@@ -223,7 +223,7 @@ function DeleteSection({ token, profile, inSession, onAccountDeleted }) {
         : <>
             <p className="text-sm normal-case">{profile.hasPassword ? t('profile.deleteConfirmPassword') : t('profile.deleteConfirmUsername')}</p>
             <Field id="profile-delete-confirm" label={t('profile.deleteConfirmLabel')}
-              type={profile.hasPassword ? 'password' : 'text'} value={value} onChange={(e) => setValue(e.target.value)} />
+              type={profile.hasPassword ? 'password' : 'text'} value={value} autoComplete="off" onChange={(e) => setValue(e.target.value)} />
             <Status clientError={clientError} serverError={serverError} />
             <div className="grid grid-cols-2 gap-2">
               <button type="button" className={actionButtonClass} onClick={cancel}>{t('common.cancel')}</button>
