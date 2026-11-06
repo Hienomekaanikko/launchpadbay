@@ -93,7 +93,11 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
           <button
             type="button"
             className="underline font-medium cursor-pointer bg-transparent border-0 p-0 text-inherit"
-            onClick={() => setRegisterView(true)}
+            onClick={() => {
+              setClientError('')
+              setServerError(null)
+              setRegisterView(true)
+            }}
           >
             {t('login.notRegisteredYet')}
           </button>
