@@ -52,11 +52,11 @@ export default function LoginView({ onLoggedIn, setShowLogin, initialError = '' 
         <div className="flex flex-col gap-4">
           <div>
             <label htmlFor="login-email" className={labelClass}>{t('login.email')}</label>
-            <Input id="login-email" className={fieldClass} type="email" placeholder={t('login.email')} value={email} onChange={(e) => setEmail(e.target.value)} />
+            <Input id="login-email" className={fieldClass} type="email" placeholder={t('login.email')} value={email} autoComplete="username" onChange={(e) => setEmail(e.target.value)} />
           </div>
           <div>
             <label htmlFor="login-password" className={labelClass}>{t('login.password')}</label>
-            <Input id="login-password" className={fieldClass} type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <Input id="login-password" className={fieldClass} type="password" placeholder="••••••••" value={password} autoComplete="current-password" onChange={(e) => setPassword(e.target.value)} />
           </div>
           {(clientError || serverError) && (
             <div
